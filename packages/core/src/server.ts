@@ -1,4 +1,6 @@
 import { createServer as httpCreateServer, type Server, type IncomingMessage, type ServerResponse } from 'node:http';
+import { readFile, stat } from 'node:fs/promises';
+import { extname, join } from 'node:path';
 import { EventBus } from './event-bus.js';
 import { RingBuffer } from './ring-buffer.js';
 import { FileStore } from './file-store.js';
@@ -9,7 +11,18 @@ export interface ServerOptions {
   port: number;
   host?: string;
   dataDir: string;
+  uiDir?: string;
 }
+
+const MIME_TYPES: Record<string, string> = {
+  '.html': 'text/html',
+  '.js': 'application/javascript',
+  '.css': 'text/css',
+  '.json': 'application/json',
+  '.svg': 'image/svg+xml',
+  '.png': 'image/png',
+  '.ico': 'image/x-icon',
+};
 
 function readBody(req: IncomingMessage): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -137,6 +150,44 @@ export function createServer(opts: ServerOptions): Promise<Server> {
       sseStream.addClient(res);
       req.on('close', () => sseStream.removeClient(res));
       return;
+    }
+
+    // Static file serving + SPA fallback
+    if (opts.uiDir) {
+      const filePath = join(opts.uiDir, pathname);
+      try {
+        const fileStat = await stat(filePath);
+        if (fileStat.isFile()) {
+          const ext = extname(filePath);
+          const contentType = MIME_TYPES[ext] ?? 'application/octet-stream';
+          const cacheControl = ext === '.html'
+            ? 'no-cache'
+            : 'public, max-age=31536000, immutable';
+          const content = await readFile(filePath);
+          res.writeHead(200, {
+            'Content-Type': contentType,
+            'Cache-Control': cacheControl,
+          });
+          return res.end(content);
+        }
+      } catch {
+        // File not found — fall through
+      }
+
+      // SPA fallback: non-API, non-v1 routes serve index.html
+      if (!pathname.startsWith('/api/') && !pathname.startsWith('/v1/')) {
+        try {
+          const indexPath = join(opts.uiDir, 'index.html');
+          const content = await readFile(indexPath);
+          res.writeHead(200, {
+            'Content-Type': 'text/html',
+            'Cache-Control': 'no-cache',
+          });
+          return res.end(content);
+        } catch {
+          // index.html missing — fall through to 404
+        }
+      }
     }
 
     // 404
