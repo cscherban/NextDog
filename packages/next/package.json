@@ -21,6 +21,7 @@
   },
   "devDependencies": {
     "@types/node": "^25",
+    "@opentelemetry/core": "^2",
     "vitest": "^3"
   }
 }
