@@ -4,11 +4,23 @@
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "exports": {
+    ".": "./dist/index.js",
+    "./register": "./dist/register.js"
+  },
   "scripts": {
     "build": "tsc",
     "test": "vitest run --passWithNoTests"
   },
+  "dependencies": {
+    "@nextdog/core": "workspace:*",
+    "@opentelemetry/api": "^1",
+    "@opentelemetry/sdk-trace-node": "^1",
+    "@opentelemetry/resources": "^1",
+    "@opentelemetry/semantic-conventions": "^1"
+  },
   "devDependencies": {
+    "@types/node": "^25",
     "vitest": "^3"
   }
 }
