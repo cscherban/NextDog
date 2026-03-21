@@ -9,6 +9,8 @@
     "test": "vitest run --passWithNoTests"
   },
   "devDependencies": {
+    "@opentelemetry/core": "^2.6.0",
+    "@opentelemetry/sdk-trace-node": "^2.6.0",
     "vitest": "^3"
   }
 }
