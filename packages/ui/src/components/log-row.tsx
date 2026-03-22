@@ -19,6 +19,11 @@ function levelClass(level?: string): string {
   }
 }
 
+function runtimeTag(event: SSEEvent): string | null {
+  const rt = event.data.attributes.runtime as string | undefined;
+  return rt === 'server' || rt === 'browser' ? rt : null;
+}
+
 interface LogRowProps {
   event: SSEEvent;
   selected?: boolean;
@@ -30,12 +35,14 @@ export function LogRow({ event, selected, showService, onClick }: LogRowProps) {
   const level = event.data.level ?? event.data.status?.code ?? '';
   const message = event.data.message ?? event.data.name;
   const ts = event.data.timestamp ?? event.timestamp;
+  const runtime = runtimeTag(event);
 
   return (
     <div class={`log-row ${showService ? 'log-row-wide' : ''} ${selected ? 'log-row-selected' : ''}`} onClick={onClick}>
       <span class="log-time">{formatTime(ts)}</span>
       <span class={levelClass(event.data.level)}>{level}</span>
       {showService && <span class="service">{event.data.serviceName}</span>}
+      {runtime && <span class={`runtime-tag runtime-${runtime}`}>{runtime}</span>}
       <span class="log-message">{message}</span>
     </div>
   );

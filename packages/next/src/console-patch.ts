@@ -109,7 +109,7 @@ export function patchConsole(url: string, serviceName: string) {
         timestamp: Date.now(),
         level: LEVEL_MAP[level],
         message,
-        attributes,
+        attributes: { ...attributes, runtime: 'server' },
         traceId: spanCtx?.traceId,
         spanId: spanCtx?.spanId,
         serviceName,

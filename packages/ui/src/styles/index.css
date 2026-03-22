@@ -435,7 +435,30 @@ a { color: var(--accent); text-decoration: none; }
 }
 
 .log-row-wide {
-  grid-template-columns: 90px 50px 80px 1fr;
+  grid-template-columns: 90px 50px 80px auto 1fr;
+}
+
+/* Runtime tags */
+.runtime-tag {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+
+.runtime-server {
+  color: var(--accent);
+  background: rgba(108, 92, 231, 0.12);
+  border: 1px solid rgba(108, 92, 231, 0.25);
+}
+
+.runtime-browser {
+  color: var(--yellow);
+  background: rgba(253, 203, 110, 0.12);
+  border: 1px solid rgba(253, 203, 110, 0.25);
 }
 
 .log-row:hover { background: var(--bg-hover); }
