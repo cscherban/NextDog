@@ -1,8 +1,12 @@
 import type { SSEEvent } from '../hooks/use-sse.js';
 
 function formatTime(timestamp: number): string {
+  const ago = Date.now() - timestamp;
+  if (ago < 5000) return 'just now';
+  if (ago < 60000) return `${Math.floor(ago / 1000)}s ago`;
+  if (ago < 3600000) return `${Math.floor(ago / 60000)}m ago`;
   const d = new Date(timestamp);
-  return d.toLocaleTimeString('en-US', { hour12: false, fractionalSecondDigits: 3 });
+  return d.toLocaleTimeString('en-US', { hour12: false });
 }
 
 function levelClass(level?: string): string {

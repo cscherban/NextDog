@@ -6,7 +6,8 @@
   padding: 0;
 }
 
-:root {
+:root,
+[data-theme="dark"] {
   --bg: #0a0a0a;
   --bg-surface: #141414;
   --bg-hover: #1a1a1a;
@@ -21,6 +22,23 @@
   --blue: #74b9ff;
   --mono: 'SF Mono', 'Cascadia Code', 'Fira Code', monospace;
   --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color-scheme: dark;
+}
+
+[data-theme="light"] {
+  --bg: #f5f5f5;
+  --bg-surface: #ffffff;
+  --bg-hover: #eaeaea;
+  --border: #ddd;
+  --text: #333;
+  --text-dim: #777;
+  --text-bright: #111;
+  --accent: #6c5ce7;
+  --green: #00a67e;
+  --yellow: #d4a017;
+  --red: #d63031;
+  --blue: #2d7dd2;
+  color-scheme: light;
 }
 
 body {
@@ -50,6 +68,63 @@ a { color: var(--accent); text-decoration: none; }
 .nav { display: flex; gap: 4px; }
 .nav a { padding: 4px 12px; border-radius: 4px; color: var(--text-dim); font-size: 12px; font-weight: 500; }
 .nav a:hover, .nav a.active { color: var(--text-bright); background: var(--bg-hover); }
+
+.nav-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 16px;
+  padding: 0 4px;
+  margin-left: 4px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 600;
+  background: var(--border);
+  color: var(--text-dim);
+}
+
+.nav a.active .nav-badge {
+  background: var(--accent);
+  color: white;
+}
+
+.connection-status {
+  font-size: 11px;
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.connection-status::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--red);
+}
+
+.connection-status.connected::before {
+  background: var(--green);
+}
+
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.theme-toggle:hover {
+  background: var(--bg-hover);
+}
 
 .main { flex: 1; overflow: hidden; display: flex; flex-direction: column; }
 
@@ -499,3 +574,10 @@ a { color: var(--accent); text-decoration: none; }
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+
+/* Smooth transitions for theme switching */
+body, .header, .detail-pane, .log-detail, .pane-header, .pane-section-title,
+.search-bar-input, .event-row, .log-row, .request-row {
+  transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+}
