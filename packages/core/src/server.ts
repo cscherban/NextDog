@@ -160,6 +160,99 @@ export function createServer(opts: ServerOptions): Promise<Server> {
       return json(res, 200, { services: [...services] });
     }
 
+    // Replay a request by spanId — reconstructs and re-sends the original HTTP request
+    if (req.method === 'POST' && pathname === '/api/replay') {
+      const body = JSON.parse(await readBody(req));
+      const { spanId } = body;
+
+      if (!spanId) {
+        return json(res, 400, { error: 'spanId is required' });
+      }
+
+      // Find the span in the ring buffer first, then file store
+      const allRecent = ringBuffer.getAll();
+      let targetSpan: Span | undefined;
+
+      for (const event of allRecent) {
+        if (event.type === 'span' && event.data.spanId === spanId) {
+          targetSpan = event.data as Span;
+          break;
+        }
+      }
+
+      if (!targetSpan) {
+        // Search file store — query by traceId if we had it, but spanId search needs all events
+        const allStored = await fileStore.query({});
+        for (const event of allStored) {
+          if (event.type === 'span' && event.data.spanId === spanId) {
+            targetSpan = event.data as Span;
+            break;
+          }
+        }
+      }
+
+      if (!targetSpan) {
+        return json(res, 404, { error: 'span not found' });
+      }
+
+      const attrs = targetSpan.attributes;
+      const method = String(attrs['http.method'] ?? attrs['http.request.method'] ?? 'GET');
+      const route = String(attrs['http.route'] ?? attrs['http.target'] ?? targetSpan.name);
+      const host = String(attrs['http.host'] ?? attrs['net.host.name'] ?? 'localhost:3000');
+      const scheme = String(attrs['http.scheme'] ?? 'http');
+      const targetUrl = route.startsWith('http') ? route : `${scheme}://${host}${route}`;
+
+      // Reconstruct headers
+      const headers: Record<string, string> = {};
+      for (const [key, value] of Object.entries(attrs)) {
+        if (key.startsWith('http.request.header.')) {
+          const headerName = key.replace('http.request.header.', '');
+          headers[headerName] = String(value);
+        }
+      }
+
+      // Add cookies
+      const cookies = attrs['http.request.cookies'] ?? attrs['cookie'];
+      if (cookies) {
+        headers['cookie'] = String(cookies);
+      }
+
+      // Request body
+      const reqBody = attrs['http.request.body'] ? String(attrs['http.request.body']) : undefined;
+
+      try {
+        const startTime = Date.now();
+        const response = await fetch(targetUrl, {
+          method,
+          headers,
+          body: reqBody && method !== 'GET' && method !== 'HEAD' ? reqBody : undefined,
+          redirect: 'follow',
+        });
+
+        const duration = Date.now() - startTime;
+        const responseBody = await response.text();
+        const responseHeaders: Record<string, string> = {};
+        response.headers.forEach((v, k) => { responseHeaders[k] = v; });
+
+        return json(res, 200, {
+          status: response.status,
+          statusText: response.statusText,
+          headers: responseHeaders,
+          body: responseBody.length > 50_000 ? responseBody.slice(0, 50_000) + '\n... (truncated)' : responseBody,
+          duration,
+          url: targetUrl,
+          method,
+        });
+      } catch (err) {
+        return json(res, 502, {
+          error: 'replay failed',
+          message: (err as Error).message,
+          url: targetUrl,
+          method,
+        });
+      }
+    }
+
     // SSE live tail
     if (req.method === 'GET' && pathname === '/sse') {
       sseStream.addClient(res);

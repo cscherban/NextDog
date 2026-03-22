@@ -2,6 +2,8 @@ import { useMemo, useState } from 'preact/hooks';
 import { Waterfall } from '../components/waterfall.js';
 import { LogRow } from '../components/log-row.js';
 import { AttributeTable } from '../components/attribute-table.js';
+import { CopyCurl } from '../components/copy-curl.js';
+import { ReplayButton } from '../components/replay-button.js';
 import type { SSEEvent } from '../hooks/use-sse.js';
 
 interface TraceProps {
@@ -60,6 +62,12 @@ export function Trace({ traceId, events }: TraceProps) {
           <span>{spans.length} spans</span>
           {logs.length > 0 && <><span>|</span><span>{logs.length} logs</span></>}
         </div>
+        {rootSpan && rootSpan.data.attributes['http.method'] && (
+          <div style="display:flex;gap:6px;align-items:center;margin-top:8px">
+            <ReplayButton event={rootSpan} />
+            <CopyCurl event={rootSpan} />
+          </div>
+        )}
       </div>
 
       <div class="pane-section">
