@@ -46,8 +46,17 @@ function convertSpan(span: ReadableSpan) {
 export class NextDogExporter implements SpanExporter {
   constructor(private url: string) {}
 
+  private isNextdogSpan(span: ReadableSpan): boolean {
+    const url = String(span.attributes['http.url'] ?? span.attributes['url.full'] ?? '');
+    return url.startsWith(this.url);
+  }
+
   export(spans: ReadableSpan[], resultCallback: (result: ExportResult) => void): void {
-    const converted = spans.map(convertSpan);
+    const filtered = spans.filter((s) => !this.isNextdogSpan(s));
+    if (filtered.length === 0) {
+      return resultCallback({ code: ExportResultCode.SUCCESS });
+    }
+    const converted = filtered.map(convertSpan);
 
     fetch(`${this.url}/v1/spans`, {
       method: 'POST',

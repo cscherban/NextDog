@@ -80,7 +80,7 @@ export function Logs({ eventsResult, allEvents, onOpenTrace, onFilter }: LogsPro
     <div style="display:flex;flex:1;overflow:hidden">
       <div style="display:flex;flex-direction:column;flex:1;min-width:0">
         <ServicePills services={services} active={activeServices} onToggle={toggleService} />
-        <SearchBar value={searchQuery} onChange={setSearchQuery} />
+        <SearchBar value={searchQuery} onChange={setSearchQuery} events={filtered} />
         <div style="padding:4px 16px;display:flex;gap:8px;align-items:center;border-bottom:1px solid var(--border)">
           <button class={`pill ${liveTail ? 'active' : ''}`} onClick={toggleLiveTail}>
             {liveTail ? '● Live' : '○ Paused'}

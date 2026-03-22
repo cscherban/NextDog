@@ -73,7 +73,7 @@ export function Requests({ eventsResult, onOpenTrace }: RequestsProps) {
   return (
     <>
       <ServicePills services={services} active={activeServices} onToggle={toggleService} />
-      <SearchBar value={searchQuery} onChange={setSearchQuery} />
+      <SearchBar value={searchQuery} onChange={setSearchQuery} events={filtered} />
       <div style="padding:4px 16px;display:flex;gap:8px;border-bottom:1px solid var(--border)">
         <button class={`pill ${sortBy === 'time' ? 'active' : ''}`} onClick={() => setSortBy('time')}>Newest</button>
         <button class={`pill ${sortBy === 'duration' ? 'active' : ''}`} onClick={() => setSortBy('duration')}>Slowest</button>

@@ -10,17 +10,50 @@ export interface UseEventsResult {
   setSearchQuery: (q: string | ((prev: string) => string)) => void;
 }
 
-function parseFilter(part: string): { key: string; value: string } | null {
-  // Split on first colon only — handles values with colons (URLs, timestamps)
-  const idx = part.indexOf(':');
-  if (idx <= 0 || idx === part.length - 1) return null;
-  return { key: part.slice(0, idx), value: part.slice(idx + 1) };
+interface FilterToken {
+  negated: boolean;
+  key?: string;
+  value: string;
+  operator: 'AND' | 'OR';
 }
 
-function matchesFilter(event: SSEEvent, key: string, value: string): boolean {
+function parseTokens(query: string): FilterToken[] {
+  if (!query.trim()) return [];
+  const tokens: FilterToken[] = [];
+  const parts = query.match(/(?:[^\s"]+|"[^"]*")+/g) ?? [];
+  let nextOperator: 'AND' | 'OR' = 'AND';
+
+  for (const part of parts) {
+    if (part.toUpperCase() === 'OR') { nextOperator = 'OR'; continue; }
+    if (part.toUpperCase() === 'AND') { nextOperator = 'AND'; continue; }
+
+    let negated = false;
+    let working = part;
+
+    if (working.startsWith('!') || working.startsWith('-')) {
+      negated = true;
+      working = working.slice(1);
+    }
+
+    const colonIdx = working.indexOf(':');
+    if (colonIdx > 0) {
+      const key = working.slice(0, colonIdx);
+      let value = working.slice(colonIdx + 1);
+      if (value.startsWith('"') && value.endsWith('"')) value = value.slice(1, -1);
+      tokens.push({ negated, key, value, operator: nextOperator });
+    } else {
+      let value = working;
+      if (value.startsWith('"') && value.endsWith('"')) value = value.slice(1, -1);
+      tokens.push({ negated, value, operator: nextOperator });
+    }
+    nextOperator = 'AND';
+  }
+  return tokens;
+}
+
+function matchesField(event: SSEEvent, key: string, value: string): boolean {
   const valueLower = value.toLowerCase();
 
-  // Built-in field matchers
   switch (key) {
     case 'level':
       return (event.data.level ?? '').toLowerCase() === valueLower;
@@ -52,7 +85,6 @@ function matchesFilter(event: SSEEvent, key: string, value: string): boolean {
       return event.type === value;
   }
 
-  // Check attributes (including dot-notation nested keys)
   const attrVal = event.data.attributes[key];
   if (attrVal !== undefined) {
     return String(attrVal).toLowerCase().includes(valueLower);
@@ -61,29 +93,53 @@ function matchesFilter(event: SSEEvent, key: string, value: string): boolean {
   return false;
 }
 
+function matchesFreetext(event: SSEEvent, text: string): boolean {
+  const searchText = [
+    event.data.name,
+    event.data.message,
+    event.data.serviceName,
+    event.data.level,
+    event.data.status?.code,
+    ...Object.values(event.data.attributes).map(String),
+  ].filter(Boolean).join(' ').toLowerCase();
+
+  return searchText.includes(text.toLowerCase());
+}
+
+function matchesSingleToken(event: SSEEvent, token: FilterToken): boolean {
+  let matches: boolean;
+  if (token.key) {
+    matches = matchesField(event, token.key, token.value);
+  } else {
+    matches = matchesFreetext(event, token.value);
+  }
+  return token.negated ? !matches : matches;
+}
+
 function matchesQuery(event: SSEEvent, query: string): boolean {
-  if (!query) return true;
+  const tokens = parseTokens(query);
+  if (tokens.length === 0) return true;
 
-  const parts = query.split(/\s+/).filter(Boolean);
-  return parts.every((part) => {
-    const filter = parseFilter(part);
-    if (filter) {
-      return matchesFilter(event, filter.key, filter.value);
+  // Group tokens by OR chains
+  // e.g. [A, B OR C, D] → [[A], [B, C], [D]]
+  // Each group is OR'd internally, groups are AND'd
+  const groups: FilterToken[][] = [];
+  let currentGroup: FilterToken[] = [];
+
+  for (const token of tokens) {
+    if (token.operator === 'OR' && currentGroup.length > 0) {
+      currentGroup.push(token);
+    } else {
+      if (currentGroup.length > 0) groups.push(currentGroup);
+      currentGroup = [token];
     }
+  }
+  if (currentGroup.length > 0) groups.push(currentGroup);
 
-    // Freetext search across all visible fields
-    const searchText = [
-      event.data.name,
-      event.data.message,
-      event.data.serviceName,
-      event.data.level,
-      event.data.status?.code,
-      event.data.traceId,
-      ...Object.values(event.data.attributes).map(String),
-    ].filter(Boolean).join(' ').toLowerCase();
-
-    return searchText.includes(part.toLowerCase());
-  });
+  // Every group must have at least one matching token (AND between groups, OR within)
+  return groups.every((group) =>
+    group.some((token) => matchesSingleToken(event, token))
+  );
 }
 
 export function useEvents(events: SSEEvent[]): UseEventsResult {
