@@ -3,6 +3,7 @@ import { route } from 'preact-router';
 import { EventRow } from '../components/event-row.js';
 import { ServicePills } from '../components/service-pills.js';
 import { SearchBar } from '../components/search-bar.js';
+import { useKeyboard } from '../hooks/use-keyboard.js';
 import type { SSEEvent } from '../hooks/use-sse.js';
 import type { UseEventsResult } from '../hooks/use-events.js';
 
@@ -15,6 +16,18 @@ export function LiveTail({ eventsResult }: LiveTailProps) {
   const { filtered, services, activeServices, toggleService, searchQuery, setSearchQuery } = eventsResult;
   const listRef = useRef<HTMLDivElement>(null);
   const [autoScroll, setAutoScroll] = useState(true);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
+
+  useKeyboard({
+    onNext: () => setSelectedIndex((i) => Math.min(i + 1, filtered.length - 1)),
+    onPrev: () => setSelectedIndex((i) => Math.max(i - 1, 0)),
+    onSelect: () => {
+      if (selectedIndex >= 0 && filtered[selectedIndex]?.data.traceId) {
+        route(`/trace/${filtered[selectedIndex].data.traceId}`);
+      }
+    },
+    onBack: () => setSelectedIndex(-1),
+  });
 
   useEffect(() => {
     if (autoScroll && listRef.current) {
@@ -41,7 +54,7 @@ export function LiveTail({ eventsResult }: LiveTailProps) {
           <div class="empty">Waiting for events...</div>
         ) : (
           filtered.map((event, i) => (
-            <EventRow key={i} event={event} onClick={() => handleEventClick(event)} />
+            <EventRow key={i} event={event} selected={i === selectedIndex} onClick={() => handleEventClick(event)} />
           ))
         )}
       </div>
