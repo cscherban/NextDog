@@ -18,18 +18,20 @@ function levelClass(level?: string): string {
 interface LogRowProps {
   event: SSEEvent;
   selected?: boolean;
+  showService?: boolean;
   onClick?: () => void;
 }
 
-export function LogRow({ event, selected, onClick }: LogRowProps) {
+export function LogRow({ event, selected, showService, onClick }: LogRowProps) {
   const level = event.data.level ?? event.data.status?.code ?? '';
   const message = event.data.message ?? event.data.name;
   const ts = event.data.timestamp ?? event.timestamp;
 
   return (
-    <div class={`log-row ${selected ? 'log-row-selected' : ''}`} onClick={onClick}>
+    <div class={`log-row ${showService ? 'log-row-wide' : ''} ${selected ? 'log-row-selected' : ''}`} onClick={onClick}>
       <span class="log-time">{formatTime(ts)}</span>
       <span class={levelClass(event.data.level)}>{level}</span>
+      {showService && <span class="service">{event.data.serviceName}</span>}
       <span class="log-message">{message}</span>
     </div>
   );

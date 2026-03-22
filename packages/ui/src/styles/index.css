@@ -229,6 +229,10 @@ a { color: var(--accent); text-decoration: none; }
   align-items: start;
 }
 
+.log-row-wide {
+  grid-template-columns: 90px 50px 80px 1fr;
+}
+
 .log-row:hover { background: var(--bg-hover); }
 .log-row-selected { background: var(--bg-hover); outline: 1px solid var(--accent); outline-offset: -1px; }
 

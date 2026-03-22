@@ -1,5 +1,6 @@
 import { useRef, useEffect, useState } from 'preact/hooks';
 import { EventRow } from '../components/event-row.js';
+import { LogRow } from '../components/log-row.js';
 import { ServicePills } from '../components/service-pills.js';
 import { SearchBar } from '../components/search-bar.js';
 import { useKeyboard } from '../hooks/use-keyboard.js';
@@ -54,7 +55,11 @@ export function LiveTail({ eventsResult, onOpenTrace }: LiveTailProps) {
           <div class="empty">Waiting for events...</div>
         ) : (
           filtered.map((event, i) => (
-            <EventRow key={i} event={event} selected={i === selectedIndex} onClick={() => handleEventClick(event)} />
+            event.type === 'log' ? (
+              <LogRow key={i} event={event} showService selected={i === selectedIndex} onClick={() => handleEventClick(event)} />
+            ) : (
+              <EventRow key={i} event={event} selected={i === selectedIndex} onClick={() => handleEventClick(event)} />
+            )
           ))
         )}
       </div>
