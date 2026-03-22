@@ -123,6 +123,21 @@ export function createServer(opts: ServerOptions): Promise<Server> {
       return json(res, 202, { accepted: spans.length });
     }
 
+    // Ingest logs
+    if (req.method === 'POST' && pathname === '/v1/logs') {
+      const body = JSON.parse(await readBody(req));
+      const logs = body.logs ?? [];
+
+      for (const log of logs) {
+        const event: NextDogEvent = log.type === 'log'
+          ? log as NextDogEvent
+          : { type: 'log' as const, timestamp: Date.now(), data: log };
+        if (event.data.serviceName) services.add(event.data.serviceName);
+        bus.emit(event);
+      }
+      return json(res, 202, { accepted: logs.length });
+    }
+
     // Query spans
     if (req.method === 'GET' && pathname === '/api/spans') {
       const service = url.searchParams.get('service') ?? undefined;
