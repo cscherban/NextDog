@@ -54,6 +54,11 @@ export function getBrowserPatchScript(url: string, serviceName: string): string 
       var args = Array.from(arguments);
       var firstArg = args[0];
       if (typeof firstArg === 'string' && firstArg.indexOf('[nextdog]') === 0) return;
+      // Skip Next.js internal RSC/navigation noise
+      if (typeof firstArg === 'string' && (
+        firstArg.indexOf('Failed to fetch RSC payload') !== -1 ||
+        firstArg.indexOf('Unexpected root span type') !== -1
+      )) return;
 
       var message = args.map(formatArg).join(' ');
       var attrs = extractAttrs(args);

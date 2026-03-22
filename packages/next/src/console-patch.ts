@@ -98,6 +98,11 @@ export function patchConsole(url: string, serviceName: string) {
 
       const firstArg = args[0];
       if (typeof firstArg === 'string' && firstArg.startsWith('[nextdog]')) return;
+      // Skip Next.js internal OTel/RSC noise
+      if (typeof firstArg === 'string' && (
+        firstArg.includes('Unexpected root span type') ||
+        firstArg.includes('Failed to fetch RSC payload')
+      )) return;
 
       const activeSpan = trace.getActiveSpan();
       const spanCtx = activeSpan?.spanContext();
