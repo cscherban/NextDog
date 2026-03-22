@@ -3,14 +3,11 @@ import { useState, useCallback } from 'preact/hooks';
 import { useSSE } from './hooks/use-sse.js';
 import { useEvents } from './hooks/use-events.js';
 import { LiveTail } from './views/live-tail.js';
+import { Requests } from './views/requests.js';
 
 const SIDECAR_URL = window.location.port === '5173'
   ? 'http://localhost:6789'
   : window.location.origin;
-
-function Requests({ path, eventsResult }: any) {
-  return <div class="empty">Requests — coming next</div>;
-}
 
 function Trace({ traceId, path }: { traceId?: string; path?: string }) {
   return <div class="empty">Trace {traceId} — coming next</div>;
