@@ -29,7 +29,7 @@ function convertSpan(span: ReadableSpan) {
   return {
     traceId: ctx.traceId,
     spanId: ctx.spanId,
-    parentSpanId: span.parentSpanContext?.spanId || undefined,
+    parentSpanId: (span as any).parentSpanId ?? (span as any).parentSpanContext?.spanId ?? undefined,
     name: span.name,
     kind: SPAN_KIND_MAP[span.kind] ?? 'INTERNAL',
     startTimeUnixNano: hrtimeToNano(span.startTime),
