@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { createServer } from './server.js';
 import { homedir } from 'node:os';
 import { join, dirname } from 'node:path';

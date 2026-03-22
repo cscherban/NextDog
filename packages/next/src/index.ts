@@ -19,6 +19,10 @@ export function withNextDog(config: NextConfig, options?: NextDogOptions): NextC
 
   return {
     ...config,
+    experimental: {
+      ...config.experimental,
+      instrumentationHook: true,
+    },
     env: {
       ...config.env,
       NEXTDOG_URL: url,
