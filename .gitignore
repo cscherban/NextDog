@@ -3,3 +3,7 @@ dist/
 .turbo/
 *.tsbuildinfo
 .worktrees/
+.claude/
+.env
+.env.*
+*.log
