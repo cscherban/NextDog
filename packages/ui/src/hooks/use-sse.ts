@@ -13,6 +13,7 @@ export interface SSEEvent {
     endTimeUnixNano?: string;
     attributes: Record<string, unknown>;
     status?: { code: string; message?: string };
+    statusCode?: number;
     serviceName: string;
     level?: string;
     message?: string;

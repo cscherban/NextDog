@@ -83,6 +83,9 @@ function matchesField(event: SSEEvent, key: string, value: string): boolean {
       return (event.data.kind ?? '').toLowerCase() === valueLower;
     case 'type':
       return event.type === value;
+    case 'statusCode':
+    case 'status_code':
+      return String(event.data.statusCode ?? event.data.attributes['http.status_code'] ?? '') === value;
   }
 
   const attrVal = event.data.attributes[key];

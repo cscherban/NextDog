@@ -8,6 +8,7 @@ export interface Span {
   endTimeUnixNano: bigint;
   attributes: Record<string, string | number | boolean>;
   status: { code: 'OK' | 'ERROR' | 'UNSET'; message?: string };
+  statusCode?: number;
   serviceName: string;
 }
 

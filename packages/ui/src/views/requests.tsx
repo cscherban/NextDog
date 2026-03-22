@@ -9,6 +9,7 @@ interface RequestGroup {
   method: string;
   routePath: string;
   status: string;
+  httpCode?: number;
   duration: string;
   durationMs: number;
   serviceName: string;
@@ -29,6 +30,7 @@ function groupByTrace(events: SSEEvent[]): RequestGroup[] {
     const method = String(rootSpan.data.attributes['http.method'] ?? 'GET');
     const routePath = String(rootSpan.data.attributes['http.route'] ?? rootSpan.data.attributes['http.target'] ?? rootSpan.data.name);
     const statusCode = rootSpan.data.status?.code ?? 'OK';
+    const httpCode = (rootSpan.data as any).statusCode ?? (Number(rootSpan.data.attributes['http.status_code']) || undefined);
 
     let durationMs = 0;
     if (rootSpan.data.startTimeUnixNano && rootSpan.data.endTimeUnixNano) {
@@ -39,7 +41,7 @@ function groupByTrace(events: SSEEvent[]): RequestGroup[] {
 
     const duration = durationMs < 1 ? `${(durationMs * 1000).toFixed(0)}µs` : durationMs < 1000 ? `${durationMs.toFixed(1)}ms` : `${(durationMs / 1000).toFixed(2)}s`;
 
-    return { traceId, method, routePath, status: statusCode, duration, durationMs, serviceName: rootSpan.data.serviceName, spans };
+    return { traceId, method, routePath, status: statusCode, httpCode, duration, durationMs, serviceName: rootSpan.data.serviceName, spans };
   }).reverse();
 }
 
@@ -86,7 +88,11 @@ export function Requests({ eventsResult, onOpenTrace }: RequestsProps) {
             <div key={group.traceId} class="request-row" onClick={() => onOpenTrace?.(group.traceId)}>
               <span class={methodClass(group.method)}>{group.method}</span>
               <span class="route">{group.routePath}</span>
-              <span class={group.status === 'ERROR' ? 'status-error' : 'status-ok'}>{group.status}</span>
+              {group.httpCode ? (
+                <span class={`http-status http-${Math.floor(group.httpCode / 100)}xx`}>{group.httpCode}</span>
+              ) : (
+                <span class={group.status === 'ERROR' ? 'status-error' : 'status-ok'}>{group.status}</span>
+              )}
               <span class="duration">{group.duration}</span>
               <span class="service">{group.serviceName}</span>
             </div>

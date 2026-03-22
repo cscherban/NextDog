@@ -39,6 +39,7 @@ function convertSpan(span: ReadableSpan) {
       code: STATUS_CODE_MAP[span.status.code] ?? 'UNSET',
       message: span.status.message,
     },
+    statusCode: Number(span.attributes['http.status_code'] ?? span.attributes['http.response.status_code'] ?? 0) || undefined,
     serviceName,
   };
 }
