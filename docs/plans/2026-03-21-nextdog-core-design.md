@@ -109,8 +109,7 @@ const { withNextDog } = require('@nextdog/next');
 module.exports = withNextDog({ /* normal Next.js config */ });
 ```
 
-- Sets `experimental.instrumentationHook: true`
-- Injects `NEXTDOG_URL` and `NEXTDOG_SERVICE_NAME` into env
+- Injects `NEXTDOG_URL` and `NEXTDOG_SERVICE_NAME` into env (no experimental flags needed — `instrumentation.ts` is built-in since Next.js 15)
 - **No-ops completely** when `NODE_ENV === 'production'`
 
 ### `instrumentation.ts` hook
