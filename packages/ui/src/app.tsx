@@ -2,8 +2,8 @@ import Router from 'preact-router';
 import { useState, useCallback } from 'preact/hooks';
 import { useSSE } from './hooks/use-sse.js';
 import { useEvents } from './hooks/use-events.js';
-import { LiveTail } from './views/live-tail.js';
 import { Requests } from './views/requests.js';
+import { Logs } from './views/logs.js';
 import { Trace } from './views/trace.js';
 import { DetailPane } from './components/detail-pane.js';
 
@@ -45,8 +45,8 @@ export function App() {
       <header class="header">
         <h1>NextDog</h1>
         <nav class="nav">
-          <a href="/" class={navClass('/')}>Live Tail</a>
-          <a href="/requests" class={navClass('/requests')}>Requests</a>
+          <a href="/" class={navClass('/')}>Spans</a>
+          <a href="/logs" class={navClass('/logs')}>Logs</a>
         </nav>
         <span style="margin-left:auto;font-size:11px;color:var(--text-dim)">
           {connected ? '● connected' : error ?? '○ disconnected'}
@@ -54,8 +54,8 @@ export function App() {
       </header>
       <div class="main">
         <Router onChange={handleRoute}>
-          <LiveTail path="/" eventsResult={eventsResult} onOpenTrace={openTrace} />
-          <Requests path="/requests" eventsResult={eventsResult} onOpenTrace={openTrace} />
+          <Requests path="/" eventsResult={eventsResult} onOpenTrace={openTrace} />
+          <Logs path="/logs" eventsResult={eventsResult} allEvents={events} onOpenTrace={openTrace} onFilter={handleFilter} />
           <Trace path="/trace/:traceId" events={events} />
         </Router>
       </div>
