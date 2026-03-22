@@ -287,13 +287,29 @@ a { color: var(--accent); text-decoration: none; }
 .waterfall-duration { width: 70px; text-align: right; color: var(--text-dim); }
 
 .requests-table { width: 100%; }
-.request-row { display: grid; grid-template-columns: 60px 1fr 60px 80px 100px; gap: 12px; padding: 6px 16px; border-bottom: 1px solid var(--border); align-items: center; cursor: pointer; font-family: var(--mono); font-size: 12px; }
+.request-row { display: grid; grid-template-columns: 75px 55px 1fr 50px 75px 90px; gap: 10px; padding: 6px 16px; border-bottom: 1px solid var(--border); align-items: center; cursor: pointer; font-family: var(--mono); font-size: 12px; }
 .request-row:hover { background: var(--bg-hover); }
+.request-row-selected { background: var(--bg-hover); outline: 1px solid var(--accent); outline-offset: -1px; }
 .method { font-weight: 600; }
 .method-get { color: var(--green); }
 .method-post { color: var(--blue); }
 .method-put { color: var(--yellow); }
 .method-delete { color: var(--red); }
+
+/* Duration percentile coloring */
+.duration-p90 { color: var(--yellow); font-weight: 600; }
+.duration-p99 { color: var(--red); font-weight: 600; }
+
+/* Error dot on service pills */
+.pill-error-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--red);
+  margin-left: 4px;
+  vertical-align: middle;
+}
 
 .empty { display: flex; align-items: center; justify-content: center; flex: 1; color: var(--text-dim); font-size: 14px; }
 

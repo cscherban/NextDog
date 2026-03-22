@@ -3,6 +3,7 @@ import { route } from 'preact-router';
 import { Waterfall } from './waterfall.js';
 import { LogRow } from './log-row.js';
 import { AttributeTable } from './attribute-table.js';
+import { CopyCurl } from './copy-curl.js';
 import type { SSEEvent } from '../hooks/use-sse.js';
 
 interface DetailPaneProps {
@@ -92,6 +93,8 @@ export function DetailPane({ traceId, events, onClose, onFilter }: DetailPanePro
                 <span>{logs.length} logs</span>
               </>
             )}
+            <span class="pane-meta-sep">|</span>
+            {rootSpan && <CopyCurl event={rootSpan} />}
           </div>
         </div>
 

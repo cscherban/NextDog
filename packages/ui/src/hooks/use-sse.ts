@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'preact/hooks';
+import { useEffect, useRef, useState, useCallback } from 'preact/hooks';
 
 export interface SSEEvent {
   type: 'span' | 'log';
@@ -21,10 +21,11 @@ export interface SSEEvent {
   };
 }
 
-interface UseSSEResult {
+export interface UseSSEResult {
   events: SSEEvent[];
   connected: boolean;
   error: string | null;
+  clearEvents: () => void;
 }
 
 export function useSSE(url: string): UseSSEResult {
@@ -62,5 +63,9 @@ export function useSSE(url: string): UseSSEResult {
     };
   }, [url]);
 
-  return { events, connected, error };
+  const clearEvents = useCallback(() => {
+    setEvents([]);
+  }, []);
+
+  return { events, connected, error, clearEvents };
 }
