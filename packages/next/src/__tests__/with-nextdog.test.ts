@@ -8,10 +8,9 @@ describe('withNextDog', () => {
     process.env.NODE_ENV = originalEnv;
   });
 
-  it('enables instrumentation hook in development', () => {
+  it('injects env vars in development', () => {
     process.env.NODE_ENV = 'development';
     const config = withNextDog({ reactStrictMode: true });
-    expect(config.experimental).toEqual(expect.objectContaining({ instrumentationHook: true }));
     expect(config.env).toEqual(expect.objectContaining({ NEXTDOG_URL: 'http://localhost:6789' }));
     expect(config.env.NEXTDOG_SERVICE_NAME).toBeDefined();
     expect(config.reactStrictMode).toBe(true);

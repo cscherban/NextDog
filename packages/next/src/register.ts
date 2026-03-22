@@ -1,4 +1,8 @@
-if (process.env.NODE_ENV === 'development') {
+// Only run in Node.js runtime (not Edge) and development mode
+if (
+  process.env.NODE_ENV === 'development' &&
+  typeof (globalThis as any).EdgeRuntime === 'undefined'
+) {
   const { NodeTracerProvider, BatchSpanProcessor } = await import('@opentelemetry/sdk-trace-node');
   const { Resource } = await import('@opentelemetry/resources');
   const { ATTR_SERVICE_NAME } = await import('@opentelemetry/semantic-conventions');
