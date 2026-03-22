@@ -4,14 +4,11 @@ import { useSSE } from './hooks/use-sse.js';
 import { useEvents } from './hooks/use-events.js';
 import { LiveTail } from './views/live-tail.js';
 import { Requests } from './views/requests.js';
+import { Trace } from './views/trace.js';
 
 const SIDECAR_URL = window.location.port === '5173'
   ? 'http://localhost:6789'
   : window.location.origin;
-
-function Trace({ traceId, path }: { traceId?: string; path?: string }) {
-  return <div class="empty">Trace {traceId} — coming next</div>;
-}
 
 export function App() {
   const [currentPath, setCurrentPath] = useState('/');
@@ -40,7 +37,7 @@ export function App() {
         <Router onChange={handleRoute}>
           <LiveTail path="/" eventsResult={eventsResult} />
           <Requests path="/requests" eventsResult={eventsResult} />
-          <Trace path="/trace/:traceId" />
+          <Trace path="/trace/:traceId" events={events} />
         </Router>
       </div>
     </div>
