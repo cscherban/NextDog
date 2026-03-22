@@ -1,4 +1,4 @@
-import { trace, context } from '@opentelemetry/api';
+import { trace } from '@opentelemetry/api';
 
 const LEVELS = ['debug', 'log', 'info', 'warn', 'error'] as const;
 type Level = typeof LEVELS[number];
@@ -11,6 +11,29 @@ const LEVEL_MAP: Record<Level, string> = {
   error: 'error',
 };
 
+function tryParseJson(str: string): unknown | null {
+  if (typeof str !== 'string') return null;
+  const trimmed = str.trim();
+  if ((trimmed.startsWith('{') && trimmed.endsWith('}')) ||
+      (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+    try { return JSON.parse(trimmed); } catch { return null; }
+  }
+  return null;
+}
+
+function flattenObject(obj: Record<string, unknown>, prefix = ''): Record<string, unknown> {
+  const result: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(obj)) {
+    const fullKey = prefix ? `${prefix}.${key}` : key;
+    if (value && typeof value === 'object' && !Array.isArray(value) && !(value instanceof Date)) {
+      Object.assign(result, flattenObject(value as Record<string, unknown>, fullKey));
+    } else {
+      result[fullKey] = value;
+    }
+  }
+  return result;
+}
+
 function formatArg(arg: unknown): string {
   if (typeof arg === 'string') return arg;
   if (arg instanceof Error) return `${arg.message}\n${arg.stack ?? ''}`;
@@ -19,10 +42,16 @@ function formatArg(arg: unknown): string {
 
 function extractAttributes(args: unknown[]): Record<string, unknown> {
   const attrs: Record<string, unknown> = {};
-  for (let i = 1; i < args.length; i++) {
-    const arg = args[i];
+  for (const arg of args) {
     if (arg && typeof arg === 'object' && !(arg instanceof Error)) {
-      Object.assign(attrs, arg);
+      // Flatten nested objects into dot-notation keys
+      Object.assign(attrs, flattenObject(arg as Record<string, unknown>));
+    } else if (typeof arg === 'string') {
+      // Try to parse JSON strings
+      const parsed = tryParseJson(arg);
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        Object.assign(attrs, flattenObject(parsed as Record<string, unknown>));
+      }
     }
   }
   return attrs;
@@ -55,12 +84,9 @@ export function patchConsole(url: string, serviceName: string) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body,
-    }).catch(() => {
-      // Silently drop — don't log errors about logging
-    });
+    }).catch(() => {});
   }
 
-  // Flush every 500ms
   flushTimer = setInterval(flush, 500);
   if (flushTimer.unref) flushTimer.unref();
 
@@ -68,14 +94,11 @@ export function patchConsole(url: string, serviceName: string) {
     const original = console[level].bind(console);
 
     console[level] = (...args: unknown[]) => {
-      // Call original console method
       original(...args);
 
-      // Skip our own messages
       const firstArg = args[0];
       if (typeof firstArg === 'string' && firstArg.startsWith('[nextdog]')) return;
 
-      // Extract trace context if active
       const activeSpan = trace.getActiveSpan();
       const spanCtx = activeSpan?.spanContext();
 

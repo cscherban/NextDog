@@ -10,25 +10,79 @@ export interface UseEventsResult {
   setSearchQuery: (q: string | ((prev: string) => string)) => void;
 }
 
+function parseFilter(part: string): { key: string; value: string } | null {
+  // Split on first colon only — handles values with colons (URLs, timestamps)
+  const idx = part.indexOf(':');
+  if (idx <= 0 || idx === part.length - 1) return null;
+  return { key: part.slice(0, idx), value: part.slice(idx + 1) };
+}
+
+function matchesFilter(event: SSEEvent, key: string, value: string): boolean {
+  const valueLower = value.toLowerCase();
+
+  // Built-in field matchers
+  switch (key) {
+    case 'level':
+      return (event.data.level ?? '').toLowerCase() === valueLower;
+    case 'service':
+      return event.data.serviceName.toLowerCase() === valueLower;
+    case 'route': {
+      const route = String(
+        event.data.attributes['http.route'] ??
+        event.data.attributes['http.target'] ??
+        event.data.name ?? ''
+      ).toLowerCase();
+      return route.includes(valueLower);
+    }
+    case 'status':
+      return (event.data.status?.code ?? '').toLowerCase() === valueLower;
+    case 'trace':
+    case 'traceId':
+      return event.data.traceId === value;
+    case 'span':
+    case 'spanId':
+      return event.data.spanId === value;
+    case 'name':
+      return (event.data.name ?? '').toLowerCase().includes(valueLower);
+    case 'message':
+      return (event.data.message ?? '').toLowerCase().includes(valueLower);
+    case 'kind':
+      return (event.data.kind ?? '').toLowerCase() === valueLower;
+    case 'type':
+      return event.type === value;
+  }
+
+  // Check attributes (including dot-notation nested keys)
+  const attrVal = event.data.attributes[key];
+  if (attrVal !== undefined) {
+    return String(attrVal).toLowerCase().includes(valueLower);
+  }
+
+  return false;
+}
+
 function matchesQuery(event: SSEEvent, query: string): boolean {
   if (!query) return true;
+
   const parts = query.split(/\s+/).filter(Boolean);
   return parts.every((part) => {
-    const [key, value] = part.split(':');
-    if (key && value) {
-      if (key === 'level' && event.data.level) return event.data.level === value;
-      if (key === 'service') return event.data.serviceName === value;
-      if (key === 'route') {
-        const route = event.data.attributes['http.route'] ?? event.data.attributes['http.target'] ?? event.data.name;
-        return String(route).includes(value);
-      }
-      if (key === 'status') return event.data.status?.code?.toLowerCase() === value.toLowerCase();
-      if (key === 'trace') return event.data.traceId === value;
-      const attrVal = event.data.attributes[key];
-      if (attrVal !== undefined) return String(attrVal).includes(value);
+    const filter = parseFilter(part);
+    if (filter) {
+      return matchesFilter(event, filter.key, filter.value);
     }
-    const text = `${event.data.name} ${event.data.message ?? ''} ${event.data.serviceName}`.toLowerCase();
-    return text.includes(part.toLowerCase());
+
+    // Freetext search across all visible fields
+    const searchText = [
+      event.data.name,
+      event.data.message,
+      event.data.serviceName,
+      event.data.level,
+      event.data.status?.code,
+      event.data.traceId,
+      ...Object.values(event.data.attributes).map(String),
+    ].filter(Boolean).join(' ').toLowerCase();
+
+    return searchText.includes(part.toLowerCase());
   });
 }
 
