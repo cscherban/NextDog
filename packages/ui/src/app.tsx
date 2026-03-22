@@ -6,6 +6,7 @@ import { Requests } from './views/requests.js';
 import { Logs } from './views/logs.js';
 import { Trace } from './views/trace.js';
 import { DetailPane } from './components/detail-pane.js';
+import { Logo } from './components/logo.js';
 
 const SIDECAR_URL = window.location.port === '5173'
   ? 'http://localhost:6789'
@@ -43,6 +44,7 @@ export function App() {
   return (
     <div class="app">
       <header class="header">
+        <Logo size={24} />
         <h1>NextDog</h1>
         <nav class="nav">
           <a href="/" class={navClass('/')}>Spans</a>
