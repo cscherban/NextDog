@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'preact/hooks';
-import { route } from 'preact-router';
 import { ServicePills } from '../components/service-pills.js';
 import { SearchBar } from '../components/search-bar.js';
 import type { SSEEvent } from '../hooks/use-sse.js';
@@ -49,9 +48,10 @@ type SortField = 'time' | 'duration';
 interface RequestsProps {
   path?: string;
   eventsResult: UseEventsResult;
+  onOpenTrace?: (traceId: string) => void;
 }
 
-export function Requests({ eventsResult }: RequestsProps) {
+export function Requests({ eventsResult, onOpenTrace }: RequestsProps) {
   const { filtered, services, activeServices, toggleService, searchQuery, setSearchQuery } = eventsResult;
   const [sortBy, setSortBy] = useState<SortField>('time');
 
@@ -83,7 +83,7 @@ export function Requests({ eventsResult }: RequestsProps) {
           <div class="empty">No requests yet</div>
         ) : (
           groups.map((group) => (
-            <div key={group.traceId} class="request-row" onClick={() => route(`/trace/${group.traceId}`)}>
+            <div key={group.traceId} class="request-row" onClick={() => onOpenTrace?.(group.traceId)}>
               <span class={methodClass(group.method)}>{group.method}</span>
               <span class="route">{group.routePath}</span>
               <span class={group.status === 'ERROR' ? 'status-error' : 'status-ok'}>{group.status}</span>

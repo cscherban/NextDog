@@ -2,7 +2,10 @@ import type { SSEEvent } from '../hooks/use-sse.js';
 
 const COLORS = ['var(--accent)', 'var(--blue)', 'var(--green)', 'var(--yellow)', 'var(--red)'];
 
-interface WaterfallProps { spans: SSEEvent[]; }
+interface WaterfallProps {
+  spans: SSEEvent[];
+  onSpanClick?: (event: SSEEvent) => void;
+}
 
 interface SpanTiming {
   name: string;
@@ -12,6 +15,7 @@ interface SpanTiming {
   depth: number;
   color: string;
   serviceName: string;
+  source: SSEEvent;
 }
 
 function buildTimings(spans: SSEEvent[]): { timings: SpanTiming[]; minNano: bigint; maxNano: bigint } {
@@ -70,6 +74,7 @@ function buildTimings(spans: SSEEvent[]): { timings: SpanTiming[]; minNano: bigi
       depth: depths.get(s.data.spanId ?? '') ?? 0,
       color: COLORS[i % COLORS.length],
       serviceName: s.data.serviceName,
+      source: s,
     };
   });
 
@@ -82,7 +87,7 @@ function formatDuration(ms: number): string {
   return `${(ms / 1000).toFixed(2)}s`;
 }
 
-export function Waterfall({ spans }: WaterfallProps) {
+export function Waterfall({ spans, onSpanClick }: WaterfallProps) {
   const { timings, minNano, maxNano } = buildTimings(spans);
   const totalNano = maxNano - minNano;
 
@@ -94,7 +99,7 @@ export function Waterfall({ spans }: WaterfallProps) {
         const leftPct = totalNano > 0n ? Number((t.startNano - minNano) * 10000n / totalNano) / 100 : 0;
         const widthPct = totalNano > 0n ? Math.max(0.5, Number((t.endNano - t.startNano) * 10000n / totalNano) / 100) : 100;
         return (
-          <div key={i} class="waterfall-row" style={`padding-left:${t.depth * 16}px`}>
+          <div key={i} class="waterfall-row" style={`padding-left:${t.depth * 16}px;${onSpanClick ? 'cursor:pointer' : ''}`} onClick={() => onSpanClick?.(t.source)}>
             <span class="waterfall-label" title={t.name}>
               <span style="color:var(--text-dim);font-size:11px">{t.serviceName} </span>{t.name}
             </span>

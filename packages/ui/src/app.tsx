@@ -5,6 +5,7 @@ import { useEvents } from './hooks/use-events.js';
 import { LiveTail } from './views/live-tail.js';
 import { Requests } from './views/requests.js';
 import { Trace } from './views/trace.js';
+import { DetailPane } from './components/detail-pane.js';
 
 const SIDECAR_URL = window.location.port === '5173'
   ? 'http://localhost:6789'
@@ -14,9 +15,18 @@ export function App() {
   const [currentPath, setCurrentPath] = useState('/');
   const { events, connected, error } = useSSE(SIDECAR_URL);
   const eventsResult = useEvents(events);
+  const [selectedTraceId, setSelectedTraceId] = useState<string | null>(null);
 
   const handleRoute = useCallback((e: { url: string }) => {
     setCurrentPath(e.url);
+  }, []);
+
+  const openTrace = useCallback((traceId: string) => {
+    setSelectedTraceId(traceId);
+  }, []);
+
+  const closePane = useCallback(() => {
+    setSelectedTraceId(null);
   }, []);
 
   const navClass = (path: string) => currentPath === path ? 'active' : '';
@@ -35,11 +45,19 @@ export function App() {
       </header>
       <div class="main">
         <Router onChange={handleRoute}>
-          <LiveTail path="/" eventsResult={eventsResult} />
-          <Requests path="/requests" eventsResult={eventsResult} />
+          <LiveTail path="/" eventsResult={eventsResult} onOpenTrace={openTrace} />
+          <Requests path="/requests" eventsResult={eventsResult} onOpenTrace={openTrace} />
           <Trace path="/trace/:traceId" events={events} />
         </Router>
       </div>
+
+      {selectedTraceId && (
+        <DetailPane
+          traceId={selectedTraceId}
+          events={events}
+          onClose={closePane}
+        />
+      )}
     </div>
   );
 }

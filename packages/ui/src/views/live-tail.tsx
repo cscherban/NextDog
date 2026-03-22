@@ -1,5 +1,4 @@
 import { useRef, useEffect, useState } from 'preact/hooks';
-import { route } from 'preact-router';
 import { EventRow } from '../components/event-row.js';
 import { ServicePills } from '../components/service-pills.js';
 import { SearchBar } from '../components/search-bar.js';
@@ -10,9 +9,10 @@ import type { UseEventsResult } from '../hooks/use-events.js';
 interface LiveTailProps {
   path?: string;
   eventsResult: UseEventsResult;
+  onOpenTrace?: (traceId: string) => void;
 }
 
-export function LiveTail({ eventsResult }: LiveTailProps) {
+export function LiveTail({ eventsResult, onOpenTrace }: LiveTailProps) {
   const { filtered, services, activeServices, toggleService, searchQuery, setSearchQuery } = eventsResult;
   const listRef = useRef<HTMLDivElement>(null);
   const [autoScroll, setAutoScroll] = useState(true);
@@ -23,7 +23,7 @@ export function LiveTail({ eventsResult }: LiveTailProps) {
     onPrev: () => setSelectedIndex((i) => Math.max(i - 1, 0)),
     onSelect: () => {
       if (selectedIndex >= 0 && filtered[selectedIndex]?.data.traceId) {
-        route(`/trace/${filtered[selectedIndex].data.traceId}`);
+        onOpenTrace?.(filtered[selectedIndex].data.traceId!);
       }
     },
     onBack: () => setSelectedIndex(-1),
@@ -42,7 +42,7 @@ export function LiveTail({ eventsResult }: LiveTailProps) {
   };
 
   const handleEventClick = (event: SSEEvent) => {
-    if (event.data.traceId) route(`/trace/${event.data.traceId}`);
+    if (event.data.traceId) onOpenTrace?.(event.data.traceId);
   };
 
   return (
@@ -60,7 +60,7 @@ export function LiveTail({ eventsResult }: LiveTailProps) {
       </div>
       {!autoScroll && (
         <button style="position:fixed;bottom:16px;right:16px;padding:6px 12px;background:var(--accent);color:white;border:none;border-radius:4px;cursor:pointer;font-size:12px;" onClick={() => setAutoScroll(true)}>
-          ↓ Resume auto-scroll
+          Resume auto-scroll
         </button>
       )}
     </>
