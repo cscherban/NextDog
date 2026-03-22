@@ -285,6 +285,17 @@ a { color: var(--accent); text-decoration: none; }
   word-break: break-all;
 }
 
+.attr-value-filterable {
+  cursor: pointer;
+  border-bottom: 1px dashed var(--border);
+  transition: color 0.1s, border-color 0.1s;
+}
+
+.attr-value-filterable:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
 .attr-value-long pre {
   margin: 0;
   padding: 4px 8px;

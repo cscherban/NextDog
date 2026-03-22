@@ -29,6 +29,15 @@ export function App() {
     setSelectedTraceId(null);
   }, []);
 
+  const handleFilter = useCallback((key: string, value: string) => {
+    eventsResult.setSearchQuery((prev: string) => {
+      const filter = `${key}:${value}`;
+      if (prev.includes(filter)) return prev;
+      return prev ? `${prev} ${filter}` : filter;
+    });
+    setSelectedTraceId(null);
+  }, [eventsResult]);
+
   const navClass = (path: string) => currentPath === path ? 'active' : '';
 
   return (
@@ -56,6 +65,7 @@ export function App() {
           traceId={selectedTraceId}
           events={events}
           onClose={closePane}
+          onFilter={handleFilter}
         />
       )}
     </div>

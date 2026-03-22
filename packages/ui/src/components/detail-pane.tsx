@@ -9,6 +9,7 @@ interface DetailPaneProps {
   traceId: string;
   events: SSEEvent[];
   onClose: () => void;
+  onFilter?: (key: string, value: string) => void;
 }
 
 function formatDuration(event: SSEEvent): string {
@@ -21,7 +22,7 @@ function formatDuration(event: SSEEvent): string {
   return `${(ms / 1000).toFixed(2)}s`;
 }
 
-export function DetailPane({ traceId, events, onClose }: DetailPaneProps) {
+export function DetailPane({ traceId, events, onClose, onFilter }: DetailPaneProps) {
   const [selectedEvent, setSelectedEvent] = useState<SSEEvent | null>(null);
   const [showJson, setShowJson] = useState(false);
 
@@ -156,6 +157,7 @@ export function DetailPane({ traceId, events, onClose }: DetailPaneProps) {
                 <>
                   <AttributeTable
                     title="Properties"
+                    onFilter={onFilter}
                     attributes={{
                       name: selectedEvent.data.name,
                       service: selectedEvent.data.serviceName,
@@ -171,6 +173,7 @@ export function DetailPane({ traceId, events, onClose }: DetailPaneProps) {
                   {Object.keys(selectedEvent.data.attributes).length > 0 && (
                     <AttributeTable
                       title="Attributes"
+                      onFilter={onFilter}
                       attributes={selectedEvent.data.attributes as Record<string, unknown>}
                     />
                   )}

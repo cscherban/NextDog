@@ -7,7 +7,7 @@ export interface UseEventsResult {
   activeServices: Set<string>;
   toggleService: (name: string) => void;
   searchQuery: string;
-  setSearchQuery: (q: string) => void;
+  setSearchQuery: (q: string | ((prev: string) => string)) => void;
 }
 
 function matchesQuery(event: SSEEvent, query: string): boolean {
