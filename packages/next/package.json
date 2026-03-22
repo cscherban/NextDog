@@ -1,6 +1,7 @@
 {
   "name": "@nextdog/next",
-  "version": "0.0.1",
+  "version": "0.1.0",
+  "description": "Next.js plugin for NextDog — zero-config dev observability",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -8,9 +9,16 @@
     ".": "./dist/index.js",
     "./register": "./dist/register.js"
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsc",
-    "test": "vitest run --passWithNoTests"
+    "test": "vitest run --passWithNoTests",
+    "prepublishOnly": "pnpm build"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "dependencies": {
     "@nextdog/core": "workspace:*",
@@ -23,5 +31,11 @@
     "@types/node": "^25",
     "@opentelemetry/core": "^2",
     "vitest": "^3"
-  }
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cscherban/NextDog"
+  },
+  "keywords": ["nextjs", "observability", "tracing", "opentelemetry", "devtools", "instrumentation"]
 }
