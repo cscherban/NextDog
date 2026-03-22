@@ -1,0 +1,55 @@
+import { useRef, useEffect, useState } from 'preact/hooks';
+import { route } from 'preact-router';
+import { EventRow } from '../components/event-row.js';
+import { ServicePills } from '../components/service-pills.js';
+import { SearchBar } from '../components/search-bar.js';
+import type { SSEEvent } from '../hooks/use-sse.js';
+import type { UseEventsResult } from '../hooks/use-events.js';
+
+interface LiveTailProps {
+  path?: string;
+  eventsResult: UseEventsResult;
+}
+
+export function LiveTail({ eventsResult }: LiveTailProps) {
+  const { filtered, services, activeServices, toggleService, searchQuery, setSearchQuery } = eventsResult;
+  const listRef = useRef<HTMLDivElement>(null);
+  const [autoScroll, setAutoScroll] = useState(true);
+
+  useEffect(() => {
+    if (autoScroll && listRef.current) {
+      listRef.current.scrollTop = listRef.current.scrollHeight;
+    }
+  }, [filtered.length, autoScroll]);
+
+  const handleScroll = () => {
+    if (!listRef.current) return;
+    const { scrollTop, scrollHeight, clientHeight } = listRef.current;
+    setAutoScroll(scrollHeight - scrollTop - clientHeight < 50);
+  };
+
+  const handleEventClick = (event: SSEEvent) => {
+    if (event.data.traceId) route(`/trace/${event.data.traceId}`);
+  };
+
+  return (
+    <>
+      <ServicePills services={services} active={activeServices} onToggle={toggleService} />
+      <SearchBar value={searchQuery} onChange={setSearchQuery} />
+      <div class="event-list" ref={listRef} onScroll={handleScroll}>
+        {filtered.length === 0 ? (
+          <div class="empty">Waiting for events...</div>
+        ) : (
+          filtered.map((event, i) => (
+            <EventRow key={i} event={event} onClick={() => handleEventClick(event)} />
+          ))
+        )}
+      </div>
+      {!autoScroll && (
+        <button style="position:fixed;bottom:16px;right:16px;padding:6px 12px;background:var(--accent);color:white;border:none;border-radius:4px;cursor:pointer;font-size:12px;" onClick={() => setAutoScroll(true)}>
+          ↓ Resume auto-scroll
+        </button>
+      )}
+    </>
+  );
+}
