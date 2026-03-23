@@ -35,21 +35,22 @@ export function App() {
   const { theme, cycle } = useTheme();
   const { toasts, addToast, removeToast } = useToasts();
 
-  const spanCount = useMemo(() => events.filter((e) => e.type === 'span').length, [events]);
-  const logCount = useMemo(() => events.filter((e) => e.type === 'log').length, [events]);
+  const { spanCount, logCount } = useMemo(() => {
+    let s = 0, l = 0;
+    for (const e of events) { e.type === 'span' ? s++ : l++; }
+    return { spanCount: s, logCount: l };
+  }, [events]);
 
-  // Track seen traces to avoid duplicate toasts
-  const seenTraces = useRef(new Set<string>());
+  // Track last-processed index to avoid re-scanning all events
+  const lastProcessedIdx = useRef(0);
 
-  // Slow request detection
+  // Slow request detection — only processes NEW events since last check
   useEffect(() => {
-    for (const event of events) {
+    for (let i = lastProcessedIdx.current; i < events.length; i++) {
+      const event = events[i];
       if (event.type !== 'span') continue;
       if (!event.data.traceId) continue;
-      if (seenTraces.current.has(event.data.traceId)) continue;
       if (event.data.kind !== 'SERVER') continue;
-
-      seenTraces.current.add(event.data.traceId);
 
       if (event.data.startTimeUnixNano && event.data.endTimeUnixNano) {
         const start = BigInt(String(event.data.startTimeUnixNano).replace('n', ''));
@@ -67,6 +68,7 @@ export function App() {
         }
       }
     }
+    lastProcessedIdx.current = events.length;
   }, [events, addToast]);
 
   const handleRoute = useCallback((e: { url: string }) => {
@@ -92,7 +94,7 @@ export function App() {
 
   const handleClear = useCallback(() => {
     clearEvents();
-    seenTraces.current.clear();
+    lastProcessedIdx.current = 0;
   }, [clearEvents]);
 
   const navClass = (path: string) => currentPath === path ? 'active' : '';

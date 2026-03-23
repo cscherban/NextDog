@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'preact/hooks';
+import { extractHttpMeta } from '../utils/format.js';
 import type { SSEEvent } from '../hooks/use-sse.js';
 
 /** Sensitive headers to strip in safe mode */
@@ -9,11 +10,7 @@ const SENSITIVE_HEADERS = new Set([
 
 function buildCurl(event: SSEEvent, includeSensitive: boolean): string {
   const attrs = event.data.attributes;
-  const method = String(attrs['http.method'] ?? attrs['http.request.method'] ?? 'GET');
-  const route = String(attrs['http.route'] ?? attrs['http.target'] ?? event.data.name);
-  const host = String(attrs['http.host'] ?? attrs['net.host.name'] ?? 'localhost:3000');
-  const scheme = String(attrs['http.scheme'] ?? 'http');
-  const url = route.startsWith('http') ? route : `${scheme}://${host}${route}`;
+  const { method, url } = extractHttpMeta(attrs, event.data.name);
 
   const parts = [`curl -X ${method}`];
 

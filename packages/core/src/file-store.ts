@@ -28,6 +28,7 @@ function deserialize(line: string): NextDogEvent {
 export interface QueryOptions {
   service?: string;
   traceId?: string;
+  spanId?: string;
   last?: number;
 }
 
@@ -58,7 +59,10 @@ export class FileStore {
         const event = deserialize(line);
         if (opts.service && event.data.serviceName !== opts.service) continue;
         if (opts.traceId && ('traceId' in event.data) && event.data.traceId !== opts.traceId) continue;
+        if (opts.spanId && ('spanId' in event.data) && event.data.spanId !== opts.spanId) continue;
         results.push(event);
+        // Short-circuit: spanId is unique, no need to keep scanning
+        if (opts.spanId) return results;
       }
     }
 

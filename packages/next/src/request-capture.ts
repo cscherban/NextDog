@@ -4,10 +4,10 @@
  *
  * Works by monkey-patching Node's http.Server to intercept incoming requests
  * before Next.js processes them. Metadata is stored keyed by traceId
- * (extracted from the active OTel span context once available).
+ * (extracted from the active OTel span context at request time).
  */
 import * as http from 'node:http';
-import { trace, context } from '@opentelemetry/api';
+import { trace } from '@opentelemetry/api';
 
 export interface RequestMetadata {
   method: string;
@@ -19,9 +19,6 @@ export interface RequestMetadata {
 
 // Store captured request metadata keyed by traceId
 const requestStore = new Map<string, RequestMetadata>();
-
-// Also store by a request fingerprint for correlation before traceId is available
-const pendingRequests = new WeakMap<http.IncomingMessage, RequestMetadata>();
 
 // Max body size to capture (16KB — enough for API payloads, avoids memory issues)
 const MAX_BODY_SIZE = 16 * 1024;
@@ -41,58 +38,41 @@ function captureHeaders(req: http.IncomingMessage): Record<string, string> {
   return headers;
 }
 
-function captureBody(req: http.IncomingMessage): Promise<string | undefined> {
-  return new Promise((resolve) => {
-    const method = (req.method ?? 'GET').toUpperCase();
-    if (method === 'GET' || method === 'HEAD' || method === 'OPTIONS') {
-      return resolve(undefined);
+function captureBody(req: http.IncomingMessage, metadata: RequestMetadata): void {
+  const method = (req.method ?? 'GET').toUpperCase();
+  if (method === 'GET' || method === 'HEAD' || method === 'OPTIONS') return;
+
+  const chunks: Buffer[] = [];
+  let size = 0;
+  let timeout: ReturnType<typeof setTimeout> | undefined;
+
+  req.on('data', (chunk: Buffer) => {
+    if (size < MAX_BODY_SIZE) {
+      chunks.push(chunk);
+      size += chunk.length;
     }
-
-    const chunks: Buffer[] = [];
-    let size = 0;
-
-    // We need to be careful not to consume the body — use a listener that
-    // doesn't interfere with Next.js reading the stream
-    const originalOn = req.on.bind(req);
-    let bodyResolved = false;
-
-    // Listen for data but don't prevent Next.js from reading
-    // Node streams support multiple 'data' listeners
-    originalOn('data', (chunk: Buffer) => {
-      if (size < MAX_BODY_SIZE) {
-        chunks.push(chunk);
-        size += chunk.length;
-      }
-    });
-
-    originalOn('end', () => {
-      if (!bodyResolved) {
-        bodyResolved = true;
-        if (chunks.length > 0) {
-          const body = Buffer.concat(chunks).toString('utf-8');
-          resolve(body.length > MAX_BODY_SIZE ? body.slice(0, MAX_BODY_SIZE) : body);
-        } else {
-          resolve(undefined);
-        }
-      }
-    });
-
-    // Timeout — don't wait forever
-    setTimeout(() => {
-      if (!bodyResolved) {
-        bodyResolved = true;
-        resolve(chunks.length > 0 ? Buffer.concat(chunks).toString('utf-8') : undefined);
-      }
-    }, 5000);
   });
+
+  req.on('end', () => {
+    if (timeout) clearTimeout(timeout);
+    if (chunks.length > 0) {
+      const body = Buffer.concat(chunks).toString('utf-8');
+      metadata.body = body.length > MAX_BODY_SIZE ? body.slice(0, MAX_BODY_SIZE) : body;
+    }
+  });
+
+  // Safety timeout — release chunk references if body never completes
+  timeout = setTimeout(() => {
+    if (chunks.length > 0) {
+      metadata.body = Buffer.concat(chunks).toString('utf-8');
+    }
+    chunks.length = 0;
+  }, 5000);
+  if (timeout.unref) timeout.unref();
 }
 
 export function getRequestMetadata(traceId: string): RequestMetadata | undefined {
   return requestStore.get(traceId);
-}
-
-export function getRequestMetadataFromReq(req: http.IncomingMessage): RequestMetadata | undefined {
-  return pendingRequests.get(req);
 }
 
 function cleanup() {
@@ -106,17 +86,14 @@ function cleanup() {
 }
 
 export function startRequestCapture() {
-  // Periodic cleanup
   const timer = setInterval(cleanup, CLEANUP_INTERVAL);
   timer.unref();
 
-  // Monkey-patch http.Server to intercept requests
   const originalEmit = http.Server.prototype.emit;
 
   http.Server.prototype.emit = function (event: string, ...args: unknown[]) {
     if (event === 'request') {
       const req = args[0] as http.IncomingMessage;
-      const res = args[1] as http.ServerResponse;
 
       const headers = captureHeaders(req);
       const metadata: RequestMetadata = {
@@ -126,24 +103,30 @@ export function startRequestCapture() {
         cookies: headers['cookie'] ?? '',
       };
 
-      // Store in WeakMap keyed by request for immediate access
-      pendingRequests.set(req, metadata);
+      // Capture body asynchronously (mutates metadata.body when ready)
+      captureBody(req, metadata);
 
-      // Capture body asynchronously (for POST/PUT/PATCH)
-      captureBody(req).then((body) => {
-        if (body) metadata.body = body;
-      });
+      // Eagerly try to get traceId from the active span context NOW,
+      // not on res.finish (where the async context may be gone).
+      // OTel HTTP instrumentation creates the span before emitting 'request',
+      // so the active span should be available here.
+      const activeSpan = trace.getActiveSpan();
+      const traceId = activeSpan?.spanContext().traceId;
 
-      // When the response finishes, try to correlate with the active trace
-      res.on('finish', () => {
-        // Try to get traceId from the active span context
-        const activeSpan = trace.getActiveSpan();
-        const traceId = activeSpan?.spanContext().traceId;
-        if (traceId) {
-          requestStore.set(traceId, metadata);
-          timestamps.set(traceId, Date.now());
-        }
-      });
+      if (traceId) {
+        requestStore.set(traceId, metadata);
+        timestamps.set(traceId, Date.now());
+      } else {
+        // Fallback: try again after a microtask (OTel may set up context async)
+        queueMicrotask(() => {
+          const span = trace.getActiveSpan();
+          const id = span?.spanContext().traceId;
+          if (id) {
+            requestStore.set(id, metadata);
+            timestamps.set(id, Date.now());
+          }
+        });
+      }
     }
 
     return originalEmit.apply(this, [event, ...args]);

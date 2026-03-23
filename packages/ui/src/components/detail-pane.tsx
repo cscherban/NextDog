@@ -5,6 +5,7 @@ import { LogRow } from './log-row.js';
 import { AttributeTable } from './attribute-table.js';
 import { CopyCurl } from './copy-curl.js';
 import { ReplayButton } from './replay-button.js';
+import { formatSpanDuration } from '../utils/format.js';
 import type { SSEEvent } from '../hooks/use-sse.js';
 
 interface DetailPaneProps {
@@ -12,16 +13,6 @@ interface DetailPaneProps {
   events: SSEEvent[];
   onClose: () => void;
   onFilter?: (key: string, value: string) => void;
-}
-
-function formatDuration(event: SSEEvent): string {
-  if (!event.data.startTimeUnixNano || !event.data.endTimeUnixNano) return '—';
-  const start = BigInt(String(event.data.startTimeUnixNano).replace('n', ''));
-  const end = BigInt(String(event.data.endTimeUnixNano).replace('n', ''));
-  const ms = Number(end - start) / 1_000_000;
-  if (ms < 1) return `${(ms * 1000).toFixed(0)}us`;
-  if (ms < 1000) return `${ms.toFixed(1)}ms`;
-  return `${(ms / 1000).toFixed(2)}s`;
 }
 
 export function DetailPane({ traceId, events, onClose, onFilter }: DetailPaneProps) {
@@ -51,7 +42,7 @@ export function DetailPane({ traceId, events, onClose, onFilter }: DetailPanePro
   const method = rootSpan ? String(rootSpan.data.attributes['http.method'] ?? '') : '';
   const routePath = rootSpan ? String(rootSpan.data.attributes['http.route'] ?? rootSpan.data.attributes['http.target'] ?? rootSpan.data.name) : traceId;
   const status = rootSpan?.data.status?.code ?? '';
-  const duration = rootSpan ? formatDuration(rootSpan) : '—';
+  const duration = rootSpan ? (formatSpanDuration(rootSpan) || '—') : '—';
 
   const handleExpand = () => {
     route(`/trace/${traceId}`);

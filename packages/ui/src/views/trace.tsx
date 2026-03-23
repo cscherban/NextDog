@@ -4,22 +4,13 @@ import { LogRow } from '../components/log-row.js';
 import { AttributeTable } from '../components/attribute-table.js';
 import { CopyCurl } from '../components/copy-curl.js';
 import { ReplayButton } from '../components/replay-button.js';
+import { formatSpanDuration } from '../utils/format.js';
 import type { SSEEvent } from '../hooks/use-sse.js';
 
 interface TraceProps {
   path?: string;
   traceId?: string;
   events: SSEEvent[];
-}
-
-function formatDuration(event: SSEEvent): string {
-  if (!event.data.startTimeUnixNano || !event.data.endTimeUnixNano) return '';
-  const start = BigInt(String(event.data.startTimeUnixNano).replace('n', ''));
-  const end = BigInt(String(event.data.endTimeUnixNano).replace('n', ''));
-  const ms = Number(end - start) / 1_000_000;
-  if (ms < 1) return `${(ms * 1000).toFixed(0)}us`;
-  if (ms < 1000) return `${ms.toFixed(1)}ms`;
-  return `${(ms / 1000).toFixed(2)}s`;
 }
 
 export function Trace({ traceId, events }: TraceProps) {
@@ -60,7 +51,7 @@ export function Trace({ traceId, events }: TraceProps) {
             {rootSpan?.data.status?.code ?? ''}
           </span>
           <span>|</span>
-          <span>{rootSpan ? formatDuration(rootSpan) : ''}</span>
+          <span>{rootSpan ? formatSpanDuration(rootSpan) : ''}</span>
           <span>|</span>
           <span>{spans.length} spans</span>
           {logs.length > 0 && <><span>|</span><span>{logs.length} logs</span></>}

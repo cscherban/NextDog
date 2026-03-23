@@ -181,13 +181,10 @@ export function createServer(opts: ServerOptions): Promise<Server> {
       }
 
       if (!targetSpan) {
-        // Search file store — query by traceId if we had it, but spanId search needs all events
-        const allStored = await fileStore.query({});
-        for (const event of allStored) {
-          if (event.type === 'span' && event.data.spanId === spanId) {
-            targetSpan = event.data as Span;
-            break;
-          }
+        // Search file store with spanId filter (short-circuits on first match)
+        const stored = await fileStore.query({ spanId });
+        if (stored.length > 0 && stored[0].type === 'span') {
+          targetSpan = stored[0].data as Span;
         }
       }
 
