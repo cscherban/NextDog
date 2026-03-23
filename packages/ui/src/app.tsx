@@ -12,6 +12,7 @@ import { ThemeToggle } from './components/theme-toggle.js';
 import { Sparkline } from './components/sparkline.js';
 import { EmptyState } from './components/empty-state.js';
 import { ToastContainer, useToasts } from './components/toast.js';
+import { ShortcutHelp } from './components/shortcut-help.js';
 
 const SIDECAR_URL = window.location.port === '5173'
   ? 'http://localhost:6789'
@@ -153,6 +154,7 @@ export function App() {
       )}
 
       <ToastContainer toasts={toasts} removeToast={removeToast} onOpenTrace={openTrace} />
+      <ShortcutHelp />
     </div>
   );
 }

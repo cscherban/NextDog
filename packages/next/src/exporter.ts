@@ -1,7 +1,13 @@
 import type { ReadableSpan, SpanExporter } from '@opentelemetry/sdk-trace-node';
 import type { ExportResult } from '@opentelemetry/core';
+import { getRequestMetadata } from './request-capture.js';
 
 const ExportResultCode = { SUCCESS: 0, FAILED: 1 } as const;
+
+/** Headers to never capture (security-sensitive but NOT cookies — we need those for replay) */
+const SKIP_HEADERS = new Set([
+  'authorization', 'proxy-authorization', 'x-api-key', 'x-auth-token',
+]);
 
 const SPAN_KIND_MAP: Record<number, string> = {
   0: 'INTERNAL',
@@ -25,16 +31,44 @@ function hrtimeToNano(hrtime: [number, number]): string {
 function convertSpan(span: ReadableSpan) {
   const ctx = span.spanContext();
   const serviceName = (span.resource?.attributes?.['service.name'] as string) ?? 'unknown';
+  const kind = SPAN_KIND_MAP[span.kind] ?? 'INTERNAL';
+
+  // Start with OTel's own attributes
+  const attributes: Record<string, string | number | boolean> = {
+    ...(span.attributes as Record<string, string | number | boolean>),
+  };
+
+  // Enrich SERVER spans with captured request metadata (headers, cookies, body)
+  if (kind === 'SERVER') {
+    const metadata = getRequestMetadata(ctx.traceId);
+    if (metadata) {
+      // Add request headers as http.request.header.{name}
+      for (const [key, value] of Object.entries(metadata.headers)) {
+        if (SKIP_HEADERS.has(key.toLowerCase())) continue;
+        attributes[`http.request.header.${key.toLowerCase()}`] = value;
+      }
+
+      // Add cookies explicitly (critical for replay)
+      if (metadata.cookies) {
+        attributes['http.request.cookies'] = metadata.cookies;
+      }
+
+      // Add request body if present
+      if (metadata.body) {
+        attributes['http.request.body'] = metadata.body;
+      }
+    }
+  }
 
   return {
     traceId: ctx.traceId,
     spanId: ctx.spanId,
     parentSpanId: (span as any).parentSpanId ?? (span as any).parentSpanContext?.spanId ?? undefined,
     name: span.name,
-    kind: SPAN_KIND_MAP[span.kind] ?? 'INTERNAL',
+    kind,
     startTimeUnixNano: hrtimeToNano(span.startTime),
     endTimeUnixNano: hrtimeToNano(span.endTime),
-    attributes: span.attributes as Record<string, string | number | boolean>,
+    attributes,
     status: {
       code: STATUS_CODE_MAP[span.status.code] ?? 'UNSET',
       message: span.status.message,

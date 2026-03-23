@@ -92,7 +92,7 @@ export function Logs({ eventsResult, allEvents, onOpenTrace, onFilter }: LogsPro
         </div>
         <div class="event-list" ref={listRef} onScroll={handleScroll}>
           {displayLogs.length === 0 ? (
-            <div class="empty">No logs yet</div>
+            <div class="empty">{searchQuery || activeServices.size > 0 ? 'No logs match this filter' : 'No logs yet'}</div>
           ) : (
             displayLogs.map((log, i) => (
               <LogRow

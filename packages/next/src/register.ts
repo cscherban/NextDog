@@ -9,11 +9,15 @@ if (
   const { NextDogExporter } = await import('./exporter.js');
   const { ensureSidecar } = await import('./sidecar.js');
   const { patchConsole } = await import('./console-patch.js');
+  const { startRequestCapture } = await import('./request-capture.js');
 
   const url = process.env.NEXTDOG_URL ?? 'http://localhost:6789';
   const serviceName = process.env.NEXTDOG_SERVICE_NAME ?? 'nextdog-app';
 
   await ensureSidecar(url);
+
+  // Capture request headers/cookies/body for replay
+  startRequestCapture();
 
   const provider = new NodeTracerProvider({
     resource: new Resource({ [ATTR_SERVICE_NAME]: serviceName }),

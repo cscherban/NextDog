@@ -123,7 +123,7 @@ export function Requests({ eventsResult, onOpenTrace }: RequestsProps) {
       </div>
       <div class="event-list">
         {groups.length === 0 ? (
-          <div class="empty">No requests yet</div>
+          <div class="empty">{searchQuery || activeServices.size > 0 ? 'No requests match this filter' : 'No requests yet'}</div>
         ) : (
           groups.map((group, i) => (
             <div

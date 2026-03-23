@@ -157,9 +157,12 @@ export function SearchBar({ value, onChange, events }: SearchBarProps) {
     onChange(removeToken(value, tokenRaw));
   };
 
+  const [showHelp, setShowHelp] = useState(false);
+
   return (
     <div class="search-bar-container">
-      <div class={`search-bar-input ${focused ? 'search-bar-focused' : ''}`} onClick={() => inputRef.current?.focus()}>
+      <div style="display:flex;gap:6px;align-items:stretch">
+      <div class={`search-bar-input ${focused ? 'search-bar-focused' : ''}`} style="flex:1" onClick={() => inputRef.current?.focus()}>
         {tokens.map((token, i) => (
           <span key={i} class={pillColor(token.key, token.negated)}>
             {token.operator === 'OR' && i > 0 && <span class="pill-operator">OR</span>}
@@ -185,6 +188,31 @@ export function SearchBar({ value, onChange, events }: SearchBarProps) {
           onKeyDown={handleKeyDown}
         />
       </div>
+      <button
+        class="pill"
+        style="font-size:12px;padding:4px 8px;flex-shrink:0;position:relative"
+        onClick={() => setShowHelp((v) => !v)}
+        title="Search syntax help"
+      >
+        ?
+      </button>
+      </div>
+      {showHelp && (
+        <div style="
+          margin-top:6px;padding:10px 12px;
+          background:var(--bg-surface);border:1px solid var(--border);
+          border-radius:4px;font-size:11px;font-family:var(--mono);
+        ">
+          <div style="font-weight:600;color:var(--text-bright);margin-bottom:6px">Filter Syntax</div>
+          <div style="color:var(--text-dim);line-height:1.8">
+            <div><span style="color:var(--text)">key:value</span> — filter by attribute</div>
+            <div><span style="color:var(--text)">!key:value</span> — exclude matches</div>
+            <div><span style="color:var(--text)">a OR b</span> — match either</div>
+            <div><span style="color:var(--text)">text</span> — search name, message, route</div>
+            <div style="margin-top:4px;color:var(--text-dim)">Keys: level, service, route, status, name, kind, runtime, traceId</div>
+          </div>
+        </div>
+      )}
       {showSuggestions && suggestions.length > 0 && focused && (
         <div class="search-suggestions">
           {suggestions.map((s) => (

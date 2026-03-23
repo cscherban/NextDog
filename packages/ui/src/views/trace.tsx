@@ -47,7 +47,10 @@ export function Trace({ traceId, events }: TraceProps) {
   return (
     <div style="flex:1;overflow-y:auto">
       <div style="padding:12px 16px;border-bottom:1px solid var(--border);background:var(--bg)">
-        <a href="/" style="font-size:12px;color:var(--text-dim)">Back</a>
+        <a href="/" style="font-size:12px;color:var(--text-dim);display:inline-flex;align-items:center;gap:4px;text-decoration:none;padding:4px 8px;border-radius:4px;margin:-4px -8px" class="back-link">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+          Back to requests
+        </a>
         <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
           {method && <span class={`method method-${method.toLowerCase()}`} style="font-size:14px">{method}</span>}
           <h2 style="font-size:14px;color:var(--text-bright);font-family:var(--mono)">{routePath}</h2>

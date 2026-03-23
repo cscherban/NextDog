@@ -46,7 +46,12 @@ export function useSSE(url: string): UseSSEResult {
     es.onmessage = (e) => {
       try {
         const event = JSON.parse(e.data) as SSEEvent;
-        setEvents((prev) => [...prev, event]);
+        setEvents((prev) => {
+          const next = [...prev, event];
+          // Cap at 2000 events to prevent memory issues in long sessions
+          if (next.length > 2000) return next.slice(-2000);
+          return next;
+        });
       } catch {
         // Ignore malformed events
       }

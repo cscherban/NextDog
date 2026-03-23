@@ -615,6 +615,22 @@ a { color: var(--accent); text-decoration: none; }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
 
+/* Focus indicators for keyboard navigation */
+.request-row:focus-visible,
+.log-row:focus-visible,
+.pill:focus-visible,
+.pane-btn:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
+
+/* Back link on trace page */
+.back-link:hover {
+  background: var(--bg-hover);
+  color: var(--text-bright);
+}
+
 /* Smooth transitions for theme switching */
 body, .header, .detail-pane, .log-detail, .pane-header, .pane-section-title,
 .search-bar-input, .event-row, .log-row, .request-row {
