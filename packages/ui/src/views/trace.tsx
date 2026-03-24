@@ -36,7 +36,7 @@ export function Trace({ traceId, events }: TraceProps) {
   const routePath = rootSpan ? String(rootSpan.data.attributes['http.route'] ?? rootSpan.data.attributes['http.target'] ?? rootSpan.data.name) : traceId;
 
   return (
-    <div style="flex:1;overflow-y:auto">
+    <div style="flex:1;display:flex;flex-direction:column;overflow:hidden">
       <div style="padding:12px 16px;border-bottom:1px solid var(--border);background:var(--bg)">
         <a href="/" style="font-size:12px;color:var(--text-dim);display:inline-flex;align-items:center;gap:4px;text-decoration:none;padding:4px 8px;border-radius:4px;margin:-4px -8px" class="back-link">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
@@ -70,9 +70,9 @@ export function Trace({ traceId, events }: TraceProps) {
       </div>
 
       {logs.length > 0 && (
-        <div class="pane-section">
+        <div class="pane-section" style="flex:1;display:flex;flex-direction:column;min-height:0">
           <div class="pane-section-title">Logs</div>
-          <div style="max-height:300px;overflow-y:auto">
+          <div style="flex:1;overflow-y:auto">
             {logs.map((log, i) => (
               <LogRow key={i} event={log} selected={selectedEvent === log} onClick={() => setSelectedEvent(log)} />
             ))}
@@ -81,16 +81,18 @@ export function Trace({ traceId, events }: TraceProps) {
       )}
 
       {logs.length === 0 && spans.length > 0 && (
-        <div class="pane-section">
+        <div class="pane-section" style="flex:1;display:flex;flex-direction:column;min-height:0">
           <div class="pane-section-title">Spans</div>
-          {spans.map((span, i) => (
-            <LogRow key={i} event={span} selected={selectedEvent === span} onClick={() => setSelectedEvent(span)} />
-          ))}
+          <div style="flex:1;overflow-y:auto">
+            {spans.map((span, i) => (
+              <LogRow key={i} event={span} selected={selectedEvent === span} onClick={() => setSelectedEvent(span)} />
+            ))}
+          </div>
         </div>
       )}
 
       {selectedEvent && (
-        <div class="pane-section">
+        <div class="pane-section" style="flex-shrink:0;max-height:40%;overflow-y:auto">
           <div class="pane-section-title">
             {selectedEvent.type === 'span' ? 'Span' : 'Log'} Detail
             <button class="pill" style="margin-left:8px" onClick={() => setShowJson(!showJson)}>

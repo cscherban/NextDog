@@ -1,7 +1,8 @@
-import { useMemo, useState } from 'preact/hooks';
+import { useMemo, useState, useEffect } from 'preact/hooks';
 import { ServicePills } from '../components/service-pills.js';
 import { SearchBar } from '../components/search-bar.js';
 import { useKeyboard } from '../hooks/use-keyboard.js';
+import { formatTime, formatDurationMs, spanDurationMs, extractHttpMeta } from '../utils/format.js';
 import type { SSEEvent } from '../hooks/use-sse.js';
 import type { UseEventsResult } from '../hooks/use-events.js';
 
@@ -16,18 +17,44 @@ interface RequestGroup {
   serviceName: string;
   spans: SSEEvent[];
   timestamp: number;
+  /** Arbitrary extra attributes keyed by column ID */
+  extraAttrs: Record<string, string>;
 }
 
-function formatTime(ts: number): string {
-  const ago = Date.now() - ts;
-  if (ago < 5000) return 'just now';
-  if (ago < 60000) return `${Math.floor(ago / 1000)}s ago`;
-  if (ago < 3600000) return `${Math.floor(ago / 60000)}m ago`;
-  const d = new Date(ts);
-  return d.toLocaleTimeString('en-US', { hour12: false });
+/** Column definitions */
+interface ColumnDef {
+  id: string;
+  label: string;
+  /** If true, this is a core column that's always present */
+  core?: boolean;
+  /** Attribute key to pull from span attributes (for custom columns) */
+  attrKey?: string;
 }
 
-function groupByTrace(events: SSEEvent[]): RequestGroup[] {
+const CORE_COLUMNS: ColumnDef[] = [
+  { id: 'time', label: 'Time', core: true },
+  { id: 'method', label: 'Method', core: true },
+  { id: 'route', label: 'Route', core: true },
+  { id: 'status', label: 'Status', core: true },
+  { id: 'duration', label: 'Duration', core: true },
+  { id: 'service', label: 'Service', core: true },
+];
+
+const COLUMNS_STORAGE_KEY = 'nextdog:request-columns';
+
+function loadCustomColumns(): ColumnDef[] {
+  try {
+    const saved = localStorage.getItem(COLUMNS_STORAGE_KEY);
+    if (saved) return JSON.parse(saved);
+  } catch {}
+  return [];
+}
+
+function saveCustomColumns(cols: ColumnDef[]) {
+  try { localStorage.setItem(COLUMNS_STORAGE_KEY, JSON.stringify(cols)); } catch {}
+}
+
+function groupByTrace(events: SSEEvent[], customColumns: ColumnDef[]): RequestGroup[] {
   const groups = new Map<string, SSEEvent[]>();
   for (const event of events) {
     const traceId = event.data.traceId;
@@ -38,21 +65,22 @@ function groupByTrace(events: SSEEvent[]): RequestGroup[] {
 
   return [...groups.entries()].map(([traceId, spans]) => {
     const rootSpan = spans.find((s) => s.data.kind === 'SERVER' && !s.data.parentSpanId) ?? spans[0];
-    const method = String(rootSpan.data.attributes['http.method'] ?? 'GET');
-    const routePath = String(rootSpan.data.attributes['http.route'] ?? rootSpan.data.attributes['http.target'] ?? rootSpan.data.name);
+    const { method, route: routePath } = extractHttpMeta(rootSpan.data.attributes, rootSpan.data.name);
     const statusCode = rootSpan.data.status?.code ?? 'OK';
     const httpCode = (rootSpan.data as any).statusCode ?? (Number(rootSpan.data.attributes['http.status_code']) || undefined);
+    const durationMs = spanDurationMs(rootSpan);
+    const duration = formatDurationMs(durationMs);
 
-    let durationMs = 0;
-    if (rootSpan.data.startTimeUnixNano && rootSpan.data.endTimeUnixNano) {
-      const start = BigInt(String(rootSpan.data.startTimeUnixNano).replace('n', ''));
-      const end = BigInt(String(rootSpan.data.endTimeUnixNano).replace('n', ''));
-      durationMs = Number(end - start) / 1_000_000;
+    // Extract custom column values
+    const extraAttrs: Record<string, string> = {};
+    for (const col of customColumns) {
+      if (col.attrKey) {
+        const val = rootSpan.data.attributes[col.attrKey];
+        extraAttrs[col.id] = val != null ? String(val) : '';
+      }
     }
 
-    const duration = durationMs < 1 ? `${(durationMs * 1000).toFixed(0)}µs` : durationMs < 1000 ? `${durationMs.toFixed(1)}ms` : `${(durationMs / 1000).toFixed(2)}s`;
-
-    return { traceId, method, routePath, status: statusCode, httpCode, duration, durationMs, serviceName: rootSpan.data.serviceName, spans, timestamp: rootSpan.timestamp };
+    return { traceId, method, routePath, status: statusCode, httpCode, duration, durationMs, serviceName: rootSpan.data.serviceName, spans, timestamp: rootSpan.timestamp, extraAttrs };
   }).reverse();
 }
 
@@ -84,12 +112,31 @@ export function Requests({ eventsResult, onOpenTrace }: RequestsProps) {
   const { filtered, services, activeServices, toggleService, searchQuery, setSearchQuery } = eventsResult;
   const [sortBy, setSortBy] = useState<SortField>('time');
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [customColumns, setCustomColumns] = useState<ColumnDef[]>(loadCustomColumns);
+  const [showColPicker, setShowColPicker] = useState(false);
+
+  const allColumns = useMemo(() => [...CORE_COLUMNS, ...customColumns], [customColumns]);
+
+  // Discover available attribute keys from the events for the column picker
+  const availableAttrs = useMemo(() => {
+    const keys = new Set<string>();
+    for (const e of filtered) {
+      if (e.data.attributes) {
+        for (const k of Object.keys(e.data.attributes)) keys.add(k);
+      }
+    }
+    // Remove already-added custom columns
+    for (const col of customColumns) {
+      if (col.attrKey) keys.delete(col.attrKey);
+    }
+    return [...keys].sort();
+  }, [filtered, customColumns]);
 
   const groups = useMemo(() => {
-    const g = groupByTrace(filtered);
+    const g = groupByTrace(filtered, customColumns);
     if (sortBy === 'duration') g.sort((a, b) => b.durationMs - a.durationMs);
     return g;
-  }, [filtered, sortBy]);
+  }, [filtered, sortBy, customColumns]);
 
   const percentiles = useMemo(() => computePercentiles(groups), [groups]);
 
@@ -104,6 +151,27 @@ export function Requests({ eventsResult, onOpenTrace }: RequestsProps) {
     onBack: () => setSelectedIndex(-1),
   });
 
+  const addColumn = (attrKey: string) => {
+    const label = attrKey.split('.').pop() ?? attrKey;
+    const col: ColumnDef = { id: `custom-${attrKey}`, label, attrKey };
+    const next = [...customColumns, col];
+    setCustomColumns(next);
+    saveCustomColumns(next);
+  };
+
+  const removeColumn = (id: string) => {
+    const next = customColumns.filter((c) => c.id !== id);
+    setCustomColumns(next);
+    saveCustomColumns(next);
+  };
+
+  // Dynamic grid template: core columns + 120px per custom column
+  const gridTemplate = useMemo(() => {
+    const base = '75px 55px 1fr 50px 75px 90px';
+    if (customColumns.length === 0) return base;
+    return base + customColumns.map(() => ' 120px').join('');
+  }, [customColumns]);
+
   const methodClass = (method: string) => {
     const m = method.toUpperCase();
     if (m === 'GET') return 'method method-get';
@@ -117,10 +185,76 @@ export function Requests({ eventsResult, onOpenTrace }: RequestsProps) {
     <>
       <ServicePills services={services} active={activeServices} onToggle={toggleService} events={filtered} />
       <SearchBar value={searchQuery} onChange={setSearchQuery} events={filtered} />
-      <div style="padding:4px 16px;display:flex;gap:8px;border-bottom:1px solid var(--border)">
+      <div style="padding:4px 16px;display:flex;gap:8px;align-items:center;border-bottom:1px solid var(--border)">
         <button class={`pill ${sortBy === 'time' ? 'active' : ''}`} onClick={() => setSortBy('time')}>Newest</button>
         <button class={`pill ${sortBy === 'duration' ? 'active' : ''}`} onClick={() => setSortBy('duration')}>Slowest</button>
+        <div style="margin-left:auto">
+          <button
+            class="pill"
+            onClick={() => setShowColPicker(!showColPicker)}
+            title="Customize columns"
+            style="font-size:11px"
+          >
+            + Column
+          </button>
+        </div>
       </div>
+
+      {/* Column picker dropdown */}
+      {showColPicker && (
+        <div class="column-picker">
+          <div class="column-picker-header">
+            <span style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-dim)">
+              Add attribute column
+            </span>
+            <button class="pane-btn" onClick={() => setShowColPicker(false)} title="Close">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          </div>
+          {customColumns.length > 0 && (
+            <div style="padding:4px 12px;border-bottom:1px solid var(--border)">
+              <div style="font-size:10px;color:var(--text-dim);margin-bottom:4px">Active custom columns:</div>
+              {customColumns.map((col) => (
+                <div key={col.id} style="display:flex;align-items:center;justify-content:space-between;padding:2px 0">
+                  <span style="font-size:12px;font-family:var(--mono)">{col.attrKey}</span>
+                  <button class="pill" onClick={() => removeColumn(col.id)} style="font-size:10px;color:var(--red)">Remove</button>
+                </div>
+              ))}
+            </div>
+          )}
+          <div style="max-height:200px;overflow-y:auto">
+            {availableAttrs.length === 0 ? (
+              <div style="padding:8px 12px;font-size:12px;color:var(--text-dim)">No more attributes available</div>
+            ) : (
+              availableAttrs.map((attr) => (
+                <div
+                  key={attr}
+                  class="column-picker-item"
+                  onClick={() => { addColumn(attr); }}
+                >
+                  <span style="font-family:var(--mono);font-size:12px">{attr}</span>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Column headers */}
+      <div class="request-row request-row-header" style={`grid-template-columns:${gridTemplate}`}>
+        <span class="timestamp">Time</span>
+        <span class="method">Method</span>
+        <span class="route">Route</span>
+        <span class="http-status">Status</span>
+        <span class="duration">Duration</span>
+        <span class="service">Service</span>
+        {customColumns.map((col) => (
+          <span key={col.id} class="custom-col" title={col.attrKey}>{col.label}</span>
+        ))}
+      </div>
+
       <div class="event-list">
         {groups.length === 0 ? (
           <div class="empty">{searchQuery || activeServices.size > 0 ? 'No requests match this filter' : 'No requests yet'}</div>
@@ -129,6 +263,7 @@ export function Requests({ eventsResult, onOpenTrace }: RequestsProps) {
             <div
               key={group.traceId}
               class={`request-row ${i === selectedIndex ? 'request-row-selected' : ''}`}
+              style={`grid-template-columns:${gridTemplate}`}
               onClick={() => { setSelectedIndex(i); onOpenTrace?.(group.traceId); }}
             >
               <span class="timestamp">{formatTime(group.timestamp)}</span>
@@ -141,6 +276,9 @@ export function Requests({ eventsResult, onOpenTrace }: RequestsProps) {
               )}
               <span class={durationClass(group.durationMs, percentiles)}>{group.duration}</span>
               <span class="service">{group.serviceName}</span>
+              {customColumns.map((col) => (
+                <span key={col.id} class="custom-col" title={group.extraAttrs[col.id]}>{group.extraAttrs[col.id] || '—'}</span>
+              ))}
             </div>
           ))
         )}

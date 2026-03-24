@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from 'preact/hooks';
+import { useMemo, useState, useCallback, useEffect } from 'preact/hooks';
 import type { SSEEvent } from './use-sse.js';
 
 export interface UseEventsResult {
@@ -147,9 +147,32 @@ function matchesQuery(event: SSEEvent, query: string): boolean {
   );
 }
 
+function readUrlParams() {
+  const params = new URLSearchParams(window.location.search);
+  return {
+    query: params.get('q') ?? '',
+    services: params.get('services')?.split(',').filter(Boolean) ?? [],
+  };
+}
+
+function syncUrlParams(query: string, services: Set<string>) {
+  const params = new URLSearchParams(window.location.search);
+  if (query) params.set('q', query); else params.delete('q');
+  if (services.size > 0) params.set('services', [...services].join(',')); else params.delete('services');
+  const qs = params.toString();
+  const url = window.location.pathname + (qs ? `?${qs}` : '');
+  history.replaceState(null, '', url);
+}
+
 export function useEvents(events: SSEEvent[]): UseEventsResult {
-  const [activeServices, setActiveServices] = useState<Set<string>>(new Set());
-  const [searchQuery, setSearchQuery] = useState('');
+  const initial = useMemo(readUrlParams, []);
+  const [activeServices, setActiveServices] = useState<Set<string>>(() => new Set(initial.services));
+  const [searchQuery, setSearchQuery] = useState(initial.query);
+
+  // Sync state → URL (debounced via replaceState — no history spam)
+  useEffect(() => {
+    syncUrlParams(searchQuery, activeServices);
+  }, [searchQuery, activeServices]);
 
   const services = useMemo(() => {
     const set = new Set<string>();
