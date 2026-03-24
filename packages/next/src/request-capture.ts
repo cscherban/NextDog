@@ -2,12 +2,11 @@
  * Captures HTTP request metadata (headers, cookies, body) and stores it
  * so the span exporter can enrich spans with this data for replay.
  *
- * Works by monkey-patching Node's http.Server to intercept incoming requests
- * before Next.js processes them. Metadata is stored keyed by traceId
- * (extracted from the active OTel span context at request time).
+ * Works by monkey-patching Node's http.Server to intercept incoming requests.
+ * Metadata is stored keyed by "method url" for correlation with OTel spans
+ * in the exporter (since the OTel active span is not available at request time).
  */
 import * as http from 'node:http';
-import { trace } from '@opentelemetry/api';
 
 export interface RequestMetadata {
   method: string;
@@ -15,10 +14,12 @@ export interface RequestMetadata {
   headers: Record<string, string>;
   cookies: string;
   body?: string;
+  capturedAt: number;
 }
 
-// Store captured request metadata keyed by traceId
-const requestStore = new Map<string, RequestMetadata>();
+// Store captured request metadata keyed by "METHOD url" for recent lookups
+// Multiple requests to the same URL are stored as a stack (most recent first)
+const requestStore = new Map<string, RequestMetadata[]>();
 
 // Max body size to capture (16KB — enough for API payloads, avoids memory issues)
 const MAX_BODY_SIZE = 16 * 1024;
@@ -26,7 +27,6 @@ const MAX_BODY_SIZE = 16 * 1024;
 // Cleanup entries older than 60s to prevent memory leaks
 const CLEANUP_INTERVAL = 30_000;
 const MAX_AGE = 60_000;
-const timestamps = new Map<string, number>();
 
 function captureHeaders(req: http.IncomingMessage): Record<string, string> {
   const headers: Record<string, string> = {};
@@ -61,7 +61,6 @@ function captureBody(req: http.IncomingMessage, metadata: RequestMetadata): void
     }
   });
 
-  // Safety timeout — release chunk references if body never completes
   timeout = setTimeout(() => {
     if (chunks.length > 0) {
       metadata.body = Buffer.concat(chunks).toString('utf-8');
@@ -71,16 +70,26 @@ function captureBody(req: http.IncomingMessage, metadata: RequestMetadata): void
   if (timeout.unref) timeout.unref();
 }
 
-export function getRequestMetadata(traceId: string): RequestMetadata | undefined {
-  return requestStore.get(traceId);
+/**
+ * Look up request metadata by method + URL path.
+ * Finds the most recent capture matching these fields.
+ */
+export function getRequestMetadata(method: string, url: string): RequestMetadata | undefined {
+  const key = `${method} ${url}`;
+  const stack = requestStore.get(key);
+  if (!stack || stack.length === 0) return undefined;
+  // Return and consume the oldest matching entry (FIFO — first request in, first matched)
+  return stack.shift();
 }
 
 function cleanup() {
   const now = Date.now();
-  for (const [key, ts] of timestamps) {
-    if (now - ts > MAX_AGE) {
+  for (const [key, stack] of requestStore) {
+    const filtered = stack.filter((m) => now - m.capturedAt < MAX_AGE);
+    if (filtered.length === 0) {
       requestStore.delete(key);
-      timestamps.delete(key);
+    } else {
+      requestStore.set(key, filtered);
     }
   }
 }
@@ -101,31 +110,19 @@ export function startRequestCapture() {
         url: req.url ?? '/',
         headers,
         cookies: headers['cookie'] ?? '',
+        capturedAt: Date.now(),
       };
 
       // Capture body asynchronously (mutates metadata.body when ready)
       captureBody(req, metadata);
 
-      // Eagerly try to get traceId from the active span context NOW,
-      // not on res.finish (where the async context may be gone).
-      // OTel HTTP instrumentation creates the span before emitting 'request',
-      // so the active span should be available here.
-      const activeSpan = trace.getActiveSpan();
-      const traceId = activeSpan?.spanContext().traceId;
-
-      if (traceId) {
-        requestStore.set(traceId, metadata);
-        timestamps.set(traceId, Date.now());
+      // Store keyed by method + url
+      const key = `${metadata.method} ${metadata.url}`;
+      const stack = requestStore.get(key);
+      if (stack) {
+        stack.push(metadata);
       } else {
-        // Fallback: try again after a microtask (OTel may set up context async)
-        queueMicrotask(() => {
-          const span = trace.getActiveSpan();
-          const id = span?.spanContext().traceId;
-          if (id) {
-            requestStore.set(id, metadata);
-            timestamps.set(id, Date.now());
-          }
-        });
+        requestStore.set(key, [metadata]);
       }
     }
 

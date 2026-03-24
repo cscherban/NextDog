@@ -39,8 +39,11 @@ function convertSpan(span: ReadableSpan) {
   };
 
   // Enrich SERVER spans with captured request metadata (headers, cookies, body)
+  // Correlate by method + URL path (traceId is not available at capture time)
   if (kind === 'SERVER') {
-    const metadata = getRequestMetadata(ctx.traceId);
+    const reqMethod = String(span.attributes['http.method'] ?? span.attributes['http.request.method'] ?? 'GET');
+    const reqUrl = String(span.attributes['http.target'] ?? span.attributes['url.path'] ?? span.name);
+    const metadata = getRequestMetadata(reqMethod, reqUrl);
     if (metadata) {
       // Add request headers as http.request.header.{name}
       for (const [key, value] of Object.entries(metadata.headers)) {
