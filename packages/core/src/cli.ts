@@ -4,6 +4,7 @@ import { homedir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { stat } from 'node:fs/promises';
 import { createRequire } from 'node:module';
+import type { Socket } from 'node:net';
 
 const DEFAULT_PORT = 6789;
 const DEFAULT_DATA_DIR = join(homedir(), '.nextdog', 'data');
@@ -38,14 +39,40 @@ async function main() {
     console.log(`[nextdog] UI not available (run pnpm build in @nextdog/ui)`);
   }
 
-  process.on('SIGINT', () => {
-    console.log('\n[nextdog] shutting down...');
-    server.close(() => process.exit(0));
+  // Track open connections so we can destroy them on shutdown
+  const connections = new Set<Socket>();
+  server.on('connection', (socket) => {
+    connections.add(socket);
+    socket.on('close', () => connections.delete(socket));
   });
 
-  process.on('SIGTERM', () => {
+  let shuttingDown = false;
+
+  function shutdown() {
+    if (shuttingDown) {
+      // Second signal — force exit immediately
+      console.log('\n[nextdog] forced exit');
+      process.exit(1);
+    }
+    shuttingDown = true;
+    console.log('\n[nextdog] shutting down...');
+
+    // Stop accepting new connections
     server.close(() => process.exit(0));
-  });
+
+    // Destroy all active connections (SSE clients etc.) after a short grace period
+    setTimeout(() => {
+      for (const socket of connections) {
+        socket.destroy();
+      }
+    }, 500).unref();
+
+    // Force exit if server.close callback never fires
+    setTimeout(() => process.exit(0), 2000).unref();
+  }
+
+  process.on('SIGINT', shutdown);
+  process.on('SIGTERM', shutdown);
 }
 
 main().catch(err => {
