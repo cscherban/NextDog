@@ -100,7 +100,13 @@ function durationClass(ms: number, p: { p50: number; p90: number; p99: number })
   return 'duration';
 }
 
-type SortField = 'time' | 'duration';
+type SortField = 'time' | 'method' | 'route' | 'status' | 'duration' | 'service' | string;
+type SortDir = 'asc' | 'desc';
+
+function SortIndicator({ field, sortBy, sortDir }: { field: string; sortBy: string; sortDir: SortDir }) {
+  if (field !== sortBy) return <span class="sort-indicator" />;
+  return <span class="sort-indicator">{sortDir === 'asc' ? '▲' : '▼'}</span>;
+}
 
 interface RequestsProps {
   path?: string;
@@ -111,6 +117,7 @@ interface RequestsProps {
 export function Requests({ eventsResult, onOpenTrace }: RequestsProps) {
   const { filtered, services, activeServices, toggleService, searchQuery, setSearchQuery } = eventsResult;
   const [sortBy, setSortBy] = useState<SortField>('time');
+  const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [customColumns, setCustomColumns] = useState<ColumnDef[]>(loadCustomColumns);
   const [showColPicker, setShowColPicker] = useState(false);
@@ -132,11 +139,38 @@ export function Requests({ eventsResult, onOpenTrace }: RequestsProps) {
     return [...keys].sort();
   }, [filtered, customColumns]);
 
+  const toggleSort = (field: SortField) => {
+    if (sortBy === field) {
+      setSortDir((d) => d === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(field);
+      setSortDir(field === 'time' ? 'desc' : 'asc');
+    }
+  };
+
   const groups = useMemo(() => {
     const g = groupByTrace(filtered, customColumns);
-    if (sortBy === 'duration') g.sort((a, b) => b.durationMs - a.durationMs);
+    const dir = sortDir === 'asc' ? 1 : -1;
+    g.sort((a, b) => {
+      switch (sortBy) {
+        case 'time': return (a.timestamp - b.timestamp) * dir;
+        case 'method': return a.method.localeCompare(b.method) * dir;
+        case 'route': return a.routePath.localeCompare(b.routePath) * dir;
+        case 'status': return ((a.httpCode ?? 0) - (b.httpCode ?? 0)) * dir;
+        case 'duration': return (a.durationMs - b.durationMs) * dir;
+        case 'service': return a.serviceName.localeCompare(b.serviceName) * dir;
+        default: {
+          // Custom column sort
+          const av = a.extraAttrs[sortBy] ?? '';
+          const bv = b.extraAttrs[sortBy] ?? '';
+          const an = Number(av), bn = Number(bv);
+          if (!isNaN(an) && !isNaN(bn)) return (an - bn) * dir;
+          return av.localeCompare(bv) * dir;
+        }
+      }
+    });
     return g;
-  }, [filtered, sortBy, customColumns]);
+  }, [filtered, sortBy, sortDir, customColumns]);
 
   const percentiles = useMemo(() => computePercentiles(groups), [groups]);
 
@@ -186,8 +220,6 @@ export function Requests({ eventsResult, onOpenTrace }: RequestsProps) {
       <ServicePills services={services} active={activeServices} onToggle={toggleService} events={filtered} />
       <SearchBar value={searchQuery} onChange={setSearchQuery} events={filtered} />
       <div style="padding:4px 16px;display:flex;gap:8px;align-items:center;border-bottom:1px solid var(--border)">
-        <button class={`pill ${sortBy === 'time' ? 'active' : ''}`} onClick={() => setSortBy('time')}>Newest</button>
-        <button class={`pill ${sortBy === 'duration' ? 'active' : ''}`} onClick={() => setSortBy('duration')}>Slowest</button>
         <div style="margin-left:auto">
           <button
             class="pill"
@@ -242,16 +274,16 @@ export function Requests({ eventsResult, onOpenTrace }: RequestsProps) {
         </div>
       )}
 
-      {/* Column headers */}
+      {/* Column headers — click to sort */}
       <div class="request-row request-row-header" style={`grid-template-columns:${gridTemplate}`}>
-        <span class="timestamp">Time</span>
-        <span class="method">Method</span>
-        <span class="route">Route</span>
-        <span class="http-status">Status</span>
-        <span class="duration">Duration</span>
-        <span class="service">Service</span>
+        <span class="col-header" onClick={() => toggleSort('time')}>Time<SortIndicator field="time" sortBy={sortBy} sortDir={sortDir} /></span>
+        <span class="col-header" onClick={() => toggleSort('method')}>Method<SortIndicator field="method" sortBy={sortBy} sortDir={sortDir} /></span>
+        <span class="col-header" onClick={() => toggleSort('route')}>Route<SortIndicator field="route" sortBy={sortBy} sortDir={sortDir} /></span>
+        <span class="col-header" onClick={() => toggleSort('status')}>Status<SortIndicator field="status" sortBy={sortBy} sortDir={sortDir} /></span>
+        <span class="col-header" onClick={() => toggleSort('duration')}>Duration<SortIndicator field="duration" sortBy={sortBy} sortDir={sortDir} /></span>
+        <span class="col-header" onClick={() => toggleSort('service')}>Service<SortIndicator field="service" sortBy={sortBy} sortDir={sortDir} /></span>
         {customColumns.map((col) => (
-          <span key={col.id} class="custom-col" title={col.attrKey}>{col.label}</span>
+          <span key={col.id} class="col-header custom-col" title={col.attrKey} onClick={() => toggleSort(col.id)}>{col.label}<SortIndicator field={col.id} sortBy={sortBy} sortDir={sortDir} /></span>
         ))}
       </div>
 

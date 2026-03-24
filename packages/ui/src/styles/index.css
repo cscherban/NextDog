@@ -292,6 +292,11 @@ a { color: var(--accent); text-decoration: none; }
 .request-row-selected { background: var(--bg-hover); outline: 1px solid var(--accent); outline-offset: -1px; }
 .request-row-header { cursor: default; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-dim); padding: 4px 16px; border-bottom: 1px solid var(--border); background: var(--bg-surface); position: sticky; top: 0; z-index: 1; }
 .request-row-header:hover { background: var(--bg-surface); }
+
+/* Sortable column headers */
+.col-header { cursor: pointer; display: inline-flex; align-items: center; gap: 3px; user-select: none; }
+.col-header:hover { color: var(--text-bright); }
+.sort-indicator { font-size: 8px; opacity: 0.7; min-width: 8px; display: inline-block; }
 .custom-col { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 120px; color: var(--text-dim); }
 
 /* Column picker */

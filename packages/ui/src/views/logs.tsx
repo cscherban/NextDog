@@ -42,6 +42,11 @@ function saveCustomColumns(cols: ColumnDef[]) {
   try { localStorage.setItem(LOG_COLUMNS_STORAGE_KEY, JSON.stringify(cols)); } catch {}
 }
 
+function SortIndicator({ field, sortBy, sortDir }: { field: string; sortBy: string; sortDir: 'asc' | 'desc' }) {
+  if (field !== sortBy) return <span class="sort-indicator" />;
+  return <span class="sort-indicator">{sortDir === 'asc' ? '▲' : '▼'}</span>;
+}
+
 interface LogsProps {
   path?: string;
   eventsResult: UseEventsResult;
@@ -60,6 +65,8 @@ export function Logs({ eventsResult, allEvents, onOpenTrace, onFilter }: LogsPro
   const [showJson, setShowJson] = useState(false);
   const [customColumns, setCustomColumns] = useState<ColumnDef[]>(loadCustomColumns);
   const [showColPicker, setShowColPicker] = useState(false);
+  const [sortBy, setSortBy] = useState<string>('time');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
 
   // Draggable sidebar
   const [sidebarWidth, setSidebarWidth] = useState(loadWidth);
@@ -104,6 +111,38 @@ export function Logs({ eventsResult, allEvents, onOpenTrace, onFilter }: LogsPro
   // In non-live mode, freeze the list
   const [frozenLogs, setFrozenLogs] = useState<SSEEvent[]>([]);
   const displayLogs = liveTail ? logs : frozenLogs;
+
+  const toggleSort = (field: string) => {
+    if (sortBy === field) {
+      setSortDir((d) => d === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(field);
+      setSortDir(field === 'time' ? 'desc' : 'asc');
+    }
+  };
+
+  // Sort display logs
+  const sortedLogs = useMemo(() => {
+    if (sortBy === 'time' && sortDir === 'desc') return displayLogs; // default order
+    const sorted = [...displayLogs];
+    const dir = sortDir === 'asc' ? 1 : -1;
+    sorted.sort((a, b) => {
+      switch (sortBy) {
+        case 'time': return ((a.data.timestamp ?? a.timestamp) - (b.data.timestamp ?? b.timestamp)) * dir;
+        case 'level': return (a.data.level ?? '').localeCompare(b.data.level ?? '') * dir;
+        case 'service': return a.data.serviceName.localeCompare(b.data.serviceName) * dir;
+        case 'message': return (a.data.message ?? a.data.name ?? '').localeCompare(b.data.message ?? b.data.name ?? '') * dir;
+        default: {
+          const av = String(a.data.attributes[sortBy.replace('custom-', '')] ?? '');
+          const bv = String(b.data.attributes[sortBy.replace('custom-', '')] ?? '');
+          const an = Number(av), bn = Number(bv);
+          if (!isNaN(an) && !isNaN(bn)) return (an - bn) * dir;
+          return av.localeCompare(bv) * dir;
+        }
+      }
+    });
+    return sorted;
+  }, [displayLogs, sortBy, sortDir]);
 
   const toggleLiveTail = () => {
     if (liveTail) {
@@ -249,26 +288,26 @@ export function Logs({ eventsResult, allEvents, onOpenTrace, onFilter }: LogsPro
           </div>
         )}
 
-        {/* Column headers */}
+        {/* Column headers — click to sort */}
         <div
           class="log-row log-row-wide log-row-header"
           style={gridTemplate ? `grid-template-columns:${gridTemplate}` : undefined}
         >
-          <span class="log-time">Time</span>
-          <span class="log-level">Level</span>
-          <span class="service">Service</span>
+          <span class="col-header" onClick={() => toggleSort('time')}>Time<SortIndicator field="time" sortBy={sortBy} sortDir={sortDir} /></span>
+          <span class="col-header" onClick={() => toggleSort('level')}>Level<SortIndicator field="level" sortBy={sortBy} sortDir={sortDir} /></span>
+          <span class="col-header" onClick={() => toggleSort('service')}>Service<SortIndicator field="service" sortBy={sortBy} sortDir={sortDir} /></span>
           <span></span>{/* runtime tag column */}
-          <span class="log-message">Message</span>
+          <span class="col-header" onClick={() => toggleSort('message')}>Message<SortIndicator field="message" sortBy={sortBy} sortDir={sortDir} /></span>
           {customColumns.map((col) => (
-            <span key={col.id} class="custom-col" title={col.attrKey}>{col.label}</span>
+            <span key={col.id} class="col-header custom-col" title={col.attrKey} onClick={() => toggleSort(col.id)}>{col.label}<SortIndicator field={col.id} sortBy={sortBy} sortDir={sortDir} /></span>
           ))}
         </div>
 
         <div class="event-list" ref={listRef} onScroll={handleScroll}>
-          {displayLogs.length === 0 ? (
+          {sortedLogs.length === 0 ? (
             <div class="empty">{searchQuery || activeServices.size > 0 ? 'No logs match this filter' : 'No logs yet'}</div>
           ) : (
-            displayLogs.map((log, i) => (
+            sortedLogs.map((log, i) => (
               <LogRow
                 key={i}
                 event={log}
