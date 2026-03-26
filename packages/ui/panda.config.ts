@@ -15,27 +15,27 @@ export default defineConfig({
     tokens: {
       colors: {
         neutral: {
-          50: { value: '#fafafa' },
-          100: { value: '#f5f5f5' },
-          200: { value: '#e5e5e5' },
-          300: { value: '#d4d4d4' },
-          400: { value: '#a3a3a3' },
-          500: { value: '#737373' },
-          600: { value: '#525252' },
-          700: { value: '#2a2a2a' },
-          800: { value: '#1a1a1a' },
-          900: { value: '#0f0f0f' },
-          950: { value: '#0a0a0a' },
+          50: { value: '#f9fafb' },
+          100: { value: '#f3f4f6' },
+          200: { value: '#e5e7eb' },
+          300: { value: '#d1d5db' },
+          400: { value: '#9ca3af' },
+          500: { value: '#6b7280' },
+          600: { value: '#4b5563' },
+          700: { value: '#282c34' },
+          800: { value: '#1c1f26' },
+          900: { value: '#14161b' },
+          950: { value: '#0e1015' },
         },
-        // Accent: teal — not error-associated, distinct from status colors
-        accent: { value: '#2dd4bf' },
-        green: { value: '#22c55e' },
-        yellow: { value: '#eab308' },
-        red: { value: '#ef4444' },
-        blue: { value: '#60a5fa' },
-        orange: { value: '#f97316' },
-        purple: { value: '#a78bfa' },
-        white: { value: '#fff' },
+        // Muted accent: soft teal — calm, non-aggressive
+        accent: { value: '#5eead4' },
+        green: { value: '#6ee7b7' },
+        yellow: { value: '#fcd34d' },
+        red: { value: '#fca5a5' },
+        blue: { value: '#93c5fd' },
+        orange: { value: '#fdba74' },
+        purple: { value: '#c4b5fd' },
+        white: { value: '#f9fafb' },
       },
       fonts: {
         mono: { value: "'SF Mono', 'Cascadia Code', 'Fira Code', 'JetBrains Mono', monospace" },
@@ -82,13 +82,13 @@ export default defineConfig({
       colors: {
         surface: {
           bg: {
-            value: { base: '{colors.neutral.950}', _light: '{colors.neutral.100}' },
+            value: { base: '{colors.neutral.950}', _light: '{colors.neutral.50}' },
           },
           panel: {
             value: { base: '{colors.neutral.900}', _light: '{colors.white}' },
           },
           hover: {
-            value: { base: '{colors.neutral.800}', _light: '{colors.neutral.200}' },
+            value: { base: '{colors.neutral.800}', _light: '{colors.neutral.100}' },
           },
           raised: {
             value: { base: '{colors.neutral.700}', _light: '{colors.neutral.50}' },
@@ -96,10 +96,10 @@ export default defineConfig({
         },
         border: {
           subtle: {
-            value: { base: 'rgba(255,255,255,0.08)', _light: '{colors.neutral.200}' },
+            value: { base: 'rgba(255,255,255,0.06)', _light: '{colors.neutral.200}' },
           },
           strong: {
-            value: { base: 'rgba(255,255,255,0.15)', _light: '{colors.neutral.300}' },
+            value: { base: 'rgba(255,255,255,0.12)', _light: '{colors.neutral.300}' },
           },
         },
         fg: {
