@@ -1,12 +1,14 @@
 import { useMemo, useState, useRef, useCallback, useEffect } from 'preact/hooks';
 import { route } from 'preact-router';
 import { css } from 'styled-system/css';
+import { token } from 'styled-system/tokens';
 import { Waterfall } from './waterfall.js';
 import { LogRow } from './log-row.js';
 import { AttributeTable } from './attribute-table.js';
 import { CopyCurl } from './copy-curl.js';
 import { ReplayButton } from './replay-button.js';
 import { formatSpanDuration } from '../utils/format.js';
+import { pillStyle, jsonViewStyle } from '../styles/shared.js';
 import type { SSEEvent } from '../hooks/use-sse.js';
 
 const STORAGE_KEY = 'nextdog:pane-width';
@@ -170,20 +172,24 @@ const logsStyle = css({
   overflowY: 'auto',
 });
 
-const pillStyle = css({
-  padding: '2px 10px',
-  borderRadius: '12px',
-  fontSize: 'sm',
-  fontWeight: 500,
-  border: '1px solid token(colors.border.subtle)',
-  cursor: 'pointer',
-  background: 'transparent',
-  color: 'fg.dim',
-});
-
 const pillMlStyle = css({
   marginLeft: '2',
 });
+
+const METHOD_COLORS: Record<string, string> = {
+  get: token('colors.green'),
+  post: token('colors.blue'),
+  put: token('colors.yellow'),
+  delete: token('colors.red'),
+};
+
+function methodStyle(method: string) {
+  const color = METHOD_COLORS[method.toLowerCase()] ?? token('colors.fg');
+  return css({ fontWeight: '600', color });
+}
+
+const statusErrorStyle = css({ color: 'red' });
+const statusOkStyle = css({ color: 'green' });
 
 // --- Component ---
 
@@ -274,7 +280,7 @@ export function DetailPane({ traceId, events, onClose, onFilter }: DetailPanePro
         <div class={headerStyle}>
           <div class={headerTopStyle}>
             <div class={titleStyle}>
-              {method && <span class={`method method-${method.toLowerCase()}`}>{method}</span>}
+              {method && <span class={methodStyle(method)}>{method}</span>}
               <span class={routeStyle}>{routePath}</span>
             </div>
             <div class={actionsStyle}>
@@ -292,7 +298,7 @@ export function DetailPane({ traceId, events, onClose, onFilter }: DetailPanePro
             </div>
           </div>
           <div class={metaStyle}>
-            <span class={status === 'ERROR' ? 'status-error' : 'status-ok'}>{status}</span>
+            <span class={status === 'ERROR' ? statusErrorStyle : statusOkStyle}>{status}</span>
             <span class={metaSepStyle}>|</span>
             <span>{duration}</span>
             <span class={metaSepStyle}>|</span>
@@ -367,7 +373,7 @@ export function DetailPane({ traceId, events, onClose, onFilter }: DetailPanePro
                 </button>
               </div>
               {showJson ? (
-                <pre class="json-view">
+                <pre class={jsonViewStyle}>
                   {JSON.stringify(selectedEvent.data, null, 2)}
                 </pre>
               ) : (

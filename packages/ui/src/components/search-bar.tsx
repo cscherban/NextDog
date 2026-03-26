@@ -10,6 +10,7 @@ const containerStyle = css({
   position: 'relative',
   py: '2', px: '4',
   borderBottom: '1px solid token(colors.border.subtle)',
+  transition: 'all 0.15s ease',
 });
 
 const rowStyle = css({
@@ -63,6 +64,7 @@ const helpBtnStyle = css({
   cursor: 'pointer',
   background: 'transparent',
   color: 'fg.dim',
+  _hover: { background: 'surface.hover' },
 });
 
 const helpPanelStyle = css({

@@ -4,6 +4,7 @@ import { css } from 'styled-system/css';
 import { useSSE } from './hooks/use-sse.js';
 import { useEvents } from './hooks/use-events.js';
 import { useTheme } from './hooks/use-theme.js';
+import { pillStyle } from './styles/shared.js';
 import { Requests } from './views/requests.js';
 import { Logs } from './views/logs.js';
 import { Trace } from './views/trace.js';
@@ -113,17 +114,6 @@ const headerRightStyle = css({
   display: 'flex',
   alignItems: 'center',
   gap: '2',
-});
-
-const pillStyle = css({
-  padding: '2px 10px',
-  borderRadius: '12px',
-  fontSize: 'sm',
-  fontWeight: 500,
-  border: '1px solid token(colors.border.subtle)',
-  cursor: 'pointer',
-  background: 'transparent',
-  color: 'fg.dim',
 });
 
 const connectionStatusBaseStyle = css({

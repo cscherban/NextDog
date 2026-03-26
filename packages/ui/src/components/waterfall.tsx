@@ -1,7 +1,8 @@
 import { css } from 'styled-system/css';
+import { token } from 'styled-system/tokens';
 import type { SSEEvent } from '../hooks/use-sse.js';
 
-const COLORS = ['var(--accent)', 'var(--blue)', 'var(--green)', 'var(--yellow)', 'var(--red)'];
+const COLORS = [token('colors.accent'), token('colors.blue'), token('colors.green'), token('colors.yellow'), token('colors.red')];
 
 const waterfallStyle = css({
   display: 'flex',

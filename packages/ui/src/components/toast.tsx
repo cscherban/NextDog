@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'preact/hooks';
 import type { FunctionComponent } from 'preact';
 import { css } from 'styled-system/css';
+import { token } from 'styled-system/tokens';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -73,32 +74,13 @@ export function useToasts() {
 }
 
 // ---------------------------------------------------------------------------
-// Styles (injected once)
-// ---------------------------------------------------------------------------
-
-const KEYFRAMES_ID = '__nextdog_toast_keyframes';
-
-function ensureKeyframes() {
-  if (typeof document === 'undefined') return;
-  if (document.getElementById(KEYFRAMES_ID)) return;
-  const style = document.createElement('style');
-  style.id = KEYFRAMES_ID;
-  style.textContent = `
-@keyframes nextdog-toast-slide-in {
-  from { transform: translateX(100%); opacity: 0; }
-  to   { transform: translateX(0);    opacity: 1; }
-}`;
-  document.head.appendChild(style);
-}
-
-// ---------------------------------------------------------------------------
 // Styles
 // ---------------------------------------------------------------------------
 
 const TYPE_COLORS: Record<Toast['type'], string> = {
-  warning: 'var(--colors-yellow)',
-  error: 'var(--colors-red)',
-  info: 'var(--colors-accent)',
+  warning: token('colors.yellow'),
+  error: token('colors.red'),
+  info: token('colors.accent'),
 };
 
 const cardBaseStyle = css({
@@ -109,7 +91,7 @@ const cardBaseStyle = css({
   display: 'flex',
   alignItems: 'center',
   gap: '2',
-  animation: 'nextdog-toast-slide-in 0.2s ease-out',
+  animation: 'toast-slide-in 0.2s ease-out',
   maxWidth: '360px',
   boxSizing: 'border-box',
 });
@@ -140,6 +122,7 @@ const closeButtonStyle = css({
   fontSize: 'xl',
   color: 'fg.dim',
   flexShrink: 0,
+  _hover: { color: 'fg.bright' },
 });
 
 const containerStyle = css({
@@ -207,10 +190,6 @@ export const ToastContainer: FunctionComponent<ToastContainerProps> = ({
   removeToast,
   onOpenTrace,
 }) => {
-  useEffect(() => {
-    ensureKeyframes();
-  }, []);
-
   if (toasts.length === 0) return null;
 
   return (

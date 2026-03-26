@@ -1,11 +1,13 @@
 import { useMemo, useState } from 'preact/hooks';
 import { css } from 'styled-system/css';
+import { token } from 'styled-system/tokens';
 import { Waterfall } from '../components/waterfall.js';
 import { LogRow } from '../components/log-row.js';
 import { AttributeTable } from '../components/attribute-table.js';
 import { CopyCurl } from '../components/copy-curl.js';
 import { ReplayButton } from '../components/replay-button.js';
 import { formatSpanDuration } from '../utils/format.js';
+import { pillStyle, jsonViewStyle, emptyStyle } from '../styles/shared.js';
 import type { SSEEvent } from '../hooks/use-sse.js';
 
 const styles = {
@@ -94,43 +96,24 @@ const styles = {
     maxHeight: '40%',
     overflowY: 'auto',
   }),
-  pill: css({
-    padding: '2px 10px',
-    borderRadius: 'full',
-    fontSize: 'sm',
-    fontWeight: 500,
-    border: '1px solid token(colors.border.subtle)',
-    cursor: 'pointer',
-    background: 'transparent',
-    color: 'fg.dim',
-    marginLeft: '2',
-  }),
-  jsonView: css({
-    mt: '2', mx: '4', mb: '3',
-    padding: '3',
-    background: 'surface.bg',
-    borderRadius: 'sm',
-    fontFamily: 'mono',
-    fontSize: 'sm',
-    color: 'fg',
-    overflowX: 'auto',
-    whiteSpace: 'pre-wrap',
-    wordBreak: 'break-word',
-    maxHeight: '300px',
-    overflowY: 'auto',
-  }),
-  empty: css({
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    color: 'fg.dim',
-    fontSize: 'xl',
-  }),
+  pillMl: css({ marginLeft: '2' }),
+  emptyLarge: css({ fontSize: 'xl' }),
   statusOk: css({ color: 'green' }),
   statusError: css({ color: 'red' }),
   methodBase: css({ fontWeight: 600, fontSize: 'xl' }),
 };
+
+const METHOD_COLORS: Record<string, string> = {
+  get: token('colors.green'),
+  post: token('colors.blue'),
+  put: token('colors.yellow'),
+  delete: token('colors.red'),
+};
+
+function methodColorStyle(method: string) {
+  const color = METHOD_COLORS[method.toLowerCase()] ?? token('colors.fg');
+  return css({ color });
+}
 
 interface TraceProps {
   path?: string;
@@ -155,7 +138,7 @@ export function Trace({ traceId, events }: TraceProps) {
     [spans]
   );
 
-  if (!traceId) return <div className={styles.empty}>No trace selected</div>;
+  if (!traceId) return <div className={`${emptyStyle} ${styles.emptyLarge}`}>No trace selected</div>;
 
   const method = rootSpan ? String(rootSpan.data.attributes['http.method'] ?? '') : '';
   const routePath = rootSpan ? String(rootSpan.data.attributes['http.route'] ?? rootSpan.data.attributes['http.target'] ?? rootSpan.data.name) : traceId;
@@ -168,7 +151,7 @@ export function Trace({ traceId, events }: TraceProps) {
           Back to requests
         </a>
         <div className={styles.titleRow}>
-          {method && <span className={`${styles.methodBase} method method-${method.toLowerCase()}`}>{method}</span>}
+          {method && <span className={`${styles.methodBase} ${methodColorStyle(method)}`}>{method}</span>}
           <h2 className={styles.routeHeading}>{routePath}</h2>
         </div>
         <div className={styles.metaRow}>
@@ -220,12 +203,12 @@ export function Trace({ traceId, events }: TraceProps) {
         <div className={styles.detailSection}>
           <div className={styles.paneSectionTitle}>
             {selectedEvent.type === 'span' ? 'Span' : 'Log'} Detail
-            <button className={styles.pill} onClick={() => setShowJson(!showJson)}>
+            <button className={`${pillStyle} ${styles.pillMl}`} onClick={() => setShowJson(!showJson)}>
               {showJson ? 'Table' : 'JSON'}
             </button>
           </div>
           {showJson ? (
-            <pre className={styles.jsonView}>{JSON.stringify(selectedEvent.data, null, 2)}</pre>
+            <pre className={jsonViewStyle}>{JSON.stringify(selectedEvent.data, null, 2)}</pre>
           ) : (
             <>
               <AttributeTable

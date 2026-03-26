@@ -10,7 +10,6 @@
   padding: 0;
 }
 
-/* Theme */
 :root,
 [data-theme="dark"] {
   color-scheme: dark;
@@ -21,34 +20,44 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   background: var(--colors-surface-bg);
   color: var(--colors-fg);
   font-size: 13px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-a { color: var(--colors-accent); text-decoration: none; }
+a {
+  color: var(--colors-accent);
+  text-decoration: none;
+}
 
 /* Scrollbar */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: var(--colors-surface-bg); }
-::-webkit-scrollbar-thumb { background: var(--colors-border-subtle); border-radius: 3px; }
-::-webkit-scrollbar-thumb:hover { background: var(--colors-fg-dim); }
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--colors-neutral-700); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--colors-neutral-600); }
 
 /* Keyframes */
 @keyframes pane-slide-in {
-  from { transform: translateX(100%); }
-  to { transform: translateX(0); }
+  from { transform: translateX(100%); opacity: 0.5; }
+  to { transform: translateX(0); opacity: 1; }
 }
 
-@keyframes contextMenuIn {
-  from { opacity: 0; transform: scale(0.95); }
+@keyframes fade-in {
+  from { opacity: 0; transform: scale(0.97); }
   to { opacity: 1; transform: scale(1); }
 }
 
-/* Smooth transitions for theme switching */
-body {
-  transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+@keyframes toast-slide-in {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+/* Selection */
+::selection {
+  background: var(--colors-accent);
+  color: var(--colors-neutral-950);
 }

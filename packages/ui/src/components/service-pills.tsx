@@ -1,5 +1,6 @@
 import { css } from 'styled-system/css';
 import { useMemo } from 'preact/hooks';
+import { pillStyle, pillActiveStyle } from '../styles/shared.js';
 import type { SSEEvent } from '../hooks/use-sse.js';
 
 const servicePillsStyle = css({
@@ -8,23 +9,6 @@ const servicePillsStyle = css({
   py: '2', px: '4',
   borderBottom: '1px solid token(colors.border.subtle)',
   flexWrap: 'wrap',
-});
-
-const pillStyle = css({
-  padding: '2px 10px',
-  borderRadius: 'full',
-  fontSize: 'sm',
-  fontWeight: 500,
-  border: '1px solid token(colors.border.subtle)',
-  cursor: 'pointer',
-  background: 'transparent',
-  color: 'fg.dim',
-});
-
-const pillActiveStyle = css({
-  background: 'accent',
-  borderColor: 'accent',
-  color: 'white',
 });
 
 const pillErrorDotStyle = css({

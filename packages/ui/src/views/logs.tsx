@@ -5,9 +5,11 @@ import { ServicePills } from '../components/service-pills.js';
 import { SearchBar } from '../components/search-bar.js';
 import { AttributeTable } from '../components/attribute-table.js';
 import { ColumnPicker } from '../components/column-picker.js';
+import { SortIndicator } from '../components/sort-indicator.js';
 import { useKeyboard } from '../hooks/use-keyboard.js';
 import { useColumnResize } from '../hooks/use-column-resize.js';
 import { showContextMenu, attrContextActions } from '../components/context-menu.js';
+import { pillStyle, pillActiveStyle, emptyStyle, colHeaderStyle, colResizeStyle, toolbarStyle, mlAutoStyle, jsonViewStyle } from '../styles/shared.js';
 import type { SSEEvent } from '../hooks/use-sse.js';
 import type { UseEventsResult } from '../hooks/use-events.js';
 
@@ -106,21 +108,6 @@ const logDetailMessageStyle = css({
   whiteSpace: 'pre-wrap',
 });
 
-const jsonViewStyle = css({
-  mt: '2', mx: '4', mb: '3',
-  padding: '3',
-  background: 'surface.bg',
-  borderRadius: 'sm',
-  fontFamily: 'mono',
-  fontSize: 'sm',
-  color: 'fg',
-  overflowX: 'auto',
-  whiteSpace: 'pre-wrap',
-  wordBreak: 'break-word',
-  maxHeight: '300px',
-  overflowY: 'auto',
-});
-
 const logRowHeaderStyle = css({
   cursor: 'default',
   fontSize: 'xs',
@@ -139,62 +126,6 @@ const logRowHeaderStyle = css({
   },
 });
 
-const pillStyle = css({
-  py: '2px', px: '2',
-  borderRadius: 'full',
-  fontSize: 'sm',
-  fontWeight: '500',
-  border: '1px solid token(colors.border.subtle)',
-  cursor: 'pointer',
-  background: 'transparent',
-  color: 'fg.dim',
-});
-
-const pillActiveStyle = css({
-  background: 'accent',
-  borderColor: 'accent',
-  color: 'white',
-});
-
-const emptyStyle = css({
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  flex: '1',
-  color: 'fg.dim',
-  fontSize: '14px',
-});
-
-const colHeaderStyle = css({
-  position: 'relative',
-  cursor: 'pointer',
-  display: 'flex',
-  alignItems: 'center',
-  gap: '1',
-  userSelect: 'none',
-  overflow: 'hidden',
-  _hover: {
-    color: 'fg.bright',
-  },
-});
-
-const sortIndicatorStyle = css({
-  fontSize: '8px',
-  opacity: '0.7',
-  minWidth: '8px',
-  display: 'inline-block',
-});
-
-const colResizeStyle = css({
-  position: 'absolute',
-  right: '-4px',
-  top: '0',
-  bottom: '0',
-  width: '9px',
-  cursor: 'col-resize',
-  zIndex: '3',
-});
-
 const outerFlexStyle = css({
   display: 'flex',
   flex: '1',
@@ -208,21 +139,9 @@ const innerColumnStyle = css({
   minWidth: '0',
 });
 
-const toolbarStyle = css({
-  py: '1', px: '4',
-  display: 'flex',
-  gap: '2',
-  alignItems: 'center',
-  borderBottom: '1px solid token(colors.border.subtle)',
-});
-
 const logCountStyle = css({
   fontSize: 'sm',
   color: 'fg.dim',
-});
-
-const mlAutoStyle = css({
-  marginLeft: 'auto',
 });
 
 const headerTitleStyle = css({
@@ -242,11 +161,6 @@ const tabButtonGroupStyle = css({
 });
 
 /* ── Components ───────────────────────────────────────────────────────── */
-
-function SortIndicator({ field, sortBy, sortDir }: { field: string; sortBy: string; sortDir: 'asc' | 'desc' }) {
-  if (field !== sortBy) return <span className={sortIndicatorStyle} />;
-  return <span className={sortIndicatorStyle}>{sortDir === 'asc' ? '▲' : '▼'}</span>;
-}
 
 interface LogsProps {
   path?: string;
