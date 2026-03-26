@@ -1,5 +1,6 @@
 import { useMemo, useState, useRef, useCallback, useEffect } from 'preact/hooks';
 import { route } from 'preact-router';
+import { css } from 'styled-system/css';
 import { Waterfall } from './waterfall.js';
 import { LogRow } from './log-row.js';
 import { AttributeTable } from './attribute-table.js';
@@ -23,6 +24,168 @@ function loadWidth(): number {
   } catch {}
   return DEFAULT_WIDTH;
 }
+
+// --- PandaCSS style constants ---
+
+const paneSlideInKeyframes = `
+@keyframes pane-slide-in {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+`;
+
+const backdropStyle = css({
+  position: 'fixed',
+  inset: '0',
+  background: 'rgba(0, 0, 0, 0.4)',
+  zIndex: 100,
+});
+
+const detailPaneStyle = css({
+  position: 'fixed',
+  top: '0',
+  right: '0',
+  bottom: '0',
+  background: 'surface.panel',
+  borderLeft: '1px solid token(colors.border.subtle)',
+  zIndex: 101,
+  display: 'flex',
+  flexDirection: 'column',
+  animation: 'pane-slide-in 0.15s ease-out',
+});
+
+const dragHandleStyle = css({
+  position: 'absolute',
+  left: '-3px',
+  top: '0',
+  bottom: '0',
+  width: '6px',
+  cursor: 'col-resize',
+  zIndex: 102,
+  background: 'transparent',
+  transition: 'background 0.15s',
+  _hover: {
+    background: 'accent',
+    opacity: 0.5,
+  },
+  _active: {
+    background: 'accent',
+    opacity: 0.5,
+  },
+});
+
+const headerStyle = css({
+  padding: '3 4',
+  borderBottom: '1px solid token(colors.border.subtle)',
+  background: 'surface.bg',
+});
+
+const headerTopStyle = css({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  gap: '3',
+});
+
+const titleStyle = css({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '2',
+  fontFamily: 'mono',
+  fontSize: 'lg',
+  fontWeight: 600,
+  color: 'fg.bright',
+  minWidth: '0',
+});
+
+const routeStyle = css({
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  whiteSpace: 'nowrap',
+});
+
+const actionsStyle = css({
+  display: 'flex',
+  gap: '1',
+  flexShrink: 0,
+});
+
+const btnStyle = css({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  width: '28px',
+  height: '28px',
+  border: 'none',
+  borderRadius: 'sm',
+  background: 'transparent',
+  color: 'fg.dim',
+  cursor: 'pointer',
+  _hover: {
+    background: 'surface.hover',
+    color: 'fg.bright',
+  },
+});
+
+const metaStyle = css({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '2',
+  marginTop: '6px',
+  fontSize: 'md',
+  color: 'fg.dim',
+  fontFamily: 'mono',
+});
+
+const metaSepStyle = css({
+  color: 'border.subtle',
+});
+
+const bodyStyle = css({
+  flex: '1',
+  overflowY: 'auto',
+});
+
+const sectionStyle = css({
+  borderBottom: '1px solid token(colors.border.subtle)',
+});
+
+const sectionTitleStyle = css({
+  display: 'flex',
+  alignItems: 'center',
+  padding: '2 4',
+  fontSize: 'sm',
+  fontWeight: 600,
+  textTransform: 'uppercase',
+  letterSpacing: '0.5px',
+  color: 'fg.dim',
+  background: 'surface.bg',
+  position: 'sticky',
+  top: '0',
+  zIndex: 1,
+});
+
+const logsStyle = css({
+  maxHeight: '200px',
+  overflowY: 'auto',
+});
+
+const pillStyle = css({
+  padding: '2px 10px',
+  borderRadius: '12px',
+  fontSize: 'sm',
+  fontWeight: 500,
+  border: '1px solid token(colors.border.subtle)',
+  cursor: 'pointer',
+  background: 'transparent',
+  color: 'fg.dim',
+});
+
+const pillMlStyle = css({
+  marginLeft: '2',
+});
+
+// --- Component ---
 
 interface DetailPaneProps {
   traceId: string;
@@ -104,44 +267,45 @@ export function DetailPane({ traceId, events, onClose, onFilter }: DetailPanePro
 
   return (
     <>
-      <div class="pane-backdrop" onClick={onClose} />
-      <div class="detail-pane" ref={paneRef} style={`width:${width}px`}>
-        <div class="pane-drag-handle" onPointerDown={onDragStart} />
-        <div class="pane-header">
-          <div class="pane-header-top">
-            <div class="pane-title">
+      <style dangerouslySetInnerHTML={{ __html: paneSlideInKeyframes }} />
+      <div class={backdropStyle} onClick={onClose} />
+      <div class={detailPaneStyle} ref={paneRef} style={`width:${width}px`}>
+        <div class={dragHandleStyle} onPointerDown={onDragStart} />
+        <div class={headerStyle}>
+          <div class={headerTopStyle}>
+            <div class={titleStyle}>
               {method && <span class={`method method-${method.toLowerCase()}`}>{method}</span>}
-              <span class="pane-route">{routePath}</span>
+              <span class={routeStyle}>{routePath}</span>
             </div>
-            <div class="pane-actions">
-              <button class="pane-btn" onClick={handleExpand} title="Expand to full page">
+            <div class={actionsStyle}>
+              <button class={btnStyle} onClick={handleExpand} title="Expand to full page">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <polyline points="15 3 21 3 21 9" /><line x1="21" y1="3" x2="14" y2="10" />
                   <polyline points="9 21 3 21 3 15" /><line x1="3" y1="21" x2="10" y2="14" />
                 </svg>
               </button>
-              <button class="pane-btn" onClick={onClose} title="Close">
+              <button class={btnStyle} onClick={onClose} title="Close">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
                 </svg>
               </button>
             </div>
           </div>
-          <div class="pane-meta">
+          <div class={metaStyle}>
             <span class={status === 'ERROR' ? 'status-error' : 'status-ok'}>{status}</span>
-            <span class="pane-meta-sep">|</span>
+            <span class={metaSepStyle}>|</span>
             <span>{duration}</span>
-            <span class="pane-meta-sep">|</span>
+            <span class={metaSepStyle}>|</span>
             <span>{spans.length} spans</span>
             {logs.length > 0 && (
               <>
-                <span class="pane-meta-sep">|</span>
+                <span class={metaSepStyle}>|</span>
                 <span>{logs.length} logs</span>
               </>
             )}
             {rootSpan && rootSpan.data.attributes['http.method'] && (
               <>
-                <span class="pane-meta-sep">|</span>
+                <span class={metaSepStyle}>|</span>
                 <ReplayButton event={rootSpan} />
                 <CopyCurl event={rootSpan} />
               </>
@@ -149,18 +313,18 @@ export function DetailPane({ traceId, events, onClose, onFilter }: DetailPanePro
           </div>
         </div>
 
-        <div class="pane-body">
+        <div class={bodyStyle}>
           {/* Waterfall */}
-          <div class="pane-section">
-            <div class="pane-section-title">Waterfall</div>
+          <div class={sectionStyle}>
+            <div class={sectionTitleStyle}>Waterfall</div>
             <Waterfall spans={spans} onSpanClick={(event) => setSelectedEvent(event)} />
           </div>
 
           {/* Logs */}
           {logs.length > 0 && (
-            <div class="pane-section">
-              <div class="pane-section-title">Logs</div>
-              <div class="pane-logs">
+            <div class={sectionStyle}>
+              <div class={sectionTitleStyle}>Logs</div>
+              <div class={logsStyle}>
                 {logs.map((log, i) => (
                   <LogRow
                     key={i}
@@ -175,9 +339,9 @@ export function DetailPane({ traceId, events, onClose, onFilter }: DetailPanePro
 
           {/* If no logs, show all events as a timeline */}
           {logs.length === 0 && spans.length > 0 && (
-            <div class="pane-section">
-              <div class="pane-section-title">Spans</div>
-              <div class="pane-logs">
+            <div class={sectionStyle}>
+              <div class={sectionTitleStyle}>Spans</div>
+              <div class={logsStyle}>
                 {spans.map((span, i) => (
                   <LogRow
                     key={i}
@@ -192,12 +356,11 @@ export function DetailPane({ traceId, events, onClose, onFilter }: DetailPanePro
 
           {/* Detail panel for selected span/log */}
           {selectedEvent && (
-            <div class="pane-section">
-              <div class="pane-section-title">
+            <div class={sectionStyle}>
+              <div class={sectionTitleStyle}>
                 {selectedEvent.type === 'span' ? 'Span' : 'Log'} Detail
                 <button
-                  class="pill"
-                  style="margin-left:8px"
+                  class={`${pillStyle} ${pillMlStyle}`}
                   onClick={() => setShowJson(!showJson)}
                 >
                   {showJson ? 'Table' : 'JSON'}

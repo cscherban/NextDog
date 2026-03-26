@@ -1,4 +1,5 @@
 import { useRef, useEffect, useState, useMemo, useCallback } from 'preact/hooks';
+import { css } from 'styled-system/css';
 import { LogRow } from '../components/log-row.js';
 import { ServicePills } from '../components/service-pills.js';
 import { SearchBar } from '../components/search-bar.js';
@@ -45,9 +46,206 @@ function saveCustomColumns(cols: ColumnDef[]) {
   try { localStorage.setItem(LOG_COLUMNS_STORAGE_KEY, JSON.stringify(cols)); } catch {}
 }
 
+/* ── PandaCSS style constants ─────────────────────────────────────────── */
+
+const logDetailStyle = css({
+  position: 'relative',
+  flexShrink: '0',
+  borderLeft: '1px solid token(colors.border.subtle)',
+  display: 'flex',
+  flexDirection: 'column',
+  background: 'surface.panel',
+  overflow: 'hidden',
+});
+
+const logDragHandleStyle = css({
+  position: 'absolute',
+  left: '-3px',
+  top: '0',
+  bottom: '0',
+  width: '6px',
+  cursor: 'col-resize',
+  zIndex: '10',
+  background: 'transparent',
+  transition: 'background 0.15s',
+  _hover: {
+    background: 'accent',
+    opacity: '0.5',
+  },
+  _active: {
+    background: 'accent',
+    opacity: '0.5',
+  },
+});
+
+const logDetailHeaderStyle = css({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  padding: '2 3',
+  borderBottom: '1px solid token(colors.border.subtle)',
+  fontSize: 'md',
+  background: 'surface.bg',
+});
+
+const logDetailBodyStyle = css({
+  flex: '1',
+  overflowY: 'auto',
+  padding: '3',
+});
+
+const logDetailMessageStyle = css({
+  fontFamily: 'mono',
+  fontSize: 'lg',
+  color: 'fg.bright',
+  padding: '2 3',
+  background: 'surface.bg',
+  borderRadius: 'sm',
+  marginBottom: '3',
+  wordBreak: 'break-word',
+  whiteSpace: 'pre-wrap',
+});
+
+const jsonViewStyle = css({
+  margin: '2 4 3',
+  padding: '3',
+  background: 'surface.bg',
+  borderRadius: 'sm',
+  fontFamily: 'mono',
+  fontSize: 'sm',
+  color: 'fg',
+  overflowX: 'auto',
+  whiteSpace: 'pre-wrap',
+  wordBreak: 'break-word',
+  maxHeight: '300px',
+  overflowY: 'auto',
+});
+
+const logRowHeaderStyle = css({
+  cursor: 'default',
+  fontSize: 'xs',
+  fontWeight: '600',
+  textTransform: 'uppercase',
+  letterSpacing: '0.5px',
+  color: 'fg.dim',
+  padding: '1 4',
+  borderBottom: '1px solid token(colors.border.subtle)',
+  background: 'surface.panel',
+  position: 'sticky',
+  top: '0',
+  zIndex: '1',
+  _hover: {
+    background: 'surface.panel',
+  },
+});
+
+const pillStyle = css({
+  padding: '2px 2',
+  borderRadius: 'full',
+  fontSize: 'sm',
+  fontWeight: '500',
+  border: '1px solid token(colors.border.subtle)',
+  cursor: 'pointer',
+  background: 'transparent',
+  color: 'fg.dim',
+});
+
+const pillActiveStyle = css({
+  background: 'accent',
+  borderColor: 'accent',
+  color: 'white',
+});
+
+const emptyStyle = css({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  flex: '1',
+  color: 'fg.dim',
+  fontSize: '14px',
+});
+
+const colHeaderStyle = css({
+  position: 'relative',
+  cursor: 'pointer',
+  display: 'flex',
+  alignItems: 'center',
+  gap: '1',
+  userSelect: 'none',
+  overflow: 'hidden',
+  _hover: {
+    color: 'fg.bright',
+  },
+});
+
+const sortIndicatorStyle = css({
+  fontSize: '8px',
+  opacity: '0.7',
+  minWidth: '8px',
+  display: 'inline-block',
+});
+
+const colResizeStyle = css({
+  position: 'absolute',
+  right: '-4px',
+  top: '0',
+  bottom: '0',
+  width: '9px',
+  cursor: 'col-resize',
+  zIndex: '3',
+});
+
+const outerFlexStyle = css({
+  display: 'flex',
+  flex: '1',
+  overflow: 'hidden',
+});
+
+const innerColumnStyle = css({
+  display: 'flex',
+  flexDirection: 'column',
+  flex: '1',
+  minWidth: '0',
+});
+
+const toolbarStyle = css({
+  padding: '1 4',
+  display: 'flex',
+  gap: '2',
+  alignItems: 'center',
+  borderBottom: '1px solid token(colors.border.subtle)',
+});
+
+const logCountStyle = css({
+  fontSize: 'sm',
+  color: 'fg.dim',
+});
+
+const mlAutoStyle = css({
+  marginLeft: 'auto',
+});
+
+const headerTitleStyle = css({
+  fontWeight: '600',
+  color: 'fg.bright',
+});
+
+const detailButtonGroupStyle = css({
+  display: 'flex',
+  gap: '1',
+});
+
+const tabButtonGroupStyle = css({
+  display: 'flex',
+  gap: '1',
+  marginBottom: '2',
+});
+
+/* ── Components ───────────────────────────────────────────────────────── */
+
 function SortIndicator({ field, sortBy, sortDir }: { field: string; sortBy: string; sortDir: 'asc' | 'desc' }) {
-  if (field !== sortBy) return <span class="sort-indicator" />;
-  return <span class="sort-indicator">{sortDir === 'asc' ? '▲' : '▼'}</span>;
+  if (field !== sortBy) return <span className={sortIndicatorStyle} />;
+  return <span className={sortIndicatorStyle}>{sortDir === 'asc' ? '▲' : '▼'}</span>;
 }
 
 interface LogsProps {
@@ -250,19 +448,19 @@ export function Logs({ eventsResult, allEvents, onOpenTrace, onFilter }: LogsPro
   };
 
   return (
-    <div style="display:flex;flex:1;overflow:hidden">
-      <div style="display:flex;flex-direction:column;flex:1;min-width:0">
+    <div className={outerFlexStyle}>
+      <div className={innerColumnStyle}>
         <ServicePills services={services} active={activeServices} onToggle={toggleService} events={filtered} />
         <SearchBar value={searchQuery} onChange={setSearchQuery} events={filtered} />
-        <div style="padding:4px 16px;display:flex;gap:8px;align-items:center;border-bottom:1px solid var(--border)">
-          <button class={`pill ${liveTail ? 'active' : ''}`} onClick={toggleLiveTail}>
+        <div className={toolbarStyle}>
+          <button className={`${pillStyle} ${liveTail ? pillActiveStyle : ''}`} onClick={toggleLiveTail}>
             {liveTail ? '● Live' : '○ Paused'}
           </button>
-          <span style="font-size:11px;color:var(--text-dim)">{displayLogs.length} logs</span>
+          <span className={logCountStyle}>{displayLogs.length} logs</span>
           {!liveTail && (
-            <button class="pill" onClick={toggleLiveTail}>Resume</button>
+            <button className={pillStyle} onClick={toggleLiveTail}>Resume</button>
           )}
-          <div style="margin-left:auto">
+          <div className={mlAutoStyle}>
             <ColumnPicker
               customColumns={customColumns}
               availableAttrs={availableAttrs}
@@ -274,8 +472,8 @@ export function Logs({ eventsResult, allEvents, onOpenTrace, onFilter }: LogsPro
 
         {/* Column headers — click to sort, drag edge to resize */}
         <div
-          class="log-row log-row-wide log-row-header"
-          style={`grid-template-columns:${gridTemplate}`}
+          className={`log-row log-row-wide ${logRowHeaderStyle}`}
+          style={{ gridTemplateColumns: gridTemplate }}
         >
           {[
             { id: 'time', label: 'Time' },
@@ -285,16 +483,16 @@ export function Logs({ eventsResult, allEvents, onOpenTrace, onFilter }: LogsPro
             { id: 'message', label: 'Message' },
             ...customColumns.map((col) => ({ id: col.id, label: col.label })),
           ].map((col) => (
-            <span key={col.id} class="col-header" onClick={col.label ? () => toggleSort(col.id) : undefined}>
+            <span key={col.id} className={colHeaderStyle} onClick={col.label ? () => toggleSort(col.id) : undefined}>
               {col.label}{col.label && <SortIndicator field={col.id} sortBy={sortBy} sortDir={sortDir} />}
-              {col.label && <span class="col-resize" onPointerDown={(e: PointerEvent) => { e.stopPropagation(); startResize(col.id, e.clientX); }} />}
+              {col.label && <span className={colResizeStyle} onPointerDown={(e: PointerEvent) => { e.stopPropagation(); startResize(col.id, e.clientX); }} />}
             </span>
           ))}
         </div>
 
-        <div class="event-list" ref={listRef} onScroll={handleScroll}>
+        <div className={css({ flex: 1, overflowY: 'auto', overflowX: 'hidden', fontFamily: 'mono', fontSize: 'md' })} ref={listRef} onScroll={handleScroll}>
           {sortedLogs.length === 0 ? (
-            <div class="empty">{searchQuery || activeServices.size > 0 ? 'No logs match this filter' : 'No logs yet'}</div>
+            <div className={emptyStyle}>{searchQuery || activeServices.size > 0 ? 'No logs match this filter' : 'No logs yet'}</div>
           ) : (
             sortedLogs.map((log, i) => (
               <LogRow
@@ -304,7 +502,7 @@ export function Logs({ eventsResult, allEvents, onOpenTrace, onFilter }: LogsPro
                 selected={i === selectedIndex}
                 onClick={() => handleLogClick(log, i)}
                 onCellContext={handleCellContext}
-                style={`grid-template-columns:${gridTemplate}`}
+                style={{ gridTemplateColumns: gridTemplate }}
                 extraColumns={customColumns.map((col) => ({
                   id: col.id,
                   attrKey: col.attrKey,
@@ -318,36 +516,36 @@ export function Logs({ eventsResult, allEvents, onOpenTrace, onFilter }: LogsPro
 
       {/* Log detail sidebar — draggable */}
       {selectedLog && (
-        <div class="log-detail" style={`width:${sidebarWidth}px`}>
-          <div class="log-drag-handle" onPointerDown={onDragStart} />
-          <div class="log-detail-header">
-            <span style="font-weight:600;color:var(--text-bright)">Log Detail</span>
-            <div style="display:flex;gap:4px">
+        <div className={logDetailStyle} style={{ width: `${sidebarWidth}px` }}>
+          <div className={logDragHandleStyle} onPointerDown={onDragStart} />
+          <div className={logDetailHeaderStyle}>
+            <span className={headerTitleStyle}>Log Detail</span>
+            <div className={detailButtonGroupStyle}>
               {selectedLog.data.traceId && (
                 <button
-                  class="pill"
+                  className={pillStyle}
                   onClick={() => onOpenTrace?.(selectedLog.data.traceId!)}
                 >
                   View Trace
                 </button>
               )}
-              <button class="pane-btn" onClick={() => setSelectedLog(null)}>
+              <button className={css({ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '28px', height: '28px', border: 'none', borderRadius: 'sm', background: 'transparent', color: 'fg.dim', cursor: 'pointer', _hover: { background: 'surface.hover', color: 'fg.bright' } })} onClick={() => setSelectedLog(null)}>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
                 </svg>
               </button>
             </div>
           </div>
-          <div class="log-detail-body">
-            <div class="log-detail-message">
+          <div className={logDetailBodyStyle}>
+            <div className={logDetailMessageStyle}>
               {selectedLog.data.message ?? selectedLog.data.name}
             </div>
-            <div style="display:flex;gap:4px;margin-bottom:8px">
-              <button class="pill" style={!showJson ? 'background:var(--accent);border-color:var(--accent);color:white' : ''} onClick={() => setShowJson(false)}>Table</button>
-              <button class="pill" style={showJson ? 'background:var(--accent);border-color:var(--accent);color:white' : ''} onClick={() => setShowJson(true)}>JSON</button>
+            <div className={tabButtonGroupStyle}>
+              <button className={`${pillStyle} ${!showJson ? pillActiveStyle : ''}`} onClick={() => setShowJson(false)}>Table</button>
+              <button className={`${pillStyle} ${showJson ? pillActiveStyle : ''}`} onClick={() => setShowJson(true)}>JSON</button>
             </div>
             {showJson ? (
-              <pre class="json-view">{JSON.stringify(selectedLog.data, null, 2)}</pre>
+              <pre className={jsonViewStyle}>{JSON.stringify(selectedLog.data, null, 2)}</pre>
             ) : (
               <>
                 <AttributeTable

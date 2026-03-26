@@ -1,4 +1,63 @@
+import { css } from 'styled-system/css';
 import { showContextMenu, attrContextActions } from './context-menu.js';
+
+const attrTableStyle = css({
+  fontSize: 'md',
+  width: '100%',
+  '& table': {
+    width: '100%',
+    borderCollapse: 'collapse',
+  },
+  '& tr': {
+    borderBottom: '1px solid token(colors.border.subtle)',
+  },
+  '& td': {
+    padding: '1 2',
+    verticalAlign: 'top',
+  },
+});
+
+const attrTableTitleStyle = css({
+  fontWeight: 'bold',
+  color: 'fg.bright',
+  padding: '2',
+  fontSize: 'md',
+});
+
+const attrKeyStyle = css({
+  color: 'fg.dim',
+  whiteSpace: 'nowrap',
+  fontFamily: 'mono',
+  fontSize: 'sm',
+  width: '1px',
+});
+
+const attrValueStyle = css({
+  color: 'fg',
+  fontFamily: 'mono',
+  fontSize: 'sm',
+  wordBreak: 'break-all',
+});
+
+const attrValueFilterableStyle = css({
+  cursor: 'pointer',
+  color: 'accent',
+  _hover: {
+    textDecoration: 'underline',
+  },
+});
+
+const attrValueLongStyle = css({
+  '& pre': {
+    margin: 0,
+    whiteSpace: 'pre-wrap',
+    wordBreak: 'break-all',
+    fontFamily: 'mono',
+    fontSize: 'sm',
+    maxHeight: '200px',
+    overflow: 'auto',
+  },
+});
 
 interface AttributeTableProps {
   attributes: Record<string, unknown>;
@@ -43,19 +102,19 @@ export function AttributeTable({ attributes, title, onFilter, onAddColumn, onRem
   };
 
   return (
-    <div class="attr-table">
-      {title && <div class="attr-table-title">{title}</div>}
+    <div className={attrTableStyle}>
+      {title && <div className={attrTableTitleStyle}>{title}</div>}
       <table>
         <tbody>
           {entries.map(([key, value]) => (
             <tr key={key}>
-              <td class="attr-key">{key}</td>
-              <td class={`attr-value ${isLongValue(value) ? 'attr-value-long' : ''}`}>
+              <td className={attrKeyStyle}>{key}</td>
+              <td className={`${attrValueStyle} ${isLongValue(value) ? attrValueLongStyle : ''}`}>
                 {isLongValue(value) ? (
                   <pre>{formatValue(value)}</pre>
                 ) : onFilter && isFilterable(value) ? (
                   <span
-                    class="attr-value-filterable"
+                    className={attrValueFilterableStyle}
                     onClick={() => onFilter(key, String(value))}
                     onContextMenu={(e: MouseEvent) => handleContextMenu(e, key, String(value))}
                     title={`Left-click to filter, right-click for options`}

@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'preact/hooks';
+import { css } from 'styled-system/css';
 import { extractHttpMeta } from '../utils/format.js';
 import type { SSEEvent } from '../hooks/use-sse.js';
 
@@ -41,6 +42,43 @@ function buildCurl(event: SSEEvent, includeSensitive: boolean): string {
   return parts.join(' \\\n');
 }
 
+const styles = {
+  wrapper: css({
+    display: 'flex',
+    gap: '1',
+  }),
+  pill: css({
+    padding: '2px 10px',
+    borderRadius: 'full',
+    fontSize: 'sm',
+    fontWeight: 500,
+    border: '1px solid token(colors.border.subtle)',
+    cursor: 'pointer',
+    background: 'transparent',
+    color: 'fg.dim',
+  }),
+  pillFullDefault: css({
+    padding: '2px 10px',
+    borderRadius: 'full',
+    fontSize: 'sm',
+    fontWeight: 500,
+    border: '1px solid token(colors.border.subtle)',
+    cursor: 'pointer',
+    background: 'transparent',
+    color: 'yellow',
+  }),
+  pillFullCopied: css({
+    padding: '2px 10px',
+    borderRadius: 'full',
+    fontSize: 'sm',
+    fontWeight: 500,
+    border: '1px solid token(colors.border.subtle)',
+    cursor: 'pointer',
+    background: 'transparent',
+    color: 'green',
+  }),
+};
+
 interface CopyCurlProps {
   event: SSEEvent;
 }
@@ -56,19 +94,18 @@ export function CopyCurl({ event }: CopyCurlProps) {
   }, [event]);
 
   return (
-    <div style="display:flex;gap:4px">
+    <div className={styles.wrapper}>
       <button
-        class="pill"
+        className={styles.pill}
         onClick={() => copy('safe')}
         title="Copy curl without cookies/auth headers"
       >
         {copied === 'safe' ? '✓ Copied' : 'Copy curl'}
       </button>
       <button
-        class="pill"
+        className={copied === 'full' ? styles.pillFullCopied : styles.pillFullDefault}
         onClick={() => copy('full')}
         title="Copy curl with all headers including cookies (may contain session tokens)"
-        style={copied === 'full' ? 'color:var(--green)' : 'color:var(--yellow)'}
       >
         {copied === 'full' ? '✓ Copied' : 'Full'}
       </button>

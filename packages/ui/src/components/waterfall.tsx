@@ -1,6 +1,65 @@
+import { css } from 'styled-system/css';
 import type { SSEEvent } from '../hooks/use-sse.js';
 
 const COLORS = ['var(--accent)', 'var(--blue)', 'var(--green)', 'var(--yellow)', 'var(--red)'];
+
+const waterfallStyle = css({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '1',
+  padding: '2',
+  fontSize: 'md',
+});
+
+const waterfallRowStyle = css({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '2',
+  padding: '1',
+  borderRadius: 'sm',
+  _hover: {
+    bg: 'surface.hover',
+  },
+});
+
+const waterfallLabelStyle = css({
+  width: '200px',
+  minWidth: '200px',
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  whiteSpace: 'nowrap',
+  color: 'fg',
+  fontSize: 'sm',
+});
+
+const waterfallBarContainerStyle = css({
+  flex: 1,
+  position: 'relative',
+  height: '16px',
+  bg: 'surface.panel',
+  borderRadius: 'sm',
+});
+
+const waterfallBarStyle = css({
+  position: 'absolute',
+  top: 0,
+  height: '100%',
+  borderRadius: 'sm',
+  opacity: 0.8,
+});
+
+const waterfallDurationStyle = css({
+  width: '70px',
+  minWidth: '70px',
+  textAlign: 'right',
+  color: 'fg.dim',
+  fontSize: 'sm',
+});
+
+const serviceNameStyle = css({
+  color: 'fg.dim',
+  fontSize: 'sm',
+});
 
 interface WaterfallProps {
   spans: SSEEvent[];
@@ -91,22 +150,22 @@ export function Waterfall({ spans, onSpanClick }: WaterfallProps) {
   const { timings, minNano, maxNano } = buildTimings(spans);
   const totalNano = maxNano - minNano;
 
-  if (timings.length === 0) return <div class="empty">No timing data available</div>;
+  if (timings.length === 0) return <div className={css({ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, color: 'fg.dim', fontSize: 'xl' })}>No timing data available</div>;
 
   return (
-    <div class="waterfall">
+    <div className={waterfallStyle}>
       {timings.map((t, i) => {
         const leftPct = totalNano > 0n ? Number((t.startNano - minNano) * 10000n / totalNano) / 100 : 0;
         const widthPct = totalNano > 0n ? Math.max(0.5, Number((t.endNano - t.startNano) * 10000n / totalNano) / 100) : 100;
         return (
-          <div key={i} class="waterfall-row" style={`padding-left:${t.depth * 16}px;${onSpanClick ? 'cursor:pointer' : ''}`} onClick={() => onSpanClick?.(t.source)}>
-            <span class="waterfall-label" title={t.name}>
-              <span style="color:var(--text-dim);font-size:11px">{t.serviceName} </span>{t.name}
+          <div key={i} className={waterfallRowStyle} style={`padding-left:${t.depth * 16}px;${onSpanClick ? 'cursor:pointer' : ''}`} onClick={() => onSpanClick?.(t.source)}>
+            <span className={waterfallLabelStyle} title={t.name}>
+              <span className={serviceNameStyle}>{t.serviceName} </span>{t.name}
             </span>
-            <div class="waterfall-bar-container">
-              <div class="waterfall-bar" style={`left:${leftPct}%;width:${widthPct}%;background:${t.color}`} />
+            <div className={waterfallBarContainerStyle}>
+              <div className={waterfallBarStyle} style={`left:${leftPct}%;width:${widthPct}%;background:${t.color}`} />
             </div>
-            <span class="waterfall-duration">{formatDuration(t.durationMs)}</span>
+            <span className={waterfallDurationStyle}>{formatDuration(t.durationMs)}</span>
           </div>
         );
       })}

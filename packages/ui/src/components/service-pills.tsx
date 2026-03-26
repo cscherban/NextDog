@@ -1,5 +1,41 @@
+import { css } from 'styled-system/css';
 import { useMemo } from 'preact/hooks';
 import type { SSEEvent } from '../hooks/use-sse.js';
+
+const servicePillsStyle = css({
+  display: 'flex',
+  gap: '6px',
+  padding: '2 4',
+  borderBottom: '1px solid token(colors.border.subtle)',
+  flexWrap: 'wrap',
+});
+
+const pillStyle = css({
+  padding: '2px 10px',
+  borderRadius: 'full',
+  fontSize: 'sm',
+  fontWeight: 500,
+  border: '1px solid token(colors.border.subtle)',
+  cursor: 'pointer',
+  background: 'transparent',
+  color: 'fg.dim',
+});
+
+const pillActiveStyle = css({
+  background: 'accent',
+  borderColor: 'accent',
+  color: 'white',
+});
+
+const pillErrorDotStyle = css({
+  display: 'inline-block',
+  width: '6px',
+  height: '6px',
+  borderRadius: '50%',
+  background: 'red',
+  marginLeft: '1',
+  verticalAlign: 'middle',
+});
 
 interface ServicePillsProps {
   services: string[];
@@ -32,15 +68,15 @@ export function ServicePills({ services, active, onToggle, events }: ServicePill
   }, [events]);
 
   return (
-    <div class="service-pills">
+    <div className={servicePillsStyle}>
       {services.map((name) => {
         const s = stats.get(name);
         const hasErrors = s && s.errors > 0;
         return (
-          <button key={name} class={`pill ${active.has(name) ? 'active' : ''}`} onClick={() => onToggle(name)}>
+          <button key={name} className={`${pillStyle} ${active.has(name) ? pillActiveStyle : ''}`} onClick={() => onToggle(name)}>
             {name}
             {hasErrors && (
-              <span class="pill-error-dot" title={`${s!.errors} errors`} />
+              <span className={pillErrorDotStyle} title={`${s!.errors} errors`} />
             )}
           </button>
         );

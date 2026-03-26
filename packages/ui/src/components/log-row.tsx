@@ -1,14 +1,119 @@
+import { css } from 'styled-system/css';
 import { formatTime } from '../utils/format.js';
 import type { SSEEvent } from '../hooks/use-sse.js';
 
+const logRowStyle = css({
+  display: 'grid',
+  gridTemplateColumns: '90px 50px 1fr',
+  gap: '2',
+  padding: '3px 4',
+  fontFamily: 'mono',
+  fontSize: 'md',
+  borderBottom: '1px solid token(colors.border.subtle)',
+  cursor: 'pointer',
+  alignItems: 'start',
+  minWidth: 0,
+  transition: 'background-color 0.15s, border-color 0.15s, color 0.15s',
+  _hover: { background: 'surface.hover' },
+});
+
+const logRowWideStyle = css({
+  gridTemplateColumns: '90px 50px 80px auto 1fr',
+});
+
+const logRowSelectedStyle = css({
+  background: 'surface.hover',
+  outline: '1px solid token(colors.accent)',
+  outlineOffset: '-1px',
+});
+
+const logTimeStyle = css({
+  color: 'fg.dim',
+});
+
+const logLevelStyle = css({
+  fontSize: 'xs',
+  fontWeight: 600,
+  textTransform: 'uppercase',
+  padding: '1px 1',
+  borderRadius: 'sm',
+  textAlign: 'center',
+});
+
+const logErrorStyle = css({
+  color: 'red',
+  background: 'rgba(225, 112, 85, 0.1)',
+});
+
+const logWarnStyle = css({
+  color: 'yellow',
+  background: 'rgba(253, 203, 110, 0.1)',
+});
+
+const logInfoStyle = css({
+  color: 'blue',
+  background: 'rgba(116, 185, 255, 0.1)',
+});
+
+const logDebugStyle = css({
+  color: 'fg.dim',
+  background: 'rgba(136, 136, 136, 0.1)',
+});
+
+const logMessageStyle = css({
+  color: 'fg',
+  wordBreak: 'break-word',
+});
+
+const serviceStyle = css({
+  color: 'blue',
+});
+
+const runtimeTagStyle = css({
+  fontSize: 'xs',
+  fontWeight: 700,
+  textTransform: 'uppercase',
+  letterSpacing: '0.5px',
+  padding: '1px 5px',
+  borderRadius: 'sm',
+  whiteSpace: 'nowrap',
+});
+
+const runtimeServerStyle = css({
+  color: 'accent',
+  background: 'rgba(108, 92, 231, 0.12)',
+  border: '1px solid rgba(108, 92, 231, 0.25)',
+});
+
+const runtimeBrowserStyle = css({
+  color: 'yellow',
+  background: 'rgba(253, 203, 110, 0.12)',
+  border: '1px solid rgba(253, 203, 110, 0.25)',
+});
+
+const customColStyle = css({
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  whiteSpace: 'nowrap',
+  maxWidth: '120px',
+  color: 'fg.dim',
+});
+
 function levelClass(level?: string): string {
   switch (level) {
-    case 'error': return 'log-level log-error';
-    case 'warn': return 'log-level log-warn';
-    case 'info': return 'log-level log-info';
-    case 'debug': return 'log-level log-debug';
-    default: return 'log-level';
+    case 'error': return `${logLevelStyle} ${logErrorStyle}`;
+    case 'warn': return `${logLevelStyle} ${logWarnStyle}`;
+    case 'info': return `${logLevelStyle} ${logInfoStyle}`;
+    case 'debug': return `${logLevelStyle} ${logDebugStyle}`;
+    default: return logLevelStyle;
   }
+}
+
+function runtimeTagClass(rt: string): string {
+  const base = runtimeTagStyle;
+  if (rt === 'server') return `${base} ${runtimeServerStyle}`;
+  if (rt === 'browser') return `${base} ${runtimeBrowserStyle}`;
+  return base;
 }
 
 function runtimeTag(event: SSEEvent): string | null {
@@ -33,27 +138,27 @@ export function LogRow({ event, selected, showService, onClick, onCellContext, e
   const runtime = runtimeTag(event);
 
   return (
-    <div class={`log-row ${showService ? 'log-row-wide' : ''} ${selected ? 'log-row-selected' : ''}`} onClick={onClick} style={style}>
-      <span class="log-time">{formatTime(ts)}</span>
+    <div className={`${logRowStyle} ${showService ? logRowWideStyle : ''} ${selected ? logRowSelectedStyle : ''}`} onClick={onClick} style={style}>
+      <span className={logTimeStyle}>{formatTime(ts)}</span>
       <span
-        class={levelClass(event.data.level)}
+        className={levelClass(event.data.level)}
         onContextMenu={onCellContext ? (e: MouseEvent) => onCellContext(e, 'level', String(level)) : undefined}
       >{level}</span>
       {showService && (
         <span
-          class="service"
+          className={serviceStyle}
           onContextMenu={onCellContext ? (e: MouseEvent) => onCellContext(e, 'service', event.data.serviceName) : undefined}
         >{event.data.serviceName}</span>
       )}
-      {runtime && <span class={`runtime-tag runtime-${runtime}`}>{runtime}</span>}
+      {runtime && <span className={runtimeTagClass(runtime)}>{runtime}</span>}
       <span
-        class="log-message"
+        className={logMessageStyle}
         onContextMenu={onCellContext ? (e: MouseEvent) => onCellContext(e, 'message', String(message)) : undefined}
       >{message}</span>
       {extraColumns?.map((col) => (
         <span
           key={col.id}
-          class="custom-col"
+          className={customColStyle}
           title={col.value}
           onContextMenu={onCellContext && col.attrKey ? (e: MouseEvent) => onCellContext(e, col.attrKey!, col.value) : undefined}
         >{col.value || '—'}</span>

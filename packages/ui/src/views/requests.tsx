@@ -1,4 +1,5 @@
 import { useMemo, useState, useEffect, useCallback } from 'preact/hooks';
+import { css } from 'styled-system/css';
 import { ServicePills } from '../components/service-pills.js';
 import { SearchBar } from '../components/search-bar.js';
 import { ColumnPicker } from '../components/column-picker.js';
@@ -96,19 +97,251 @@ function computePercentiles(groups: RequestGroup[]): { p50: number; p90: number;
   return { p50: at(0.5), p90: at(0.9), p99: at(0.99) };
 }
 
-function durationClass(ms: number, p: { p50: number; p90: number; p99: number }): string {
-  if (p.p50 === 0) return 'duration';
-  if (ms >= p.p99) return 'duration duration-p99';
-  if (ms >= p.p90) return 'duration duration-p90';
-  return 'duration';
-}
-
 type SortField = 'time' | 'method' | 'route' | 'status' | 'duration' | 'service' | string;
 type SortDir = 'asc' | 'desc';
 
+/* ── PandaCSS style constants ─────────────────────────────────────────── */
+
+const requestRowStyle = css({
+  display: 'grid',
+  gap: '2',
+  padding: '1 4',
+  borderBottom: '1px solid token(colors.border.subtle)',
+  alignItems: 'center',
+  cursor: 'pointer',
+  fontFamily: 'mono',
+  fontSize: 'md',
+  minWidth: '0',
+  '& > span': {
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+  _hover: {
+    background: 'surface.hover',
+  },
+});
+
+const requestRowHeaderStyle = css({
+  cursor: 'default',
+  fontSize: 'xs',
+  fontWeight: '600',
+  textTransform: 'uppercase',
+  letterSpacing: '0.5px',
+  color: 'fg.dim',
+  padding: '1 4',
+  borderBottom: '1px solid token(colors.border.subtle)',
+  background: 'surface.panel',
+  position: 'sticky',
+  top: '0',
+  zIndex: '1',
+  _hover: {
+    background: 'surface.panel',
+  },
+});
+
+const requestRowSelectedStyle = css({
+  background: 'surface.hover',
+  outline: '1px solid token(colors.accent)',
+  outlineOffset: '-1px',
+});
+
+const timestampStyle = css({
+  color: 'fg.dim',
+});
+
+const methodStyle = css({
+  fontWeight: '600',
+});
+
+const methodGetStyle = css({
+  fontWeight: '600',
+  color: 'green',
+});
+
+const methodPostStyle = css({
+  fontWeight: '600',
+  color: 'blue',
+});
+
+const methodPutStyle = css({
+  fontWeight: '600',
+  color: 'yellow',
+});
+
+const methodDeleteStyle = css({
+  fontWeight: '600',
+  color: 'red',
+});
+
+const routeStyle = css({
+  color: 'fg',
+});
+
+const httpStatusStyle = css({
+  fontWeight: '600',
+  fontSize: 'sm',
+  textAlign: 'center',
+  padding: '1px 1',
+  borderRadius: 'sm',
+});
+
+const http2xxStyle = css({
+  color: 'green',
+  background: 'rgba(0, 184, 148, 0.1)',
+});
+
+const http3xxStyle = css({
+  color: 'blue',
+  background: 'rgba(116, 185, 255, 0.1)',
+});
+
+const http4xxStyle = css({
+  color: 'yellow',
+  background: 'rgba(253, 203, 110, 0.1)',
+});
+
+const http5xxStyle = css({
+  color: 'red',
+  background: 'rgba(225, 112, 85, 0.15)',
+});
+
+const durationStyle = css({
+  color: 'fg.dim',
+  textAlign: 'right',
+});
+
+const durationP90Style = css({
+  color: 'yellow',
+  fontWeight: '600',
+  textAlign: 'right',
+});
+
+const durationP99Style = css({
+  color: 'red',
+  fontWeight: '600',
+  textAlign: 'right',
+});
+
+const serviceStyle = css({
+  color: 'blue',
+});
+
+const statusOkStyle = css({
+  color: 'green',
+});
+
+const statusErrorStyle = css({
+  color: 'red',
+});
+
+const colHeaderStyle = css({
+  position: 'relative',
+  cursor: 'pointer',
+  display: 'flex',
+  alignItems: 'center',
+  gap: '1',
+  userSelect: 'none',
+  overflow: 'hidden',
+  _hover: {
+    color: 'fg.bright',
+  },
+});
+
+const sortIndicatorStyle = css({
+  fontSize: '8px',
+  opacity: '0.7',
+  minWidth: '8px',
+  display: 'inline-block',
+});
+
+const colResizeStyle = css({
+  position: 'absolute',
+  right: '-4px',
+  top: '0',
+  bottom: '0',
+  width: '9px',
+  cursor: 'col-resize',
+  zIndex: '3',
+});
+
+const emptyStyle = css({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  flex: '1',
+  color: 'fg.dim',
+  fontSize: '14px',
+});
+
+const customColStyle = css({
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  whiteSpace: 'nowrap',
+  maxWidth: '120px',
+  color: 'fg.dim',
+});
+
+const pillStyle = css({
+  padding: '2px 2',
+  borderRadius: 'full',
+  fontSize: 'sm',
+  fontWeight: '500',
+  border: '1px solid token(colors.border.subtle)',
+  cursor: 'pointer',
+  background: 'transparent',
+  color: 'fg.dim',
+});
+
+const pillActiveStyle = css({
+  background: 'accent',
+  borderColor: 'accent',
+  color: 'white',
+});
+
+const toolbarStyle = css({
+  padding: '1 4',
+  display: 'flex',
+  gap: '2',
+  alignItems: 'center',
+  borderBottom: '1px solid token(colors.border.subtle)',
+});
+
+const mlAutoStyle = css({
+  marginLeft: 'auto',
+});
+
+/* ── Helpers ──────────────────────────────────────────────────────────── */
+
+function getDurationClassName(ms: number, p: { p50: number; p90: number; p99: number }): string {
+  if (p.p50 === 0) return durationStyle;
+  if (ms >= p.p99) return `${durationStyle} ${durationP99Style}`;
+  if (ms >= p.p90) return `${durationStyle} ${durationP90Style}`;
+  return durationStyle;
+}
+
+function getMethodClassName(method: string): string {
+  const m = method.toUpperCase();
+  if (m === 'GET') return methodGetStyle;
+  if (m === 'POST') return methodPostStyle;
+  if (m === 'PUT') return methodPutStyle;
+  if (m === 'DELETE') return methodDeleteStyle;
+  return methodStyle;
+}
+
+function getHttpStatusClassName(code: number): string {
+  const group = Math.floor(code / 100);
+  const base = httpStatusStyle;
+  if (group === 2) return `${base} ${http2xxStyle}`;
+  if (group === 3) return `${base} ${http3xxStyle}`;
+  if (group === 4) return `${base} ${http4xxStyle}`;
+  if (group === 5) return `${base} ${http5xxStyle}`;
+  return base;
+}
+
 function SortIndicator({ field, sortBy, sortDir }: { field: string; sortBy: string; sortDir: SortDir }) {
-  if (field !== sortBy) return <span class="sort-indicator" />;
-  return <span class="sort-indicator">{sortDir === 'asc' ? '▲' : '▼'}</span>;
+  if (field !== sortBy) return <span className={sortIndicatorStyle} />;
+  return <span className={sortIndicatorStyle}>{sortDir === 'asc' ? '▲' : '▼'}</span>;
 }
 
 interface RequestsProps {
@@ -235,21 +468,12 @@ export function Requests({ eventsResult, onOpenTrace }: RequestsProps) {
 
   const { gridTemplate, startResize } = useColumnResize('requests', columnConfigs);
 
-  const methodClass = (method: string) => {
-    const m = method.toUpperCase();
-    if (m === 'GET') return 'method method-get';
-    if (m === 'POST') return 'method method-post';
-    if (m === 'PUT') return 'method method-put';
-    if (m === 'DELETE') return 'method method-delete';
-    return 'method';
-  };
-
   return (
     <>
       <ServicePills services={services} active={activeServices} onToggle={toggleService} events={filtered} />
       <SearchBar value={searchQuery} onChange={setSearchQuery} events={filtered} />
-      <div style="padding:4px 16px;display:flex;gap:8px;align-items:center;border-bottom:1px solid var(--border)">
-        <div style="margin-left:auto">
+      <div className={toolbarStyle}>
+        <div className={mlAutoStyle}>
           <ColumnPicker
             customColumns={customColumns}
             availableAttrs={availableAttrs}
@@ -260,7 +484,7 @@ export function Requests({ eventsResult, onOpenTrace }: RequestsProps) {
       </div>
 
       {/* Column headers — click to sort, drag edge to resize */}
-      <div class="request-row request-row-header" style={`grid-template-columns:${gridTemplate}`}>
+      <div className={`${requestRowStyle} ${requestRowHeaderStyle}`} style={{ gridTemplateColumns: gridTemplate }}>
         {[
           { id: 'time', label: 'Time' },
           { id: 'method', label: 'Method' },
@@ -270,36 +494,36 @@ export function Requests({ eventsResult, onOpenTrace }: RequestsProps) {
           { id: 'service', label: 'Service' },
           ...customColumns.map((col) => ({ id: col.id, label: col.label })),
         ].map((col) => (
-          <span key={col.id} class="col-header" onClick={() => toggleSort(col.id)}>
+          <span key={col.id} className={colHeaderStyle} onClick={() => toggleSort(col.id)}>
             {col.label}<SortIndicator field={col.id} sortBy={sortBy} sortDir={sortDir} />
-            <span class="col-resize" onPointerDown={(e: PointerEvent) => { e.stopPropagation(); startResize(col.id, e.clientX); }} />
+            <span className={colResizeStyle} onPointerDown={(e: PointerEvent) => { e.stopPropagation(); startResize(col.id, e.clientX); }} />
           </span>
         ))}
       </div>
 
-      <div class="event-list">
+      <div className={css({ flex: 1, overflowY: 'auto', overflowX: 'hidden', fontFamily: 'mono', fontSize: 'md' })}>
         {groups.length === 0 ? (
-          <div class="empty">{searchQuery || activeServices.size > 0 ? 'No requests match this filter' : 'No requests yet'}</div>
+          <div className={emptyStyle}>{searchQuery || activeServices.size > 0 ? 'No requests match this filter' : 'No requests yet'}</div>
         ) : (
           groups.map((group, i) => (
             <div
               key={group.traceId}
-              class={`request-row ${i === selectedIndex ? 'request-row-selected' : ''}`}
-              style={`grid-template-columns:${gridTemplate}`}
+              className={`${requestRowStyle} ${i === selectedIndex ? requestRowSelectedStyle : ''}`}
+              style={{ gridTemplateColumns: gridTemplate }}
               onClick={() => { setSelectedIndex(i); onOpenTrace?.(group.traceId); }}
             >
-              <span class="timestamp">{formatTime(group.timestamp)}</span>
-              <span class={methodClass(group.method)} onContextMenu={(e: MouseEvent) => handleCellContext(e, 'http.method', group.method)}>{group.method}</span>
-              <span class="route" onContextMenu={(e: MouseEvent) => handleCellContext(e, 'route', group.routePath)}>{group.routePath}</span>
+              <span className={timestampStyle}>{formatTime(group.timestamp)}</span>
+              <span className={getMethodClassName(group.method)} onContextMenu={(e: MouseEvent) => handleCellContext(e, 'http.method', group.method)}>{group.method}</span>
+              <span className={routeStyle} onContextMenu={(e: MouseEvent) => handleCellContext(e, 'route', group.routePath)}>{group.routePath}</span>
               {group.httpCode ? (
-                <span class={`http-status http-${Math.floor(group.httpCode / 100)}xx`} onContextMenu={(e: MouseEvent) => handleCellContext(e, 'statusCode', String(group.httpCode))}>{group.httpCode}</span>
+                <span className={getHttpStatusClassName(group.httpCode)} onContextMenu={(e: MouseEvent) => handleCellContext(e, 'statusCode', String(group.httpCode))}>{group.httpCode}</span>
               ) : (
-                <span class={group.status === 'ERROR' ? 'status-error' : 'status-ok'} onContextMenu={(e: MouseEvent) => handleCellContext(e, 'status', group.status)}>{group.status}</span>
+                <span className={group.status === 'ERROR' ? statusErrorStyle : statusOkStyle} onContextMenu={(e: MouseEvent) => handleCellContext(e, 'status', group.status)}>{group.status}</span>
               )}
-              <span class={durationClass(group.durationMs, percentiles)}>{group.duration}</span>
-              <span class="service" onContextMenu={(e: MouseEvent) => handleCellContext(e, 'service', group.serviceName)}>{group.serviceName}</span>
+              <span className={getDurationClassName(group.durationMs, percentiles)}>{group.duration}</span>
+              <span className={serviceStyle} onContextMenu={(e: MouseEvent) => handleCellContext(e, 'service', group.serviceName)}>{group.serviceName}</span>
               {customColumns.map((col) => (
-                <span key={col.id} class="custom-col" title={group.extraAttrs[col.id]} onContextMenu={(e: MouseEvent) => handleCellContext(e, col.attrKey, group.extraAttrs[col.id])}>{group.extraAttrs[col.id] || '—'}</span>
+                <span key={col.id} className={customColStyle} title={group.extraAttrs[col.id]} onContextMenu={(e: MouseEvent) => handleCellContext(e, col.attrKey, group.extraAttrs[col.id])}>{group.extraAttrs[col.id] || '—'}</span>
               ))}
             </div>
           ))

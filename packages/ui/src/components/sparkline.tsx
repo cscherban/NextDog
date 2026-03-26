@@ -1,4 +1,5 @@
 import { useMemo } from 'preact/hooks';
+import { token } from 'styled-system/tokens';
 import type { SSEEvent } from '../hooks/use-sse.js';
 
 const WIDTH = 80;
@@ -39,18 +40,19 @@ export function Sparkline({ events }: { events: SSEEvent[] }) {
 
   const polylinePoints = points.join(' ');
   const areaPoints = `0,${HEIGHT} ${polylinePoints} ${WIDTH},${HEIGHT}`;
+  const greenColor = token('colors.green');
 
   return (
     <svg width={WIDTH} height={HEIGHT} viewBox={`0 0 ${WIDTH} ${HEIGHT}`}>
       <polygon
         points={areaPoints}
-        fill="var(--green)"
+        fill={greenColor}
         opacity={0.1}
       />
       <polyline
         points={polylinePoints}
         fill="none"
-        stroke="var(--green)"
+        stroke={greenColor}
         stroke-width="1.5"
       />
     </svg>

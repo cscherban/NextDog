@@ -1,5 +1,209 @@
 import { useState, useRef, useMemo } from 'preact/hooks';
+import { css } from 'styled-system/css';
 import type { SSEEvent } from '../hooks/use-sse.js';
+
+// ---------------------------------------------------------------------------
+// Style constants (defined outside the component)
+// ---------------------------------------------------------------------------
+
+const containerStyle = css({
+  position: 'relative',
+  padding: '2 4',
+  borderBottom: '1px solid token(colors.border.subtle)',
+});
+
+const rowStyle = css({
+  display: 'flex',
+  gap: '6px',
+  alignItems: 'stretch',
+});
+
+const inputWrapperBase = css({
+  display: 'flex',
+  flexWrap: 'wrap',
+  gap: '1',
+  alignItems: 'center',
+  minHeight: '32px',
+  padding: '1 2',
+  background: 'surface.bg',
+  border: '1px solid token(colors.border.subtle)',
+  borderRadius: 'sm',
+  cursor: 'text',
+  flex: 1,
+});
+
+const inputWrapperFocused = css({
+  borderColor: 'accent',
+});
+
+const searchInputStyle = css({
+  flex: 1,
+  minWidth: '120px',
+  border: 'none',
+  background: 'transparent',
+  color: 'fg',
+  fontFamily: 'mono',
+  fontSize: 'md',
+  outline: 'none',
+  padding: '2px 0',
+  _placeholder: {
+    color: 'fg.dim',
+    opacity: 0.6,
+  },
+});
+
+const helpBtnStyle = css({
+  fontSize: 'md',
+  padding: '1 2',
+  flexShrink: 0,
+  position: 'relative',
+  borderRadius: '12px',
+  fontWeight: 500,
+  border: '1px solid token(colors.border.subtle)',
+  cursor: 'pointer',
+  background: 'transparent',
+  color: 'fg.dim',
+});
+
+const helpPanelStyle = css({
+  marginTop: '6px',
+  padding: '10px 12px',
+  background: 'surface.panel',
+  border: '1px solid token(colors.border.subtle)',
+  borderRadius: 'sm',
+  fontSize: 'sm',
+  fontFamily: 'mono',
+});
+
+const helpTitleStyle = css({
+  fontWeight: 600,
+  color: 'fg.bright',
+  marginBottom: '6px',
+});
+
+const helpBodyStyle = css({
+  color: 'fg.dim',
+  lineHeight: 1.8,
+});
+
+const helpKeywordStyle = css({ color: 'fg' });
+
+const helpFooterStyle = css({
+  marginTop: '1',
+  color: 'fg.dim',
+});
+
+// -- pill styles --
+
+const pillFilterBase = css({
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: '2px',
+  padding: '1px 6px',
+  borderRadius: 'sm',
+  fontFamily: 'mono',
+  fontSize: 'sm',
+  background: 'rgba(108, 92, 231, 0.15)',
+  border: '1px solid rgba(108, 92, 231, 0.3)',
+  color: 'fg',
+  whiteSpace: 'nowrap',
+});
+
+const pillNegated = css({
+  background: 'rgba(225, 112, 85, 0.15)',
+  borderColor: 'rgba(225, 112, 85, 0.3)',
+});
+
+const pillLevel = css({
+  background: 'rgba(116, 185, 255, 0.15)',
+  borderColor: 'rgba(116, 185, 255, 0.3)',
+});
+
+const pillService = css({
+  background: 'rgba(0, 184, 148, 0.15)',
+  borderColor: 'rgba(0, 184, 148, 0.3)',
+});
+
+const pillStatus = css({
+  background: 'rgba(253, 203, 110, 0.15)',
+  borderColor: 'rgba(253, 203, 110, 0.3)',
+});
+
+const pillRoute = css({
+  background: 'rgba(108, 92, 231, 0.15)',
+  borderColor: 'rgba(108, 92, 231, 0.3)',
+});
+
+const pillTrace = css({
+  background: 'rgba(136, 136, 136, 0.15)',
+  borderColor: 'rgba(136, 136, 136, 0.3)',
+});
+
+const pillKeyStyle = css({ color: 'fg.dim' });
+
+const pillSepStyle = css({ color: 'fg.dim', margin: '0 1px' });
+
+const pillValStyle = css({ color: 'fg.bright' });
+
+const pillNegStyle = css({ color: 'red', fontWeight: 600, marginRight: '2px' });
+
+const pillOperatorStyle = css({
+  fontSize: '9px',
+  fontWeight: 700,
+  color: 'yellow',
+  marginRight: '1',
+  textTransform: 'uppercase',
+});
+
+const pillRemoveStyle = css({
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  width: '14px',
+  height: '14px',
+  marginLeft: '2px',
+  border: 'none',
+  borderRadius: '2px',
+  background: 'transparent',
+  color: 'fg.dim',
+  cursor: 'pointer',
+  fontSize: 'xs',
+  lineHeight: 1,
+  padding: 0,
+  _hover: {
+    background: 'rgba(255, 255, 255, 0.1)',
+    color: 'fg.bright',
+  },
+});
+
+const suggestionsStyle = css({
+  position: 'absolute',
+  left: '4',
+  right: '4',
+  top: 'calc(100% - 2px)',
+  background: 'surface.panel',
+  border: '1px solid token(colors.border.subtle)',
+  borderRadius: '0 0 token(radii.sm) token(radii.sm)',
+  zIndex: 50,
+  maxHeight: '200px',
+  overflowY: 'auto',
+});
+
+const suggestionStyle = css({
+  padding: '6px 12px',
+  fontFamily: 'mono',
+  fontSize: 'md',
+  color: 'fg.dim',
+  cursor: 'pointer',
+  _hover: {
+    background: 'surface.hover',
+    color: 'fg.bright',
+  },
+});
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
 
 interface SearchBarProps {
   value: string;
@@ -62,17 +266,17 @@ function parseTokens(query: string): FilterToken[] {
   return tokens;
 }
 
-function pillColor(key?: string, negated?: boolean): string {
-  if (negated) return 'pill-filter pill-negated';
+function pillColorClass(key?: string, negated?: boolean): string {
+  if (negated) return `${pillFilterBase} ${pillNegated}`;
   switch (key) {
-    case 'level': return 'pill-filter pill-level';
-    case 'service': return 'pill-filter pill-service';
-    case 'status': return 'pill-filter pill-status';
+    case 'level': return `${pillFilterBase} ${pillLevel}`;
+    case 'service': return `${pillFilterBase} ${pillService}`;
+    case 'status': return `${pillFilterBase} ${pillStatus}`;
     case 'route':
-    case 'name': return 'pill-filter pill-route';
+    case 'name': return `${pillFilterBase} ${pillRoute}`;
     case 'trace':
-    case 'traceId': return 'pill-filter pill-trace';
-    default: return 'pill-filter';
+    case 'traceId': return `${pillFilterBase} ${pillTrace}`;
+    default: return pillFilterBase;
   }
 }
 
@@ -107,6 +311,10 @@ function collectFacets(events: SSEEvent[]): string[] {
   }
   return [...facets].sort();
 }
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
 
 export function SearchBar({ value, onChange, events }: SearchBarProps) {
   const [focused, setFocused] = useState(false);
@@ -160,23 +368,23 @@ export function SearchBar({ value, onChange, events }: SearchBarProps) {
   const [showHelp, setShowHelp] = useState(false);
 
   return (
-    <div class="search-bar-container">
-      <div style="display:flex;gap:6px;align-items:stretch">
-      <div class={`search-bar-input ${focused ? 'search-bar-focused' : ''}`} style="flex:1" onClick={() => inputRef.current?.focus()}>
+    <div class={containerStyle}>
+      <div class={rowStyle}>
+      <div class={`${inputWrapperBase} ${focused ? inputWrapperFocused : ''}`} onClick={() => inputRef.current?.focus()}>
         {tokens.map((token, i) => (
-          <span key={i} class={pillColor(token.key, token.negated)}>
-            {token.operator === 'OR' && i > 0 && <span class="pill-operator">OR</span>}
-            {token.negated && <span class="pill-neg">!</span>}
-            {token.key && <span class="pill-key">{token.key}</span>}
-            {token.key && <span class="pill-sep">:</span>}
-            <span class="pill-val">{token.value}</span>
-            <button class="pill-remove" onClick={(e) => { e.stopPropagation(); handleRemoveToken(token.raw); }}>x</button>
+          <span key={i} class={pillColorClass(token.key, token.negated)}>
+            {token.operator === 'OR' && i > 0 && <span class={pillOperatorStyle}>OR</span>}
+            {token.negated && <span class={pillNegStyle}>!</span>}
+            {token.key && <span class={pillKeyStyle}>{token.key}</span>}
+            {token.key && <span class={pillSepStyle}>:</span>}
+            <span class={pillValStyle}>{token.value}</span>
+            <button class={pillRemoveStyle} onClick={(e) => { e.stopPropagation(); handleRemoveToken(token.raw); }}>x</button>
           </span>
         ))}
         <input
           ref={inputRef}
           type="text"
-          class="search-input"
+          class={searchInputStyle}
           placeholder={tokens.length === 0 ? 'Filter... (e.g. level:error, !service:noisy, status:OK OR status:ERROR)' : ''}
           value={inputValue}
           onInput={(e) => {
@@ -189,8 +397,7 @@ export function SearchBar({ value, onChange, events }: SearchBarProps) {
         />
       </div>
       <button
-        class="pill"
-        style="font-size:12px;padding:4px 8px;flex-shrink:0;position:relative"
+        class={helpBtnStyle}
         onClick={() => setShowHelp((v) => !v)}
         title="Search syntax help"
       >
@@ -198,25 +405,21 @@ export function SearchBar({ value, onChange, events }: SearchBarProps) {
       </button>
       </div>
       {showHelp && (
-        <div style="
-          margin-top:6px;padding:10px 12px;
-          background:var(--bg-surface);border:1px solid var(--border);
-          border-radius:4px;font-size:11px;font-family:var(--mono);
-        ">
-          <div style="font-weight:600;color:var(--text-bright);margin-bottom:6px">Filter Syntax</div>
-          <div style="color:var(--text-dim);line-height:1.8">
-            <div><span style="color:var(--text)">key:value</span> — filter by attribute</div>
-            <div><span style="color:var(--text)">!key:value</span> — exclude matches</div>
-            <div><span style="color:var(--text)">a OR b</span> — match either</div>
-            <div><span style="color:var(--text)">text</span> — search name, message, route</div>
-            <div style="margin-top:4px;color:var(--text-dim)">Keys: level, service, route, status, name, kind, runtime, traceId</div>
+        <div class={helpPanelStyle}>
+          <div class={helpTitleStyle}>Filter Syntax</div>
+          <div class={helpBodyStyle}>
+            <div><span class={helpKeywordStyle}>key:value</span> — filter by attribute</div>
+            <div><span class={helpKeywordStyle}>!key:value</span> — exclude matches</div>
+            <div><span class={helpKeywordStyle}>a OR b</span> — match either</div>
+            <div><span class={helpKeywordStyle}>text</span> — search name, message, route</div>
+            <div class={helpFooterStyle}>Keys: level, service, route, status, name, kind, runtime, traceId</div>
           </div>
         </div>
       )}
       {showSuggestions && suggestions.length > 0 && focused && (
-        <div class="search-suggestions">
+        <div class={suggestionsStyle}>
           {suggestions.map((s) => (
-            <div key={s} class="search-suggestion" onMouseDown={() => handleSuggestionClick(s)}>
+            <div key={s} class={suggestionStyle} onMouseDown={() => handleSuggestionClick(s)}>
               {s}
             </div>
           ))}
