@@ -40,6 +40,10 @@ export const colHeaderStyle = css({
   gap: '1',
   userSelect: 'none',
   overflow: 'hidden',
+  borderRight: '1px solid token(colors.border.subtle)',
+  _last: {
+    borderRight: 'none',
+  },
   _hover: {
     color: 'fg.bright',
   },

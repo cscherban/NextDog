@@ -173,6 +173,35 @@ const logsStyle = css({
   overflowY: 'auto',
 });
 
+const segmentGroupStyle = css({
+  display: 'inline-flex',
+  borderRadius: 'md',
+  border: '1px solid token(colors.border.subtle)',
+  overflow: 'hidden',
+});
+
+const segmentBtnStyle = css({
+  py: '0.5', px: '2',
+  fontSize: 'xs',
+  fontFamily: 'mono',
+  fontWeight: 500,
+  cursor: 'pointer',
+  border: 'none',
+  background: 'transparent',
+  color: 'fg.dim',
+  textTransform: 'none',
+  letterSpacing: '0',
+  transition: 'all 0.12s ease',
+  _hover: { color: 'fg.bright', background: 'surface.hover' },
+});
+
+const segmentBtnActiveStyle = css({
+  background: 'accent',
+  color: 'surface.bg',
+  fontWeight: 600,
+});
+
+// Keep for backward compat but unused now
 const toggleBtnStyle = css({
   fontSize: 'sm',
   fontFamily: 'mono',
@@ -381,12 +410,10 @@ export function DetailPane({ traceId, events, onClose, onFilter }: DetailPanePro
             <div class={sectionStyle}>
               <div class={sectionTitleStyle}>
                 <span>{selectedEvent.type === 'span' ? 'Span' : 'Log'} Detail</span>
-                <button
-                  class={toggleBtnStyle}
-                  onClick={() => setShowJson(!showJson)}
-                >
-                  {showJson ? 'Table' : 'JSON'}
-                </button>
+                <div class={segmentGroupStyle}>
+                  <button class={`${segmentBtnStyle} ${!showJson ? segmentBtnActiveStyle : ''}`} onClick={() => setShowJson(false)}>Table</button>
+                  <button class={`${segmentBtnStyle} ${showJson ? segmentBtnActiveStyle : ''}`} onClick={() => setShowJson(true)}>JSON</button>
+                </div>
               </div>
               {showJson ? (
                 <pre class={jsonViewStyle}>
