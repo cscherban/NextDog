@@ -174,20 +174,20 @@ const logsStyle = css({
 });
 
 const toggleBtnStyle = css({
-  fontSize: 'xs',
+  fontSize: 'sm',
   fontFamily: 'mono',
-  py: '0.5', px: '2',
+  py: '1', px: '2',
   borderRadius: 'sm',
   border: '1px solid token(colors.border.strong)',
-  background: 'transparent',
-  color: 'fg.dim',
+  background: 'surface.hover',
+  color: 'fg',
   cursor: 'pointer',
   textTransform: 'none',
   letterSpacing: '0',
   fontWeight: 500,
   transition: 'all 0.15s ease',
   _hover: {
-    background: 'surface.hover',
+    background: 'surface.raised',
     color: 'fg.bright',
   },
 });

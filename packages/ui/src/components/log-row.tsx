@@ -6,14 +6,18 @@ const logRowStyle = css({
   display: 'grid',
   gridTemplateColumns: '90px 50px 1fr',
   gap: '2',
-  py: '1', px: '4',
+  py: '1.5', px: '4',
   fontFamily: 'mono',
   fontSize: 'md',
   borderBottom: '1px solid token(colors.border.subtle)',
   cursor: 'pointer',
-  alignItems: 'start',
+  alignItems: 'center',
   minWidth: 0,
-  transition: 'all 0.12s ease',
+  '& > span': {
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
   _hover: { background: 'surface.hover' },
 });
 

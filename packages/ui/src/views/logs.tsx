@@ -115,11 +115,11 @@ const logRowHeaderStyle = css({
   gap: '2',
   cursor: 'default',
   fontSize: 'xs',
-  fontWeight: '500',
+  fontWeight: '600',
   textTransform: 'uppercase',
   letterSpacing: '0.5px',
   color: 'fg.dim',
-  py: '2', px: '4',
+  py: '1', px: '4',
   borderBottom: '1px solid token(colors.border.subtle)',
   background: 'surface.panel',
   position: 'sticky',
@@ -182,8 +182,9 @@ const tabBtnStyle = css({
 });
 
 const tabBtnActiveStyle = css({
-  background: 'surface.raised',
-  color: 'fg.bright',
+  background: 'accent',
+  color: 'surface.bg',
+  fontWeight: 600,
 });
 
 /* ── Components ───────────────────────────────────────────────────────── */
