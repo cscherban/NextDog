@@ -340,6 +340,12 @@ export function SearchBar({ value, onChange, events, rightSlot }: SearchBarProps
       .map((f) => `${f}:`);
   }, [inputValue, facets]);
 
+  const editToken = (tokenRaw: string) => {
+    onChange(removeToken(value, tokenRaw));
+    setInputValue(tokenRaw);
+    setTimeout(() => inputRef.current?.focus(), 0);
+  };
+
   const handleKeyDown = (e: KeyboardEvent) => {
     if (e.key === 'Enter') {
       e.preventDefault();
@@ -353,6 +359,13 @@ export function SearchBar({ value, onChange, events, rightSlot }: SearchBarProps
       // Remove last token
       const lastToken = tokens[tokens.length - 1];
       onChange(removeToken(value, lastToken.raw));
+    } else if (e.key === 'ArrowLeft' && tokens.length > 0) {
+      // Edit last token when cursor is at position 0
+      const input = e.target as HTMLInputElement;
+      if (input.selectionStart === 0 && input.selectionEnd === 0) {
+        e.preventDefault();
+        editToken(tokens[tokens.length - 1].raw);
+      }
     } else if (e.key === 'Escape') {
       setShowSuggestions(false);
       (e.target as HTMLInputElement).blur();
@@ -380,7 +393,12 @@ export function SearchBar({ value, onChange, events, rightSlot }: SearchBarProps
           <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
         </svg>
         {tokens.map((token, i) => (
-          <span key={i} class={pillColorClass(token.key, token.negated)}>
+          <span
+            key={i}
+            class={pillColorClass(token.key, token.negated)}
+            onDblClick={(e) => { e.stopPropagation(); editToken(token.raw); }}
+            title="Double-click to edit"
+          >
             {token.operator === 'OR' && i > 0 && <span class={pillOperatorStyle}>OR</span>}
             {token.negated && <span class={pillNegStyle}>!</span>}
             {token.key && <span class={pillKeyStyle}>{token.key}</span>}
