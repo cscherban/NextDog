@@ -22,6 +22,8 @@ function saveWidths(viewId: string, widths: Record<string, number>) {
 export function useColumnResize(viewId: string, columns: ColumnConfig[]) {
   const [overrides, setOverrides] = useState<Record<string, number>>(() => loadWidths(viewId));
   const dragging = useRef<{ colId: string; startX: number; startWidth: number } | null>(null);
+  const pendingWidth = useRef<{ colId: string; width: number } | null>(null);
+  const rafId = useRef<number>(0);
 
   // Persist on change
   useEffect(() => {
@@ -30,23 +32,42 @@ export function useColumnResize(viewId: string, columns: ColumnConfig[]) {
 
   // Pointer move/up handlers (registered once)
   useEffect(() => {
+    const flushPending = () => {
+      if (pendingWidth.current) {
+        const { colId, width } = pendingWidth.current;
+        pendingWidth.current = null;
+        setOverrides((prev) => ({ ...prev, [colId]: width }));
+      }
+    };
+
     const onMove = (e: PointerEvent) => {
       if (!dragging.current) return;
       const delta = e.clientX - dragging.current.startX;
       const newWidth = Math.max(MIN_WIDTH, dragging.current.startWidth + delta);
-      setOverrides((prev) => ({ ...prev, [dragging.current!.colId]: newWidth }));
+      pendingWidth.current = { colId: dragging.current.colId, width: newWidth };
+      cancelAnimationFrame(rafId.current);
+      rafId.current = requestAnimationFrame(flushPending);
     };
+
     const onUp = () => {
       if (!dragging.current) return;
+      // Flush any pending width
+      if (pendingWidth.current) {
+        const { colId, width } = pendingWidth.current;
+        pendingWidth.current = null;
+        setOverrides((prev) => ({ ...prev, [colId]: width }));
+      }
       dragging.current = null;
       document.body.style.cursor = '';
       document.body.style.userSelect = '';
     };
+
     window.addEventListener('pointermove', onMove);
     window.addEventListener('pointerup', onUp);
     return () => {
       window.removeEventListener('pointermove', onMove);
       window.removeEventListener('pointerup', onUp);
+      cancelAnimationFrame(rafId.current);
     };
   }, []);
 
@@ -60,7 +81,6 @@ export function useColumnResize(viewId: string, columns: ColumnConfig[]) {
   const gridTemplate = useMemo(() => {
     return columns.map((col) => {
       const w = overrides[col.id] ?? col.defaultWidth;
-      // Use 0 as sentinel for "flex" columns
       if (col.defaultWidth === 0) return '1fr';
       return `${w}px`;
     }).join(' ');

@@ -3,6 +3,7 @@ import { LogRow } from '../components/log-row.js';
 import { ServicePills } from '../components/service-pills.js';
 import { SearchBar } from '../components/search-bar.js';
 import { AttributeTable } from '../components/attribute-table.js';
+import { ColumnPicker } from '../components/column-picker.js';
 import { useKeyboard } from '../hooks/use-keyboard.js';
 import { useColumnResize } from '../hooks/use-column-resize.js';
 import { showContextMenu, attrContextActions } from '../components/context-menu.js';
@@ -66,7 +67,6 @@ export function Logs({ eventsResult, allEvents, onOpenTrace, onFilter }: LogsPro
   const [selectedLog, setSelectedLog] = useState<SSEEvent | null>(null);
   const [showJson, setShowJson] = useState(false);
   const [customColumns, setCustomColumns] = useState<ColumnDef[]>(loadCustomColumns);
-  const [showColPicker, setShowColPicker] = useState(false);
   const [sortBy, setSortBy] = useState<string>('time');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
 
@@ -263,58 +263,14 @@ export function Logs({ eventsResult, allEvents, onOpenTrace, onFilter }: LogsPro
             <button class="pill" onClick={toggleLiveTail}>Resume</button>
           )}
           <div style="margin-left:auto">
-            <button
-              class="pill"
-              onClick={() => setShowColPicker(!showColPicker)}
-              title="Customize columns"
-              style="font-size:11px"
-            >
-              + Column
-            </button>
+            <ColumnPicker
+              customColumns={customColumns}
+              availableAttrs={availableAttrs}
+              onAdd={addColumn}
+              onRemove={removeColumn}
+            />
           </div>
         </div>
-
-        {/* Column picker dropdown */}
-        {showColPicker && (
-          <div class="column-picker">
-            <div class="column-picker-header">
-              <span style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-dim)">
-                Add attribute column
-              </span>
-              <button class="pane-btn" onClick={() => setShowColPicker(false)} title="Close">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
-                </svg>
-              </button>
-            </div>
-            {customColumns.length > 0 && (
-              <div style="padding:4px 12px;border-bottom:1px solid var(--border)">
-                <div style="font-size:10px;color:var(--text-dim);margin-bottom:4px">Active custom columns:</div>
-                {customColumns.map((col) => (
-                  <div key={col.id} style="display:flex;align-items:center;justify-content:space-between;padding:2px 0">
-                    <span style="font-size:12px;font-family:var(--mono)">{col.attrKey}</span>
-                    <button class="pill" onClick={() => removeColumn(col.id)} style="font-size:10px;color:var(--red)">Remove</button>
-                  </div>
-                ))}
-              </div>
-            )}
-            <div style="max-height:200px;overflow-y:auto">
-              {availableAttrs.length === 0 ? (
-                <div style="padding:8px 12px;font-size:12px;color:var(--text-dim)">No more attributes available</div>
-              ) : (
-                availableAttrs.map((attr) => (
-                  <div
-                    key={attr}
-                    class="column-picker-item"
-                    onClick={() => addColumn(attr)}
-                  >
-                    <span style="font-family:var(--mono);font-size:12px">{attr}</span>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        )}
 
         {/* Column headers — click to sort, drag edge to resize */}
         <div
