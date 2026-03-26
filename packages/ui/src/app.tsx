@@ -39,7 +39,7 @@ const appStyle = css({
 const headerStyle = css({
   display: 'flex',
   alignItems: 'center',
-  gap: '4',
+  gap: '0',
   py: '0', px: '4',
   height: '44px',
   borderBottom: '1px solid token(colors.border.subtle)',
@@ -47,10 +47,10 @@ const headerStyle = css({
 });
 
 const headerH1Style = css({
-  fontSize: '2xl',
+  fontSize: 'xl',
   fontWeight: 600,
   color: 'fg.bright',
-  letterSpacing: '-0.3px',
+  letterSpacing: '-0.2px',
 });
 
 const navStyle = css({
@@ -104,7 +104,8 @@ const headerRightStyle = css({
   marginLeft: 'auto',
   display: 'flex',
   alignItems: 'center',
-  gap: '2',
+  gap: '3',
+  flexShrink: 0,
 });
 
 const connectionStatusBaseStyle = css({
@@ -221,8 +222,10 @@ export function App() {
   return (
     <div className={appStyle}>
       <header className={headerStyle}>
-        <Logo size={24} />
-        <h1 className={headerH1Style}>NextDog</h1>
+        <div className={css({ display: 'flex', alignItems: 'center', gap: '2', marginRight: '2' })}>
+          <Logo size={22} />
+          <h1 className={headerH1Style}>NextDog</h1>
+        </div>
         <nav className={navStyle}>
           <a href="/" className={`${navLinkBase} ${isActive('/') ? navLinkActiveIndicator : ''}`}>
             Spans
