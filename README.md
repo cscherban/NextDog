@@ -9,9 +9,9 @@
 </p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/@nextdog/next"><img src="https://img.shields.io/npm/v/@nextdog/next.svg?label=%40nextdog%2Fnext&color=6c5ce7" alt="@nextdog/next" /></a>
-  <a href="https://www.npmjs.com/package/@nextdog/core"><img src="https://img.shields.io/npm/v/@nextdog/core.svg?label=%40nextdog%2Fcore&color=6c5ce7" alt="@nextdog/core" /></a>
-  <a href="https://www.npmjs.com/package/@nextdog/ui"><img src="https://img.shields.io/npm/v/@nextdog/ui.svg?label=%40nextdog%2Fui&color=6c5ce7" alt="@nextdog/ui" /></a>
+  <a href="https://www.npmjs.com/package/@nextdog/next"><img src="https://img.shields.io/npm/v/@nextdog/next.svg?label=%40nextdog%2Fnext&color=e74c3c" alt="@nextdog/next" /></a>
+  <a href="https://www.npmjs.com/package/@nextdog/core"><img src="https://img.shields.io/npm/v/@nextdog/core.svg?label=%40nextdog%2Fcore&color=e74c3c" alt="@nextdog/core" /></a>
+  <a href="https://www.npmjs.com/package/@nextdog/ui"><img src="https://img.shields.io/npm/v/@nextdog/ui.svg?label=%40nextdog%2Fui&color=e74c3c" alt="@nextdog/ui" /></a>
   <a href="https://github.com/cscherban/NextDog/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="license" /></a>
 </p>
 
