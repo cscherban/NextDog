@@ -82,7 +82,7 @@ const logDetailHeaderStyle = css({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
-  padding: '2 3',
+  py: '2', px: '3',
   borderBottom: '1px solid token(colors.border.subtle)',
   fontSize: 'md',
   background: 'surface.bg',
@@ -98,7 +98,7 @@ const logDetailMessageStyle = css({
   fontFamily: 'mono',
   fontSize: 'lg',
   color: 'fg.bright',
-  padding: '2 3',
+  py: '2', px: '3',
   background: 'surface.bg',
   borderRadius: 'sm',
   marginBottom: '3',
@@ -107,7 +107,7 @@ const logDetailMessageStyle = css({
 });
 
 const jsonViewStyle = css({
-  margin: '2 4 3',
+  mt: '2', mx: '4', mb: '3',
   padding: '3',
   background: 'surface.bg',
   borderRadius: 'sm',
@@ -128,7 +128,7 @@ const logRowHeaderStyle = css({
   textTransform: 'uppercase',
   letterSpacing: '0.5px',
   color: 'fg.dim',
-  padding: '1 4',
+  py: '1', px: '4',
   borderBottom: '1px solid token(colors.border.subtle)',
   background: 'surface.panel',
   position: 'sticky',
@@ -140,7 +140,7 @@ const logRowHeaderStyle = css({
 });
 
 const pillStyle = css({
-  padding: '2px 2',
+  py: '2px', px: '2',
   borderRadius: 'full',
   fontSize: 'sm',
   fontWeight: '500',
@@ -209,7 +209,7 @@ const innerColumnStyle = css({
 });
 
 const toolbarStyle = css({
-  padding: '1 4',
+  py: '1', px: '4',
   display: 'flex',
   gap: '2',
   alignItems: 'center',

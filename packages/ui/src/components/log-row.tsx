@@ -6,7 +6,7 @@ const logRowStyle = css({
   display: 'grid',
   gridTemplateColumns: '90px 50px 1fr',
   gap: '2',
-  padding: '3px 4',
+  py: '3px', px: '4',
   fontFamily: 'mono',
   fontSize: 'md',
   borderBottom: '1px solid token(colors.border.subtle)',
@@ -35,7 +35,7 @@ const logLevelStyle = css({
   fontSize: 'xs',
   fontWeight: 600,
   textTransform: 'uppercase',
-  padding: '1px 1',
+  py: '1px', px: '1',
   borderRadius: 'sm',
   textAlign: 'center',
 });

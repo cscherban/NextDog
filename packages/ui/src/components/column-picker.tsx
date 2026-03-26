@@ -37,7 +37,7 @@ export function ColumnPicker({ customColumns, availableAttrs, onAdd, onRemove }:
       <button
         onClick={() => setOpen(!open)}
         className={css({
-          fontSize: 'sm', fontFamily: 'mono', padding: '1 2',
+          fontSize: 'sm', fontFamily: 'mono', py: '1', px: '2',
           borderRadius: 'md', border: '1px solid token(colors.border.subtle)',
           background: 'transparent', color: 'fg', cursor: 'pointer',
           _hover: { background: 'surface.hover' },
@@ -59,7 +59,7 @@ export function ColumnPicker({ customColumns, availableAttrs, onAdd, onRemove }:
           <div
             className={css({
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              padding: '2 3', borderBottom: '1px solid token(colors.border.subtle)',
+              py: '2', px: '3', borderBottom: '1px solid token(colors.border.subtle)',
               fontSize: 'sm', fontWeight: '600', textTransform: 'uppercase',
               letterSpacing: '0.5px', color: 'fg.dim',
             })}
@@ -76,7 +76,7 @@ export function ColumnPicker({ customColumns, availableAttrs, onAdd, onRemove }:
           </div>
 
           {customColumns.length > 0 && (
-            <div className={css({ padding: '1 3', borderBottom: '1px solid token(colors.border.subtle)' })}>
+            <div className={css({ py: '1', px: '3', borderBottom: '1px solid token(colors.border.subtle)' })}>
               <div className={css({ fontSize: 'xs', color: 'fg.dim', marginBottom: '1' })}>Active:</div>
               {customColumns.map((col) => (
                 <div key={col.id} className={css({ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: '1' })}>
@@ -92,13 +92,13 @@ export function ColumnPicker({ customColumns, availableAttrs, onAdd, onRemove }:
 
           <div className={css({ maxHeight: '200px', overflowY: 'auto' })}>
             {availableAttrs.length === 0 ? (
-              <div className={css({ padding: '2 3', color: 'fg.dim' })}>No more attributes available</div>
+              <div className={css({ py: '2', px: '3', color: 'fg.dim' })}>No more attributes available</div>
             ) : (
               availableAttrs.map((attr) => (
                 <div
                   key={attr}
                   onClick={() => { onAdd(attr); setOpen(false); }}
-                  className={css({ padding: '1 3', cursor: 'pointer', _hover: { background: 'surface.hover' } })}
+                  className={css({ py: '1', px: '3', cursor: 'pointer', _hover: { background: 'surface.hover' } })}
                 >
                   {attr}
                 </div>

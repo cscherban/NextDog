@@ -18,7 +18,7 @@ const dialogStyle = css({
   position: 'fixed', top: '50%', left: '50%',
   transform: 'translate(-50%,-50%)',
   background: 'surface.panel', border: '1px solid token(colors.border.subtle)',
-  borderRadius: 'lg', padding: '5 6', zIndex: 1001,
+  borderRadius: 'lg', py: '5', px: '6', zIndex: 1001,
   minWidth: '260px', boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
 });
 
@@ -28,12 +28,12 @@ const titleStyle = css({
 
 const rowStyle = css({
   display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-  padding: '1 0', fontSize: 'md',
+  py: '1', px: '0', fontSize: 'md',
 });
 
 const kbdStyle = css({
   background: 'surface.bg', border: '1px solid token(colors.border.subtle)',
-  borderRadius: 'sm', padding: '0 1', fontFamily: 'mono',
+  borderRadius: 'sm', py: '0', px: '1', fontFamily: 'mono',
   fontSize: 'sm', color: 'fg.bright', minWidth: '20px', textAlign: 'center',
 });
 

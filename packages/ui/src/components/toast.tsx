@@ -105,7 +105,7 @@ const cardBaseStyle = css({
   background: 'surface.panel',
   border: '1px solid token(colors.border.subtle)',
   borderRadius: 'md',
-  padding: '2 3',
+  py: '2', px: '3',
   display: 'flex',
   alignItems: 'center',
   gap: '2',

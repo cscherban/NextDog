@@ -75,7 +75,7 @@ const dragHandleStyle = css({
 });
 
 const headerStyle = css({
-  padding: '3 4',
+  py: '3', px: '4',
   borderBottom: '1px solid token(colors.border.subtle)',
   background: 'surface.bg',
 });
@@ -153,7 +153,7 @@ const sectionStyle = css({
 const sectionTitleStyle = css({
   display: 'flex',
   alignItems: 'center',
-  padding: '2 4',
+  py: '2', px: '4',
   fontSize: 'sm',
   fontWeight: 600,
   textTransform: 'uppercase',

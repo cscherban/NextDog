@@ -16,7 +16,7 @@ const styles = {
     overflow: 'hidden',
   }),
   header: css({
-    padding: '3 4',
+    py: '3', px: '4',
     borderBottom: '1px solid token(colors.border.subtle)',
     background: 'surface.bg',
   }),
@@ -27,7 +27,7 @@ const styles = {
     alignItems: 'center',
     gap: '1',
     textDecoration: 'none',
-    padding: '1 2',
+    py: '1', px: '2',
     borderRadius: 'sm',
     margin: '-4px -8px',
     _hover: {
@@ -73,7 +73,7 @@ const styles = {
   paneSectionTitle: css({
     display: 'flex',
     alignItems: 'center',
-    padding: '2 4',
+    py: '2', px: '4',
     fontSize: 'sm',
     fontWeight: 600,
     textTransform: 'uppercase',
@@ -106,7 +106,7 @@ const styles = {
     marginLeft: '2',
   }),
   jsonView: css({
-    margin: '2 4 3',
+    mt: '2', mx: '4', mb: '3',
     padding: '3',
     background: 'surface.bg',
     borderRadius: 'sm',

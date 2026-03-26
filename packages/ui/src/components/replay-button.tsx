@@ -49,7 +49,7 @@ const pillButton = css({
   display: 'inline-flex',
   alignItems: 'center',
   gap: '1',
-  padding: '1 3',
+  py: '1', px: '3',
   borderRadius: 'lg',
   border: '1px solid token(colors.border.subtle)',
   fontSize: 'sm',
@@ -72,7 +72,7 @@ const headerBar = css({
   display: 'flex',
   alignItems: 'center',
   gap: '2',
-  padding: '2 3',
+  py: '2', px: '3',
   background: 'surface.panel',
   borderBottom: '1px solid token(colors.border.subtle)',
   fontFamily: 'mono',
@@ -86,7 +86,7 @@ const detailsStyle = css({
 });
 
 const summaryStyle = css({
-  padding: '1 3',
+  py: '1', px: '3',
   fontSize: 'sm',
   color: 'fg.dim',
   cursor: 'pointer',
@@ -94,7 +94,7 @@ const summaryStyle = css({
 });
 
 const headersContent = css({
-  padding: '1 3 2',
+  pt: '1', px: '3', pb: '2',
   fontFamily: 'mono',
   fontSize: 'sm',
 });
@@ -116,7 +116,7 @@ const bodyPre = css({
 
 const errorContainer = css({
   marginTop: '2',
-  padding: '2 3',
+  py: '2', px: '3',
   border: '1px solid token(colors.red)',
   borderRadius: 'md',
   fontFamily: 'mono',

@@ -39,7 +39,7 @@ const headerStyle = css({
   display: 'flex',
   alignItems: 'center',
   gap: '4',
-  padding: '2 4',
+  py: '2', px: '4',
   borderBottom: '1px solid token(colors.border.subtle)',
   background: 'surface.panel',
 });
@@ -56,7 +56,7 @@ const navStyle = css({
 });
 
 const navLinkStyle = css({
-  padding: '1 3',
+  py: '1', px: '3',
   borderRadius: 'sm',
   color: 'fg.dim',
   fontSize: 'md',
@@ -69,7 +69,7 @@ const navLinkStyle = css({
 });
 
 const navLinkActiveStyle = css({
-  padding: '1 3',
+  py: '1', px: '3',
   borderRadius: 'sm',
   fontSize: 'md',
   fontWeight: 500,
@@ -84,7 +84,7 @@ const navBadgeStyle = css({
   justifyContent: 'center',
   minWidth: '18px',
   height: '16px',
-  padding: '0 1',
+  py: '0', px: '1',
   marginLeft: '1',
   borderRadius: 'lg',
   fontSize: 'xs',
@@ -99,7 +99,7 @@ const navBadgeActiveStyle = css({
   justifyContent: 'center',
   minWidth: '18px',
   height: '16px',
-  padding: '0 1',
+  py: '0', px: '1',
   marginLeft: '1',
   borderRadius: 'lg',
   fontSize: 'xs',

@@ -1,3 +1,6 @@
+/* PandaCSS generated styles */
+@layer reset, base, tokens, recipes, utilities;
+
 /* Base reset */
 *,
 *::before,
@@ -7,7 +10,7 @@
   padding: 0;
 }
 
-/* Theme variables — consumed by PandaCSS semantic tokens */
+/* Theme */
 :root,
 [data-theme="dark"] {
   color-scheme: dark;

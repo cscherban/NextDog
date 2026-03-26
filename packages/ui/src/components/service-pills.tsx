@@ -5,7 +5,7 @@ import type { SSEEvent } from '../hooks/use-sse.js';
 const servicePillsStyle = css({
   display: 'flex',
   gap: '6px',
-  padding: '2 4',
+  py: '2', px: '4',
   borderBottom: '1px solid token(colors.border.subtle)',
   flexWrap: 'wrap',
 });

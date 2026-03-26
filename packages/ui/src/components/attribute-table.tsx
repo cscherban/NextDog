@@ -12,7 +12,7 @@ const attrTableStyle = css({
     borderBottom: '1px solid token(colors.border.subtle)',
   },
   '& td': {
-    padding: '1 2',
+    py: '1', px: '2',
     verticalAlign: 'top',
   },
 });

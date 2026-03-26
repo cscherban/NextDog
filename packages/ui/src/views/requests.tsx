@@ -105,7 +105,7 @@ type SortDir = 'asc' | 'desc';
 const requestRowStyle = css({
   display: 'grid',
   gap: '2',
-  padding: '1 4',
+  py: '1', px: '4',
   borderBottom: '1px solid token(colors.border.subtle)',
   alignItems: 'center',
   cursor: 'pointer',
@@ -129,7 +129,7 @@ const requestRowHeaderStyle = css({
   textTransform: 'uppercase',
   letterSpacing: '0.5px',
   color: 'fg.dim',
-  padding: '1 4',
+  py: '1', px: '4',
   borderBottom: '1px solid token(colors.border.subtle)',
   background: 'surface.panel',
   position: 'sticky',
@@ -182,7 +182,7 @@ const httpStatusStyle = css({
   fontWeight: '600',
   fontSize: 'sm',
   textAlign: 'center',
-  padding: '1px 1',
+  py: '1px', px: '1',
   borderRadius: 'sm',
 });
 
@@ -283,7 +283,7 @@ const customColStyle = css({
 });
 
 const pillStyle = css({
-  padding: '2px 2',
+  py: '2px', px: '2',
   borderRadius: 'full',
   fontSize: 'sm',
   fontWeight: '500',
@@ -300,7 +300,7 @@ const pillActiveStyle = css({
 });
 
 const toolbarStyle = css({
-  padding: '1 4',
+  py: '1', px: '4',
   display: 'flex',
   gap: '2',
   alignItems: 'center',

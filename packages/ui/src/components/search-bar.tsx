@@ -8,7 +8,7 @@ import type { SSEEvent } from '../hooks/use-sse.js';
 
 const containerStyle = css({
   position: 'relative',
-  padding: '2 4',
+  py: '2', px: '4',
   borderBottom: '1px solid token(colors.border.subtle)',
 });
 
@@ -24,7 +24,7 @@ const inputWrapperBase = css({
   gap: '1',
   alignItems: 'center',
   minHeight: '32px',
-  padding: '1 2',
+  py: '1', px: '2',
   background: 'surface.bg',
   border: '1px solid token(colors.border.subtle)',
   borderRadius: 'sm',
@@ -54,7 +54,7 @@ const searchInputStyle = css({
 
 const helpBtnStyle = css({
   fontSize: 'md',
-  padding: '1 2',
+  py: '1', px: '2',
   flexShrink: 0,
   position: 'relative',
   borderRadius: '12px',
