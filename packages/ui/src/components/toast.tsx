@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'preact/hooks';
 import type { FunctionComponent } from 'preact';
+import { css } from 'styled-system/css';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -91,14 +92,70 @@ function ensureKeyframes() {
 }
 
 // ---------------------------------------------------------------------------
-// Components
+// Styles
 // ---------------------------------------------------------------------------
 
 const TYPE_COLORS: Record<Toast['type'], string> = {
-  warning: 'var(--yellow)',
-  error: 'var(--red)',
-  info: 'var(--accent)',
+  warning: 'var(--colors-yellow)',
+  error: 'var(--colors-red)',
+  info: 'var(--colors-accent)',
 };
+
+const cardBaseStyle = css({
+  background: 'surface.panel',
+  border: '1px solid token(colors.border.subtle)',
+  borderRadius: 'md',
+  padding: '2 3',
+  display: 'flex',
+  alignItems: 'center',
+  gap: '2',
+  animation: 'nextdog-toast-slide-in 0.2s ease-out',
+  maxWidth: '360px',
+  boxSizing: 'border-box',
+});
+
+const messageStyle = css({
+  fontFamily: 'mono',
+  fontSize: 'md',
+  flex: 1,
+  minWidth: 0,
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  whiteSpace: 'nowrap',
+});
+
+const durationStyle = css({
+  fontFamily: 'mono',
+  fontSize: 'sm',
+  color: 'fg.dim',
+  flexShrink: 0,
+});
+
+const closeButtonStyle = css({
+  background: 'none',
+  border: 'none',
+  cursor: 'pointer',
+  padding: '0 2px',
+  lineHeight: 1,
+  fontSize: 'xl',
+  color: 'fg.dim',
+  flexShrink: 0,
+});
+
+const containerStyle = css({
+  position: 'fixed',
+  bottom: '4',
+  right: '4',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '2',
+  zIndex: 99999,
+  pointerEvents: 'auto',
+});
+
+// ---------------------------------------------------------------------------
+// Components
+// ---------------------------------------------------------------------------
 
 const ToastCard: FunctionComponent<{
   toast: Toast;
@@ -111,46 +168,20 @@ const ToastCard: FunctionComponent<{
     <div
       role="alert"
       onClick={clickable ? () => onOpenTrace!(toast.traceId!) : undefined}
+      className={cardBaseStyle}
       style={{
-        background: 'var(--bg-surface)',
-        border: '1px solid var(--border)',
         borderLeft: `3px solid ${TYPE_COLORS[toast.type]}`,
-        borderRadius: '6px',
-        padding: '8px 12px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '8px',
         cursor: clickable ? 'pointer' : 'default',
-        animation: 'nextdog-toast-slide-in 0.2s ease-out',
-        maxWidth: '360px',
-        boxSizing: 'border-box' as const,
       }}
     >
       {/* Message */}
-      <span
-        style={{
-          fontFamily: 'monospace',
-          fontSize: '12px',
-          flex: 1,
-          minWidth: 0,
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap',
-        }}
-      >
+      <span className={messageStyle}>
         {toast.message}
       </span>
 
       {/* Duration badge */}
       {toast.duration && (
-        <span
-          style={{
-            fontFamily: 'monospace',
-            fontSize: '11px',
-            color: 'var(--text-dim, #888)',
-            flexShrink: 0,
-          }}
-        >
+        <span className={durationStyle}>
           {toast.duration}
         </span>
       )}
@@ -163,16 +194,7 @@ const ToastCard: FunctionComponent<{
           onClose();
         }}
         aria-label="Dismiss"
-        style={{
-          background: 'none',
-          border: 'none',
-          cursor: 'pointer',
-          padding: '0 2px',
-          lineHeight: 1,
-          fontSize: '14px',
-          color: 'var(--text-dim, #888)',
-          flexShrink: 0,
-        }}
+        className={closeButtonStyle}
       >
         ×
       </button>
@@ -192,18 +214,7 @@ export const ToastContainer: FunctionComponent<ToastContainerProps> = ({
   if (toasts.length === 0) return null;
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        bottom: '16px',
-        right: '16px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '8px',
-        zIndex: 99999,
-        pointerEvents: 'auto',
-      }}
-    >
+    <div className={containerStyle}>
       {toasts.map((toast) => (
         <ToastCard
           key={toast.id}

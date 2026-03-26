@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'preact/hooks';
+import { css } from 'styled-system/css';
 import type { SSEEvent } from '../hooks/use-sse.js';
 
 interface ReplayResponse {
@@ -24,9 +25,13 @@ type ReplayState =
   | { phase: 'success'; data: ReplayResponse }
   | { phase: 'error'; data: ReplayError };
 
+const statusGreen = css({ color: 'green', fontWeight: 600 });
+const statusYellow = css({ color: 'yellow', fontWeight: 600 });
+const statusRed = css({ color: 'red', fontWeight: 600 });
+
 function StatusBadge({ status }: { status: number }) {
-  const color = status < 300 ? 'var(--green)' : status < 400 ? 'var(--yellow)' : 'var(--red)';
-  return <span style={`color:${color};font-weight:600`}>{status}</span>;
+  const style = status < 300 ? statusGreen : status < 400 ? statusYellow : statusRed;
+  return <span className={style}>{status}</span>;
 }
 
 function formatBody(body: string, contentType: string): string {
@@ -39,6 +44,92 @@ function formatBody(body: string, contentType: string): string {
   }
   return body;
 }
+
+const pillButton = css({
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: '1',
+  padding: '1 3',
+  borderRadius: 'lg',
+  border: '1px solid token(colors.border.subtle)',
+  fontSize: 'sm',
+  fontFamily: 'mono',
+  cursor: 'pointer',
+  whiteSpace: 'nowrap',
+  background: 'accent',
+  color: 'surface.bg',
+  fontWeight: 600,
+});
+
+const resultContainer = css({
+  marginTop: '2',
+  border: '1px solid token(colors.border.subtle)',
+  borderRadius: 'md',
+  overflow: 'hidden',
+});
+
+const headerBar = css({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '2',
+  padding: '2 3',
+  background: 'surface.panel',
+  borderBottom: '1px solid token(colors.border.subtle)',
+  fontFamily: 'mono',
+  fontSize: 'sm',
+});
+
+const dimText = css({ color: 'fg.dim' });
+
+const detailsStyle = css({
+  borderBottom: '1px solid token(colors.border.subtle)',
+});
+
+const summaryStyle = css({
+  padding: '1 3',
+  fontSize: 'sm',
+  color: 'fg.dim',
+  cursor: 'pointer',
+  userSelect: 'none',
+});
+
+const headersContent = css({
+  padding: '1 3 2',
+  fontFamily: 'mono',
+  fontSize: 'sm',
+});
+
+const headerKey = css({ color: 'fg' });
+const headerRow = css({ color: 'fg.dim' });
+
+const bodyPre = css({
+  margin: 0,
+  padding: '3',
+  fontFamily: 'mono',
+  fontSize: 'sm',
+  maxHeight: '400px',
+  overflow: 'auto',
+  color: 'fg',
+  whiteSpace: 'pre-wrap',
+  wordBreak: 'break-all',
+});
+
+const errorContainer = css({
+  marginTop: '2',
+  padding: '2 3',
+  border: '1px solid token(colors.red)',
+  borderRadius: 'md',
+  fontFamily: 'mono',
+  fontSize: 'sm',
+  color: 'red',
+});
+
+const errorTitle = css({ fontWeight: 600 });
+
+const errorDetail = css({
+  color: 'fg.dim',
+  marginTop: '1',
+});
 
 interface ReplayButtonProps {
   event: SSEEvent;
@@ -80,62 +171,42 @@ export function ReplayButton({ event }: ReplayButtonProps) {
   return (
     <div>
       <button
-        class="pill"
+        className={pillButton}
         onClick={replay}
         disabled={state.phase === 'loading'}
-        style={`
-          background: var(--accent);
-          color: var(--bg);
-          font-weight: 600;
-          opacity: ${state.phase === 'loading' ? '0.6' : '1'};
-        `}
+        style={{ opacity: state.phase === 'loading' ? 0.6 : 1 }}
       >
         {state.phase === 'loading' ? 'Replaying...' : 'Replay'}
       </button>
 
       {state.phase === 'success' && (
-        <div style="margin-top:8px;border:1px solid var(--border);border-radius:6px;overflow:hidden">
+        <div className={resultContainer}>
           {/* Response header bar */}
-          <div style="
-            display:flex;align-items:center;gap:8px;
-            padding:8px 12px;
-            background:var(--bg-surface);
-            border-bottom:1px solid var(--border);
-            font-family:var(--mono);font-size:12px;
-          ">
+          <div className={headerBar}>
             <StatusBadge status={state.data.status} />
-            <span style="color:var(--text-dim)">{state.data.statusText}</span>
-            <span style="color:var(--text-dim)">|</span>
-            <span style="color:var(--text-dim)">{state.data.duration}ms</span>
-            <span style="color:var(--text-dim)">|</span>
-            <span style="color:var(--text-dim)">{state.data.method} {state.data.url}</span>
+            <span className={dimText}>{state.data.statusText}</span>
+            <span className={dimText}>|</span>
+            <span className={dimText}>{state.data.duration}ms</span>
+            <span className={dimText}>|</span>
+            <span className={dimText}>{state.data.method} {state.data.url}</span>
           </div>
 
           {/* Response headers (collapsed by default) */}
-          <details style="border-bottom:1px solid var(--border)">
-            <summary style="
-              padding:6px 12px;font-size:11px;color:var(--text-dim);
-              cursor:pointer;user-select:none;
-            ">
+          <details className={detailsStyle}>
+            <summary className={summaryStyle}>
               Response Headers ({Object.keys(state.data.headers).length})
             </summary>
-            <div style="padding:4px 12px 8px;font-family:var(--mono);font-size:11px">
+            <div className={headersContent}>
               {Object.entries(state.data.headers).map(([k, v]) => (
-                <div key={k} style="color:var(--text-dim)">
-                  <span style="color:var(--text)">{k}</span>: {v}
+                <div key={k} className={headerRow}>
+                  <span className={headerKey}>{k}</span>: {v}
                 </div>
               ))}
             </div>
           </details>
 
           {/* Response body */}
-          <pre style="
-            margin:0;padding:12px;
-            font-family:var(--mono);font-size:12px;
-            max-height:400px;overflow:auto;
-            color:var(--text);
-            white-space:pre-wrap;word-break:break-all;
-          ">{formatBody(
+          <pre className={bodyPre}>{formatBody(
             state.data.body,
             state.data.headers['content-type'] ?? ''
           )}</pre>
@@ -143,16 +214,11 @@ export function ReplayButton({ event }: ReplayButtonProps) {
       )}
 
       {state.phase === 'error' && (
-        <div style="
-          margin-top:8px;padding:8px 12px;
-          border:1px solid var(--red);border-radius:6px;
-          font-family:var(--mono);font-size:12px;
-          color:var(--red);
-        ">
-          <div style="font-weight:600">Replay failed</div>
-          <div style="color:var(--text-dim);margin-top:4px">{state.data.message}</div>
+        <div className={errorContainer}>
+          <div className={errorTitle}>Replay failed</div>
+          <div className={errorDetail}>{state.data.message}</div>
           {state.data.url && (
-            <div style="color:var(--text-dim);margin-top:2px">{state.data.method} {state.data.url}</div>
+            <div className={errorDetail}>{state.data.method} {state.data.url}</div>
           )}
         </div>
       )}

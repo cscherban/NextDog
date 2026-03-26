@@ -1,3 +1,5 @@
+import { css } from 'styled-system/css';
+
 interface EmptyStateProps {
   connected: boolean;
 }
@@ -5,47 +7,47 @@ interface EmptyStateProps {
 export function EmptyState({ connected }: EmptyStateProps) {
   return (
     <div
-      style={{
+      className={css({
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
         height: '100%',
         width: '100%',
-        gap: '16px',
-      }}
+        gap: '4',
+      })}
     >
-      <div style={{ fontSize: '48px', lineHeight: 1 }}>🐾</div>
+      <div className={css({ fontSize: '48px', lineHeight: '1' })}>🐾</div>
 
-      <div style={{ fontSize: '16px', color: 'var(--text-dim)' }}>
+      <div className={css({ fontSize: 'xl', color: 'fg.dim' })}>
         {connected ? 'Waiting for events...' : 'Connecting to sidecar...'}
       </div>
 
       <div
-        style={{
+        className={css({
           display: 'flex',
           flexDirection: 'column',
-          gap: '6px',
-          fontSize: '13px',
-          color: 'var(--text-dim)',
-        }}
+          gap: '1',
+          fontSize: 'lg',
+          color: 'fg.dim',
+        })}
       >
         <div>✓ Add withNextDog() to next.config.js</div>
         <div>✓ Add register() to instrumentation.ts</div>
         <div>✓ Run npm run dev</div>
         {connected ? (
-          <div style={{ color: 'var(--green)' }}>✓ Sidecar connected on :6789</div>
+          <div className={css({ color: 'green' })}>✓ Sidecar connected on :6789</div>
         ) : (
           <div>○ Waiting for sidecar on :6789</div>
         )}
       </div>
 
       <div
-        style={{
-          fontSize: '11px',
+        className={css({
+          fontSize: 'sm',
           fontStyle: 'italic',
-          color: 'var(--text-dim)',
-        }}
+          color: 'fg.dim',
+        })}
       >
         Events will appear here automatically
       </div>

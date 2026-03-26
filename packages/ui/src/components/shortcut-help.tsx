@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'preact/hooks';
+import { css } from 'styled-system/css';
 
 const shortcuts = [
   { key: 'j', desc: 'Next row' },
@@ -7,6 +8,38 @@ const shortcuts = [
   { key: 'Esc', desc: 'Close / go back' },
   { key: '?', desc: 'Toggle this help' },
 ];
+
+const overlayStyle = css({
+  position: 'fixed', inset: '0',
+  background: 'rgba(0,0,0,0.5)', zIndex: 1000,
+});
+
+const dialogStyle = css({
+  position: 'fixed', top: '50%', left: '50%',
+  transform: 'translate(-50%,-50%)',
+  background: 'surface.panel', border: '1px solid token(colors.border.subtle)',
+  borderRadius: 'lg', padding: '5 6', zIndex: 1001,
+  minWidth: '260px', boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+});
+
+const titleStyle = css({
+  fontSize: 'lg', fontWeight: '600', color: 'fg.bright', marginBottom: '3',
+});
+
+const rowStyle = css({
+  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+  padding: '1 0', fontSize: 'md',
+});
+
+const kbdStyle = css({
+  background: 'surface.bg', border: '1px solid token(colors.border.subtle)',
+  borderRadius: 'sm', padding: '0 1', fontFamily: 'mono',
+  fontSize: 'sm', color: 'fg.bright', minWidth: '20px', textAlign: 'center',
+});
+
+const footerStyle = css({
+  marginTop: '3', fontSize: 'sm', color: 'fg.dim', textAlign: 'center',
+});
 
 export function ShortcutHelp() {
   const [open, setOpen] = useState(false);
@@ -31,31 +64,17 @@ export function ShortcutHelp() {
 
   return (
     <>
-      <div
-        style="position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:1000"
-        onClick={() => setOpen(false)}
-      />
-      <div style="
-        position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
-        background:var(--bg-surface);border:1px solid var(--border);
-        border-radius:8px;padding:20px 24px;z-index:1001;
-        min-width:260px;box-shadow:0 8px 32px rgba(0,0,0,0.3);
-      ">
-        <div style="font-size:13px;font-weight:600;color:var(--text-bright);margin-bottom:12px">
-          Keyboard Shortcuts
-        </div>
+      <div className={overlayStyle} onClick={() => setOpen(false)} />
+      <div className={dialogStyle}>
+        <div className={titleStyle}>Keyboard Shortcuts</div>
         {shortcuts.map(({ key, desc }) => (
-          <div key={key} style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:12px">
-            <span style="color:var(--text-dim)">{desc}</span>
-            <kbd style="
-              background:var(--bg);border:1px solid var(--border);
-              border-radius:3px;padding:2px 6px;font-family:var(--mono);
-              font-size:11px;color:var(--text-bright);min-width:20px;text-align:center;
-            ">{key}</kbd>
+          <div key={key} className={rowStyle}>
+            <span className={css({ color: 'fg.dim' })}>{desc}</span>
+            <kbd className={kbdStyle}>{key}</kbd>
           </div>
         ))}
-        <div style="margin-top:12px;font-size:11px;color:var(--text-dim);text-align:center">
-          Press <kbd style="background:var(--bg);border:1px solid var(--border);border-radius:3px;padding:1px 4px;font-family:var(--mono);font-size:10px">?</kbd> to close
+        <div className={footerStyle}>
+          Press <kbd className={kbdStyle}>?</kbd> to close
         </div>
       </div>
     </>
