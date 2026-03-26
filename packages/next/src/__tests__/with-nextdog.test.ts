@@ -1,5 +1,8 @@
-import { describe, it, expect, afterEach } from 'vitest';
+import { describe, it, expect, afterEach, vi } from 'vitest';
 import { withNextDog } from '../index.js';
+
+// Mock require to control Next.js version detection
+vi.mock('next/package.json', () => ({ default: { version: '16.2.1' } }));
 
 describe('withNextDog', () => {
   const originalEnv = process.env.NODE_ENV;
@@ -34,5 +37,11 @@ describe('withNextDog', () => {
     process.env.NODE_ENV = 'development';
     const config = withNextDog({}, { url: 'http://localhost:9999' });
     expect(config.env.NEXTDOG_URL).toBe('http://localhost:9999');
+  });
+
+  it('does NOT set experimental.instrumentationHook for Next.js 16+', () => {
+    process.env.NODE_ENV = 'development';
+    const config = withNextDog({});
+    expect(config.experimental?.instrumentationHook).toBeUndefined();
   });
 });

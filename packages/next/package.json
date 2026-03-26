@@ -28,6 +28,12 @@
     "@opentelemetry/resources": "^1",
     "@opentelemetry/semantic-conventions": "^1"
   },
+  "peerDependencies": {
+    "next": ">=14"
+  },
+  "peerDependenciesMeta": {
+    "next": { "optional": false }
+  },
   "devDependencies": {
     "@types/node": "^25",
     "@opentelemetry/core": "^2",
