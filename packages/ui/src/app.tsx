@@ -64,19 +64,19 @@ const navLinkBase = css({
   display: 'flex',
   alignItems: 'center',
   py: '0', px: '3',
-  color: 'fg.dim',
+  color: 'fg.dim !important',
   fontSize: 'lg',
   fontWeight: 500,
   textDecoration: 'none',
   borderBottom: '2px solid transparent',
   transition: 'all 0.15s ease',
   _hover: {
-    color: 'fg.bright',
+    color: 'fg.bright !important',
   },
 });
 
 const navLinkActiveIndicator = css({
-  color: 'fg.bright',
+  color: 'fg.bright !important',
   borderBottomColor: 'accent',
 });
 
