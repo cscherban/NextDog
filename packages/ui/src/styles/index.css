@@ -1,13 +1,14 @@
 /* PandaCSS generated styles */
 @layer reset, base, tokens, recipes, utilities;
 
-/* Base reset */
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+@layer reset {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
 }
 
 :root,
