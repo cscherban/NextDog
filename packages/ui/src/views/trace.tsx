@@ -1,4 +1,4 @@
-import { useMemo, useState, useRef, useEffect } from 'preact/hooks';
+import { useMemo, useState, useRef, useEffect, useCallback } from 'preact/hooks';
 import { css } from 'styled-system/css';
 import { token } from 'styled-system/tokens';
 import { Waterfall } from '../components/waterfall.js';
@@ -160,7 +160,7 @@ const s = {
 
   // Right detail panel
   rightPanel: css({
-    width: '360px',
+    position: 'relative',
     flexShrink: 0,
     borderLeft: '1px solid token(colors.border.subtle)',
     display: 'flex',
@@ -226,6 +226,32 @@ const s = {
     fontSize: 'md',
     fontFamily: 'mono',
   }),
+
+  // Horizontal resize handle (between left and right panels)
+  hDragHandle: css({
+    position: 'absolute',
+    left: '-3px',
+    top: '0',
+    bottom: '0',
+    width: '6px',
+    cursor: 'col-resize',
+    zIndex: 10,
+    background: 'transparent',
+    transition: 'background 0.15s',
+    _hover: { background: 'accent', opacity: 0.5 },
+    _active: { background: 'accent', opacity: 0.5 },
+  }),
+
+  // Vertical resize handle (below waterfall)
+  vDragHandle: css({
+    height: '4px',
+    cursor: 'row-resize',
+    background: 'transparent',
+    transition: 'background 0.15s',
+    flexShrink: 0,
+    _hover: { background: 'accent', opacity: 0.5 },
+    _active: { background: 'accent', opacity: 0.5 },
+  }),
 };
 
 /* ── Helpers ──────────────────────────────────────────────────────────── */
@@ -250,11 +276,71 @@ interface TraceProps {
   events: SSEEvent[];
 }
 
+const PANEL_STORAGE_KEY = 'nextdog:trace-panel-width';
+const WATERFALL_STORAGE_KEY = 'nextdog:trace-waterfall-height';
+
+function loadNum(key: string, fallback: number) {
+  try { const v = localStorage.getItem(key); return v ? Number(v) : fallback; } catch { return fallback; }
+}
+
 export function Trace({ traceId, events }: TraceProps) {
   const [selectedEvent, setSelectedEvent] = useState<SSEEvent | null>(null);
   const [showJson, setShowJson] = useState(false);
   const [waterfallOpen, setWaterfallOpen] = useState(true);
   const [activeTab, setActiveTab] = useState<'spans' | 'logs'>('spans');
+
+  // Resizable right panel
+  const [panelWidth, setPanelWidth] = useState(() => loadNum(PANEL_STORAGE_KEY, 360));
+  const panelDrag = useRef<{ startX: number; startW: number } | null>(null);
+
+  // Resizable waterfall height
+  const [waterfallHeight, setWaterfallHeight] = useState(() => loadNum(WATERFALL_STORAGE_KEY, 160));
+  const wfDrag = useRef<{ startY: number; startH: number } | null>(null);
+
+  useEffect(() => {
+    const onMove = (e: PointerEvent) => {
+      if (panelDrag.current) {
+        const delta = panelDrag.current.startX - e.clientX;
+        const w = Math.max(240, Math.min(700, panelDrag.current.startW + delta));
+        setPanelWidth(w);
+      }
+      if (wfDrag.current) {
+        const delta = e.clientY - wfDrag.current.startY;
+        const h = Math.max(60, Math.min(500, wfDrag.current.startH + delta));
+        setWaterfallHeight(h);
+      }
+    };
+    const onUp = () => {
+      if (panelDrag.current) {
+        panelDrag.current = null;
+        try { localStorage.setItem(PANEL_STORAGE_KEY, String(panelWidth)); } catch {}
+      }
+      if (wfDrag.current) {
+        wfDrag.current = null;
+        try { localStorage.setItem(WATERFALL_STORAGE_KEY, String(waterfallHeight)); } catch {}
+      }
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    return () => {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+    };
+  }, [panelWidth, waterfallHeight]);
+
+  const startPanelDrag = useCallback((e: PointerEvent) => {
+    panelDrag.current = { startX: e.clientX, startW: panelWidth };
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+  }, [panelWidth]);
+
+  const startWfDrag = useCallback((e: PointerEvent) => {
+    wfDrag.current = { startY: e.clientY, startH: waterfallHeight };
+    document.body.style.cursor = 'row-resize';
+    document.body.style.userSelect = 'none';
+  }, [waterfallHeight]);
 
   const traceEvents = useMemo(
     () => events.filter((e) => e.data.traceId === traceId),
@@ -321,9 +407,12 @@ export function Trace({ traceId, events }: TraceProps) {
               <span className={s.collapseIcon} style={{ transform: waterfallOpen ? 'rotate(0)' : 'rotate(-90deg)' }}>▾</span>
             </div>
             {waterfallOpen && (
-              <Waterfall spans={spans} onSpanClick={(event) => setSelectedEvent(event)} />
+              <div style={{ height: `${waterfallHeight}px`, overflow: 'auto' }}>
+                <Waterfall spans={spans} onSpanClick={(event) => setSelectedEvent(event)} />
+              </div>
             )}
           </div>
+          {waterfallOpen && <div className={s.vDragHandle} onPointerDown={startWfDrag} />}
 
           {/* Tab bar — Spans / Logs */}
           <div className={s.tabBar}>
@@ -364,7 +453,8 @@ export function Trace({ traceId, events }: TraceProps) {
 
         {/* Right detail panel */}
         {selectedEvent ? (
-          <div className={s.rightPanel}>
+          <div className={s.rightPanel} style={{ width: `${panelWidth}px` }}>
+            <div className={s.hDragHandle} onPointerDown={startPanelDrag} />
             <div className={s.detailHeader}>
               <span className={s.detailTitle}>
                 {selectedEvent.type === 'span' ? 'Span' : 'Log'} Detail
@@ -408,7 +498,8 @@ export function Trace({ traceId, events }: TraceProps) {
             </div>
           </div>
         ) : (
-          <div className={s.rightPanel}>
+          <div className={s.rightPanel} style={{ width: `${panelWidth}px` }}>
+            <div className={s.hDragHandle} onPointerDown={startPanelDrag} />
             <div className={s.noSelection}>
               Click a span or log to view details
             </div>

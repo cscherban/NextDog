@@ -185,8 +185,26 @@ export function ReplayButton({ event }: ReplayButtonProps) {
         {state.phase === 'loading' ? 'Replaying...' : 'Replay'}
       </button>
 
+      {(state.phase === 'success' || state.phase === 'error') && (
+        <button
+          onClick={() => setState({ phase: 'idle' })}
+          className={css({
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            width: '20px', height: '20px', border: 'none', borderRadius: 'sm',
+            background: 'transparent', color: 'fg.dim', cursor: 'pointer',
+            position: 'absolute', top: '2', right: '2',
+            _hover: { color: 'fg.bright', background: 'surface.hover' },
+          })}
+          title="Dismiss"
+        >
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      )}
+
       {state.phase === 'success' && (
-        <div className={resultContainer}>
+        <div className={resultContainer} style={{ position: 'relative' }}>
           {/* Response header bar */}
           <div className={headerBar}>
             <StatusBadge status={state.data.status} />
