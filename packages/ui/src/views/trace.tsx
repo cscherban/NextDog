@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'preact/hooks';
+import { useMemo, useState, useRef, useEffect } from 'preact/hooks';
 import { css } from 'styled-system/css';
 import { token } from 'styled-system/tokens';
 import { Waterfall } from '../components/waterfall.js';
@@ -7,10 +7,12 @@ import { AttributeTable } from '../components/attribute-table.js';
 import { CopyCurl } from '../components/copy-curl.js';
 import { ReplayButton } from '../components/replay-button.js';
 import { formatSpanDuration } from '../utils/format.js';
-import { pillStyle, jsonViewStyle, emptyStyle } from '../styles/shared.js';
+import { emptyStyle, jsonViewStyle } from '../styles/shared.js';
 import type { SSEEvent } from '../hooks/use-sse.js';
 
-const styles = {
+/* ── Styles ───────────────────────────────────────────────────────────── */
+
+const s = {
   root: css({
     flex: 1,
     display: 'flex',
@@ -20,7 +22,8 @@ const styles = {
   header: css({
     py: '3', px: '4',
     borderBottom: '1px solid token(colors.border.subtle)',
-    background: 'surface.bg',
+    background: 'surface.panel',
+    flexShrink: 0,
   }),
   backLink: css({
     fontSize: 'md',
@@ -32,21 +35,20 @@ const styles = {
     py: '1', px: '2',
     borderRadius: 'sm',
     margin: '-4px -8px',
-    _hover: {
-      background: 'surface.hover',
-      color: 'fg.bright',
-    },
+    transition: 'all 0.15s ease',
+    _hover: { background: 'surface.hover', color: 'fg.bright' },
   }),
   titleRow: css({
     display: 'flex',
     alignItems: 'center',
     gap: '2',
-    marginTop: '1',
+    marginTop: '2',
   }),
   routeHeading: css({
-    fontSize: 'xl',
+    fontSize: '2xl',
     color: 'fg.bright',
     fontFamily: 'mono',
+    fontWeight: 600,
   }),
   metaRow: css({
     display: 'flex',
@@ -55,53 +57,178 @@ const styles = {
     fontSize: 'md',
     color: 'fg.dim',
     fontFamily: 'mono',
+    alignItems: 'center',
   }),
   actionsRow: css({
     display: 'flex',
-    gap: '6px',
+    gap: '2',
     alignItems: 'center',
     marginTop: '2',
   }),
-  paneSection: css({
-    borderBottom: '1px solid token(colors.border.subtle)',
+  methodBase: css({ fontWeight: 600, fontSize: '2xl' }),
+  statusOk: css({ color: 'green' }),
+  statusError: css({ color: 'red' }),
+  sep: css({ color: 'fg.dim', opacity: 0.4 }),
+
+  // Main content area — horizontal split
+  body: css({
+    flex: 1,
+    display: 'flex',
+    overflow: 'hidden',
   }),
-  paneSectionFlex: css({
-    borderBottom: '1px solid token(colors.border.subtle)',
+
+  // Left panel — waterfall + tabs
+  leftPanel: css({
     flex: 1,
     display: 'flex',
     flexDirection: 'column',
-    minHeight: 0,
+    overflow: 'hidden',
+    minWidth: 0,
   }),
-  paneSectionTitle: css({
+
+  // Collapsible waterfall section
+  waterfallSection: css({
+    borderBottom: '1px solid token(colors.border.subtle)',
+    flexShrink: 0,
+  }),
+  sectionHeader: css({
     display: 'flex',
     alignItems: 'center',
-    py: '2', px: '4',
-    fontSize: 'sm',
+    justifyContent: 'space-between',
+    py: '1.5', px: '4',
+    fontSize: 'xs',
     fontWeight: 600,
     textTransform: 'uppercase',
     letterSpacing: '0.5px',
     color: 'fg.dim',
     background: 'surface.bg',
-    position: 'sticky',
-    top: 0,
-    zIndex: 1,
+    cursor: 'pointer',
+    userSelect: 'none',
+    transition: 'all 0.12s ease',
+    _hover: { color: 'fg.bright' },
   }),
-  scrollArea: css({
+  collapseIcon: css({
+    fontSize: 'sm',
+    transition: 'transform 0.15s ease',
+  }),
+
+  // Tab bar
+  tabBar: css({
+    display: 'flex',
+    gap: '0',
+    borderBottom: '1px solid token(colors.border.subtle)',
+    background: 'surface.panel',
+    flexShrink: 0,
+  }),
+  tab: css({
+    py: '2', px: '4',
+    fontSize: 'sm',
+    fontWeight: 500,
+    color: 'fg.dim',
+    cursor: 'pointer',
+    border: 'none',
+    background: 'transparent',
+    borderBottom: '2px solid transparent',
+    transition: 'all 0.12s ease',
+    fontFamily: 'mono',
+    _hover: { color: 'fg.bright' },
+  }),
+  tabActive: css({
+    color: 'fg.bright',
+    borderBottomColor: 'accent',
+  }),
+  tabBadge: css({
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minWidth: '16px',
+    height: '14px',
+    py: '0', px: '1',
+    marginLeft: '1.5',
+    borderRadius: 'full',
+    fontSize: 'xs',
+    fontWeight: 600,
+    background: 'surface.hover',
+    color: 'fg.dim',
+  }),
+
+  // Scrollable list area
+  listArea: css({
     flex: 1,
     overflowY: 'auto',
   }),
-  detailSection: css({
-    borderBottom: '1px solid token(colors.border.subtle)',
+
+  // Right detail panel
+  rightPanel: css({
+    width: '360px',
     flexShrink: 0,
-    maxHeight: '40%',
-    overflowY: 'auto',
+    borderLeft: '1px solid token(colors.border.subtle)',
+    display: 'flex',
+    flexDirection: 'column',
+    overflow: 'hidden',
+    background: 'surface.panel',
   }),
-  pillMl: css({ marginLeft: '2' }),
-  emptyLarge: css({ fontSize: 'xl' }),
-  statusOk: css({ color: 'green' }),
-  statusError: css({ color: 'red' }),
-  methodBase: css({ fontWeight: 600, fontSize: 'xl' }),
+  detailHeader: css({
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    py: '2', px: '4',
+    borderBottom: '1px solid token(colors.border.subtle)',
+    background: 'surface.bg',
+    flexShrink: 0,
+  }),
+  detailTitle: css({
+    fontSize: 'sm',
+    fontWeight: 600,
+    color: 'fg.bright',
+  }),
+  detailBody: css({
+    flex: 1,
+    overflowY: 'auto',
+    py: '2', px: '0',
+  }),
+  closeBtn: css({
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    width: '24px', height: '24px', border: 'none', borderRadius: 'sm',
+    background: 'transparent', color: 'fg.dim', cursor: 'pointer',
+    transition: 'all 0.12s ease',
+    _hover: { background: 'surface.hover', color: 'fg.bright' },
+  }),
+  segmentGroup: css({
+    display: 'inline-flex',
+    borderRadius: 'md',
+    border: '1px solid token(colors.border.subtle)',
+    overflow: 'hidden',
+  }),
+  segmentBtn: css({
+    py: '0.5', px: '2',
+    fontSize: 'xs',
+    fontFamily: 'mono',
+    fontWeight: 500,
+    cursor: 'pointer',
+    border: 'none',
+    background: 'transparent',
+    color: 'fg.dim',
+    transition: 'all 0.12s ease',
+    _hover: { color: 'fg.bright', background: 'surface.hover' },
+  }),
+  segmentBtnActive: css({
+    background: 'accent',
+    color: 'surface.bg',
+    fontWeight: 600,
+  }),
+  noSelection: css({
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: 1,
+    color: 'fg.dim',
+    fontSize: 'md',
+    fontFamily: 'mono',
+  }),
 };
+
+/* ── Helpers ──────────────────────────────────────────────────────────── */
 
 const METHOD_COLORS: Record<string, string> = {
   get: token('colors.green'),
@@ -115,6 +242,8 @@ function methodColorStyle(method: string) {
   return css({ color });
 }
 
+/* ── Component ────────────────────────────────────────────────────────── */
+
 interface TraceProps {
   path?: string;
   traceId?: string;
@@ -124,6 +253,8 @@ interface TraceProps {
 export function Trace({ traceId, events }: TraceProps) {
   const [selectedEvent, setSelectedEvent] = useState<SSEEvent | null>(null);
   const [showJson, setShowJson] = useState(false);
+  const [waterfallOpen, setWaterfallOpen] = useState(true);
+  const [activeTab, setActiveTab] = useState<'spans' | 'logs'>('spans');
 
   const traceEvents = useMemo(
     () => events.filter((e) => e.data.traceId === traceId),
@@ -138,100 +269,152 @@ export function Trace({ traceId, events }: TraceProps) {
     [spans]
   );
 
-  if (!traceId) return <div className={`${emptyStyle} ${styles.emptyLarge}`}>No trace selected</div>;
+  // Auto-switch to spans tab if no logs
+  useEffect(() => {
+    if (activeTab === 'logs' && logs.length === 0) setActiveTab('spans');
+  }, [logs.length, activeTab]);
+
+  if (!traceId) return <div className={emptyStyle}>No trace selected</div>;
 
   const method = rootSpan ? String(rootSpan.data.attributes['http.method'] ?? '') : '';
   const routePath = rootSpan ? String(rootSpan.data.attributes['http.route'] ?? rootSpan.data.attributes['http.target'] ?? rootSpan.data.name) : traceId;
+  const listItems = activeTab === 'spans' ? spans : logs;
 
   return (
-    <div className={styles.root}>
-      <div className={styles.header}>
-        <a href="/" className={styles.backLink}>
+    <div className={s.root}>
+      {/* Header */}
+      <div className={s.header}>
+        <a href="/" className={s.backLink}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-          Back to requests
+          Back
         </a>
-        <div className={styles.titleRow}>
-          {method && <span className={`${styles.methodBase} ${methodColorStyle(method)}`}>{method}</span>}
-          <h2 className={styles.routeHeading}>{routePath}</h2>
+        <div className={s.titleRow}>
+          {method && <span className={`${s.methodBase} ${methodColorStyle(method)}`}>{method}</span>}
+          <h2 className={s.routeHeading}>{routePath}</h2>
         </div>
-        <div className={styles.metaRow}>
-          <span className={rootSpan?.data.status?.code === 'ERROR' ? styles.statusError : styles.statusOk}>
+        <div className={s.metaRow}>
+          <span className={rootSpan?.data.status?.code === 'ERROR' ? s.statusError : s.statusOk}>
             {rootSpan?.data.status?.code ?? ''}
           </span>
-          <span>|</span>
+          <span className={s.sep}>|</span>
           <span>{rootSpan ? formatSpanDuration(rootSpan) : ''}</span>
-          <span>|</span>
+          <span className={s.sep}>|</span>
           <span>{spans.length} spans</span>
-          {logs.length > 0 && <><span>|</span><span>{logs.length} logs</span></>}
+          {logs.length > 0 && <><span className={s.sep}>|</span><span>{logs.length} logs</span></>}
         </div>
         {rootSpan && rootSpan.data.attributes['http.method'] && (
-          <div className={styles.actionsRow}>
+          <div className={s.actionsRow}>
             <ReplayButton event={rootSpan} />
             <CopyCurl event={rootSpan} />
           </div>
         )}
       </div>
 
-      <div className={styles.paneSection}>
-        <div className={styles.paneSectionTitle}>Waterfall</div>
-        <Waterfall spans={spans} onSpanClick={(event) => setSelectedEvent(event)} />
-      </div>
-
-      {logs.length > 0 && (
-        <div className={styles.paneSectionFlex}>
-          <div className={styles.paneSectionTitle}>Logs</div>
-          <div className={styles.scrollArea}>
-            {logs.map((log, i) => (
-              <LogRow key={i} event={log} selected={selectedEvent === log} onClick={() => setSelectedEvent(log)} />
-            ))}
+      {/* Body — horizontal split */}
+      <div className={s.body}>
+        {/* Left panel */}
+        <div className={s.leftPanel}>
+          {/* Collapsible waterfall */}
+          <div className={s.waterfallSection}>
+            <div className={s.sectionHeader} onClick={() => setWaterfallOpen(!waterfallOpen)}>
+              <span>Waterfall</span>
+              <span className={s.collapseIcon} style={{ transform: waterfallOpen ? 'rotate(0)' : 'rotate(-90deg)' }}>▾</span>
+            </div>
+            {waterfallOpen && (
+              <Waterfall spans={spans} onSpanClick={(event) => setSelectedEvent(event)} />
+            )}
           </div>
-        </div>
-      )}
 
-      {logs.length === 0 && spans.length > 0 && (
-        <div className={styles.paneSectionFlex}>
-          <div className={styles.paneSectionTitle}>Spans</div>
-          <div className={styles.scrollArea}>
-            {spans.map((span, i) => (
-              <LogRow key={i} event={span} selected={selectedEvent === span} onClick={() => setSelectedEvent(span)} />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {selectedEvent && (
-        <div className={styles.detailSection}>
-          <div className={styles.paneSectionTitle}>
-            {selectedEvent.type === 'span' ? 'Span' : 'Log'} Detail
-            <button className={`${pillStyle} ${styles.pillMl}`} onClick={() => setShowJson(!showJson)}>
-              {showJson ? 'Table' : 'JSON'}
+          {/* Tab bar — Spans / Logs */}
+          <div className={s.tabBar}>
+            <button
+              className={`${s.tab} ${activeTab === 'spans' ? s.tabActive : ''}`}
+              onClick={() => setActiveTab('spans')}
+            >
+              Spans
+              <span className={s.tabBadge}>{spans.length}</span>
             </button>
+            {logs.length > 0 && (
+              <button
+                className={`${s.tab} ${activeTab === 'logs' ? s.tabActive : ''}`}
+                onClick={() => setActiveTab('logs')}
+              >
+                Logs
+                <span className={s.tabBadge}>{logs.length}</span>
+              </button>
+            )}
           </div>
-          {showJson ? (
-            <pre className={jsonViewStyle}>{JSON.stringify(selectedEvent.data, null, 2)}</pre>
-          ) : (
-            <>
-              <AttributeTable
-                title="Properties"
-                attributes={{
-                  name: selectedEvent.data.name,
-                  service: selectedEvent.data.serviceName,
-                  kind: selectedEvent.data.kind,
-                  status: selectedEvent.data.status?.code,
-                  ...(selectedEvent.data.message ? { message: selectedEvent.data.message } : {}),
-                  ...(selectedEvent.data.level ? { level: selectedEvent.data.level } : {}),
-                  traceId: selectedEvent.data.traceId,
-                  spanId: selectedEvent.data.spanId,
-                  parentSpanId: selectedEvent.data.parentSpanId,
-                }}
-              />
-              {Object.keys(selectedEvent.data.attributes).length > 0 && (
-                <AttributeTable title="Attributes" attributes={selectedEvent.data.attributes as Record<string, unknown>} />
-              )}
-            </>
-          )}
+
+          {/* List */}
+          <div className={s.listArea}>
+            {listItems.length === 0 ? (
+              <div className={emptyStyle}>No {activeTab} in this trace</div>
+            ) : (
+              listItems.map((item, i) => (
+                <LogRow
+                  key={i}
+                  event={item}
+                  selected={selectedEvent === item}
+                  onClick={() => setSelectedEvent(item)}
+                />
+              ))
+            )}
+          </div>
         </div>
-      )}
+
+        {/* Right detail panel */}
+        {selectedEvent ? (
+          <div className={s.rightPanel}>
+            <div className={s.detailHeader}>
+              <span className={s.detailTitle}>
+                {selectedEvent.type === 'span' ? 'Span' : 'Log'} Detail
+              </span>
+              <div className={css({ display: 'flex', gap: '2', alignItems: 'center' })}>
+                <div className={s.segmentGroup}>
+                  <button className={`${s.segmentBtn} ${!showJson ? s.segmentBtnActive : ''}`} onClick={() => setShowJson(false)}>Table</button>
+                  <button className={`${s.segmentBtn} ${showJson ? s.segmentBtnActive : ''}`} onClick={() => setShowJson(true)}>JSON</button>
+                </div>
+                <button className={s.closeBtn} onClick={() => setSelectedEvent(null)}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div className={s.detailBody}>
+              {showJson ? (
+                <pre className={jsonViewStyle}>{JSON.stringify(selectedEvent.data, null, 2)}</pre>
+              ) : (
+                <>
+                  <AttributeTable
+                    title="Properties"
+                    attributes={{
+                      name: selectedEvent.data.name,
+                      service: selectedEvent.data.serviceName,
+                      kind: selectedEvent.data.kind,
+                      status: selectedEvent.data.status?.code,
+                      ...(selectedEvent.data.message ? { message: selectedEvent.data.message } : {}),
+                      ...(selectedEvent.data.level ? { level: selectedEvent.data.level } : {}),
+                      traceId: selectedEvent.data.traceId,
+                      spanId: selectedEvent.data.spanId,
+                      parentSpanId: selectedEvent.data.parentSpanId,
+                    }}
+                  />
+                  {Object.keys(selectedEvent.data.attributes).length > 0 && (
+                    <AttributeTable title="Attributes" attributes={selectedEvent.data.attributes as Record<string, unknown>} />
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className={s.rightPanel}>
+            <div className={s.noSelection}>
+              Click a span or log to view details
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
