@@ -2,6 +2,7 @@ import { useMemo, useState, useEffect, useCallback } from 'preact/hooks';
 import { ServicePills } from '../components/service-pills.js';
 import { SearchBar } from '../components/search-bar.js';
 import { useKeyboard } from '../hooks/use-keyboard.js';
+import { useColumnResize } from '../hooks/use-column-resize.js';
 import { showContextMenu, attrContextActions } from '../components/context-menu.js';
 import { formatTime, formatDurationMs, spanDurationMs, extractHttpMeta } from '../utils/format.js';
 import type { SSEEvent } from '../hooks/use-sse.js';
@@ -125,12 +126,17 @@ export function Requests({ eventsResult, onOpenTrace }: RequestsProps) {
 
   const allColumns = useMemo(() => [...CORE_COLUMNS, ...customColumns], [customColumns]);
 
+  // Built-in fields already shown as core columns
+  const BUILTIN_FIELDS = new Set(['http.method', 'http.request.method', 'http.route', 'http.target', 'http.status_code', 'http.response.status_code', 'runtime', 'level', 'message', 'service', 'serviceName', 'traceId', 'spanId', 'timestamp', 'kind', 'name', 'type']);
+
   // Discover available attribute keys from the events for the column picker
   const availableAttrs = useMemo(() => {
     const keys = new Set<string>();
     for (const e of filtered) {
       if (e.data.attributes) {
-        for (const k of Object.keys(e.data.attributes)) keys.add(k);
+        for (const k of Object.keys(e.data.attributes)) {
+          if (!BUILTIN_FIELDS.has(k)) keys.add(k);
+        }
       }
     }
     // Remove already-added custom columns
@@ -216,12 +222,18 @@ export function Requests({ eventsResult, onOpenTrace }: RequestsProps) {
     showContextMenu(e.clientX, e.clientY, actions);
   }, [setSearchQuery, addColumn, removeColumn, customColumns, activeColumnKeys]);
 
-  // Dynamic grid template: core columns + 120px per custom column
-  const gridTemplate = useMemo(() => {
-    const base = '75px 55px 1fr 50px 75px 90px';
-    if (customColumns.length === 0) return base;
-    return base + customColumns.map(() => ' 120px').join('');
-  }, [customColumns]);
+  // Draggable column widths
+  const columnConfigs = useMemo(() => [
+    { id: 'time', defaultWidth: 75 },
+    { id: 'method', defaultWidth: 55 },
+    { id: 'route', defaultWidth: 0 }, // 0 = flex (1fr)
+    { id: 'status', defaultWidth: 50 },
+    { id: 'duration', defaultWidth: 75 },
+    { id: 'service', defaultWidth: 90 },
+    ...customColumns.map((col) => ({ id: col.id, defaultWidth: 120 })),
+  ], [customColumns]);
+
+  const { gridTemplate, startResize } = useColumnResize('requests', columnConfigs);
 
   const methodClass = (method: string) => {
     const m = method.toUpperCase();
@@ -291,16 +303,21 @@ export function Requests({ eventsResult, onOpenTrace }: RequestsProps) {
         </div>
       )}
 
-      {/* Column headers — click to sort */}
+      {/* Column headers — click to sort, drag edge to resize */}
       <div class="request-row request-row-header" style={`grid-template-columns:${gridTemplate}`}>
-        <span class="col-header" onClick={() => toggleSort('time')}>Time<SortIndicator field="time" sortBy={sortBy} sortDir={sortDir} /></span>
-        <span class="col-header" onClick={() => toggleSort('method')}>Method<SortIndicator field="method" sortBy={sortBy} sortDir={sortDir} /></span>
-        <span class="col-header" onClick={() => toggleSort('route')}>Route<SortIndicator field="route" sortBy={sortBy} sortDir={sortDir} /></span>
-        <span class="col-header" onClick={() => toggleSort('status')}>Status<SortIndicator field="status" sortBy={sortBy} sortDir={sortDir} /></span>
-        <span class="col-header" onClick={() => toggleSort('duration')}>Duration<SortIndicator field="duration" sortBy={sortBy} sortDir={sortDir} /></span>
-        <span class="col-header" onClick={() => toggleSort('service')}>Service<SortIndicator field="service" sortBy={sortBy} sortDir={sortDir} /></span>
-        {customColumns.map((col) => (
-          <span key={col.id} class="col-header custom-col" title={col.attrKey} onClick={() => toggleSort(col.id)}>{col.label}<SortIndicator field={col.id} sortBy={sortBy} sortDir={sortDir} /></span>
+        {[
+          { id: 'time', label: 'Time' },
+          { id: 'method', label: 'Method' },
+          { id: 'route', label: 'Route' },
+          { id: 'status', label: 'Status' },
+          { id: 'duration', label: 'Duration' },
+          { id: 'service', label: 'Service' },
+          ...customColumns.map((col) => ({ id: col.id, label: col.label })),
+        ].map((col) => (
+          <span key={col.id} class="col-header" onClick={() => toggleSort(col.id)}>
+            {col.label}<SortIndicator field={col.id} sortBy={sortBy} sortDir={sortDir} />
+            <span class="col-resize" onPointerDown={(e: PointerEvent) => { e.stopPropagation(); startResize(col.id, e.clientX); }} />
+          </span>
         ))}
       </div>
 

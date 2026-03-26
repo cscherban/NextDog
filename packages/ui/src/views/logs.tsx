@@ -4,6 +4,7 @@ import { ServicePills } from '../components/service-pills.js';
 import { SearchBar } from '../components/search-bar.js';
 import { AttributeTable } from '../components/attribute-table.js';
 import { useKeyboard } from '../hooks/use-keyboard.js';
+import { useColumnResize } from '../hooks/use-column-resize.js';
 import { showContextMenu, attrContextActions } from '../components/context-menu.js';
 import type { SSEEvent } from '../hooks/use-sse.js';
 import type { UseEventsResult } from '../hooks/use-events.js';
@@ -155,12 +156,17 @@ export function Logs({ eventsResult, allEvents, onOpenTrace, onFilter }: LogsPro
     }
   };
 
+  // Built-in fields that are already shown as core columns — hide from column picker
+  const BUILTIN_FIELDS = new Set(['runtime', 'level', 'message', 'service', 'serviceName', 'traceId', 'spanId', 'timestamp', 'kind', 'name', 'type']);
+
   // Discover available attribute keys for the column picker
   const availableAttrs = useMemo(() => {
     const keys = new Set<string>();
     for (const e of displayLogs) {
       if (e.data.attributes) {
-        for (const k of Object.keys(e.data.attributes)) keys.add(k);
+        for (const k of Object.keys(e.data.attributes)) {
+          if (!BUILTIN_FIELDS.has(k)) keys.add(k);
+        }
       }
     }
     for (const col of customColumns) keys.delete(col.attrKey);
@@ -197,12 +203,17 @@ export function Logs({ eventsResult, allEvents, onOpenTrace, onFilter }: LogsPro
     showContextMenu(e.clientX, e.clientY, actions);
   }, [setSearchQuery, addColumn, removeColumn, customColumns, activeColumnKeys]);
 
-  // Dynamic grid template for log rows with custom columns
-  const gridTemplate = useMemo(() => {
-    const base = '90px 50px 80px auto 1fr';
-    if (customColumns.length === 0) return undefined; // use CSS default
-    return base + customColumns.map(() => ' 120px').join('');
-  }, [customColumns]);
+  // Draggable column widths
+  const columnConfigs = useMemo(() => [
+    { id: 'time', defaultWidth: 90 },
+    { id: 'level', defaultWidth: 50 },
+    { id: 'service', defaultWidth: 80 },
+    { id: 'runtime', defaultWidth: 50 },
+    { id: 'message', defaultWidth: 0 }, // 0 = flex (1fr)
+    ...customColumns.map((col) => ({ id: col.id, defaultWidth: 120 })),
+  ], [customColumns]);
+
+  const { gridTemplate, startResize } = useColumnResize('logs', columnConfigs);
 
   useKeyboard({
     onNext: () => setSelectedIndex((i) => Math.min(i + 1, displayLogs.length - 1)),
@@ -305,18 +316,23 @@ export function Logs({ eventsResult, allEvents, onOpenTrace, onFilter }: LogsPro
           </div>
         )}
 
-        {/* Column headers — click to sort */}
+        {/* Column headers — click to sort, drag edge to resize */}
         <div
           class="log-row log-row-wide log-row-header"
-          style={gridTemplate ? `grid-template-columns:${gridTemplate}` : undefined}
+          style={`grid-template-columns:${gridTemplate}`}
         >
-          <span class="col-header" onClick={() => toggleSort('time')}>Time<SortIndicator field="time" sortBy={sortBy} sortDir={sortDir} /></span>
-          <span class="col-header" onClick={() => toggleSort('level')}>Level<SortIndicator field="level" sortBy={sortBy} sortDir={sortDir} /></span>
-          <span class="col-header" onClick={() => toggleSort('service')}>Service<SortIndicator field="service" sortBy={sortBy} sortDir={sortDir} /></span>
-          <span></span>{/* runtime tag column */}
-          <span class="col-header" onClick={() => toggleSort('message')}>Message<SortIndicator field="message" sortBy={sortBy} sortDir={sortDir} /></span>
-          {customColumns.map((col) => (
-            <span key={col.id} class="col-header custom-col" title={col.attrKey} onClick={() => toggleSort(col.id)}>{col.label}<SortIndicator field={col.id} sortBy={sortBy} sortDir={sortDir} /></span>
+          {[
+            { id: 'time', label: 'Time' },
+            { id: 'level', label: 'Level' },
+            { id: 'service', label: 'Service' },
+            { id: 'runtime', label: '' },
+            { id: 'message', label: 'Message' },
+            ...customColumns.map((col) => ({ id: col.id, label: col.label })),
+          ].map((col) => (
+            <span key={col.id} class="col-header" onClick={col.label ? () => toggleSort(col.id) : undefined}>
+              {col.label}{col.label && <SortIndicator field={col.id} sortBy={sortBy} sortDir={sortDir} />}
+              {col.label && <span class="col-resize" onPointerDown={(e: PointerEvent) => { e.stopPropagation(); startResize(col.id, e.clientX); }} />}
+            </span>
           ))}
         </div>
 
@@ -332,7 +348,7 @@ export function Logs({ eventsResult, allEvents, onOpenTrace, onFilter }: LogsPro
                 selected={i === selectedIndex}
                 onClick={() => handleLogClick(log, i)}
                 onCellContext={handleCellContext}
-                style={gridTemplate ? `grid-template-columns:${gridTemplate}` : undefined}
+                style={`grid-template-columns:${gridTemplate}`}
                 extraColumns={customColumns.map((col) => ({
                   id: col.id,
                   attrKey: col.attrKey,

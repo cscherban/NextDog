@@ -5,90 +5,100 @@ interface LogoProps {
 export function Logo({ size = 20 }: LogoProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-      {/* Left ear — pointy upright like Sadaharu */}
-      <path d="M12 22C10 10 14 2 20 4C25 6 22 16 20 24" fill="#e8e0e0" />
-      <path d="M13.5 20C12 11 15 4.5 20 6C24 7.5 21.5 16 20 23" fill="#f5f0f0" />
-      {/* Inner ear pink */}
-      <path d="M15 16C14 10 16 6 19 7.5C21.5 9 20 14 19 19" fill="#ffb3b3" opacity="0.5" />
+      {/* Left ear — wide, angular, Akita-style */}
+      <path d="M8 20L16 2L24 22" fill="#f0ebe8" stroke="#c8c0bb" stroke-width="0.5" />
+      <path d="M12 18L16 6L22 20" fill="#e8a0a0" opacity="0.6" />
 
       {/* Right ear */}
-      <path d="M52 22C54 10 50 2 44 4C39 6 42 16 44 24" fill="#e8e0e0" />
-      <path d="M50.5 20C52 11 49 4.5 44 6C40 7.5 42.5 16 44 23" fill="#f5f0f0" />
-      <path d="M49 16C50 10 48 6 45 7.5C42.5 9 44 14 45 19" fill="#ffb3b3" opacity="0.5" />
+      <path d="M56 20L48 2L40 22" fill="#f0ebe8" stroke="#c8c0bb" stroke-width="0.5" />
+      <path d="M52 18L48 6L42 20" fill="#e8a0a0" opacity="0.6" />
 
-      {/* Head — big round white fluffy */}
-      <circle cx="32" cy="34" r="20" fill="#f5f0f0" />
+      {/* Fur tufts at top — jagged fluffy outline */}
+      <path d="M16 22C14 20 13 17 15 16C17 15 18 18 20 20C22 18 23 15 25 16C27 17 26 20 24 22" fill="#f5f0ee" />
+      <path d="M40 22C38 20 37 17 39 16C41 15 42 18 44 20C46 18 47 15 49 16C51 17 50 20 48 22" fill="#f5f0ee" />
 
-      {/* Fluffy texture — subtle fur tufts */}
-      <circle cx="32" cy="14" r="3" fill="#f5f0f0" />
-      <circle cx="14" cy="30" r="2.5" fill="#f5f0f0" />
-      <circle cx="50" cy="30" r="2.5" fill="#f5f0f0" />
+      {/* Head — large round */}
+      <circle cx="32" cy="36" r="19" fill="#f5f0ee" />
 
-      {/* Face — slightly lighter round area */}
-      <circle cx="32" cy="37" r="13" fill="#faf7f7" />
+      {/* Cheek fur tufts */}
+      <path d="M13 34C11 32 10 36 12 38C10 40 11 43 13 42" fill="#f5f0ee" />
+      <path d="M51 34C53 32 54 36 52 38C54 40 53 43 51 42" fill="#f5f0ee" />
 
-      {/* Blush cheeks — pink like Sadaharu */}
-      <ellipse cx="19" cy="40" rx="4" ry="2.5" fill="#ff8a8a" opacity="0.3" />
-      <ellipse cx="45" cy="40" rx="4" ry="2.5" fill="#ff8a8a" opacity="0.3" />
+      {/* Face — lighter muzzle */}
+      <ellipse cx="32" cy="40" rx="11" ry="9" fill="#faf7f5" />
 
-      {/* Eyes — big round dark, Sadaharu-style */}
-      <ellipse cx="25" cy="33" rx="5" ry="5.5" fill="#1a1a2e" />
-      <ellipse cx="39" cy="33" rx="5" ry="5.5" fill="#1a1a2e" />
+      {/* Eyebrows — brown, curved, Sadaharu signature */}
+      <path d="M21 26C23 24 26 24 28 25.5" stroke="#9e8573" stroke-width="2" stroke-linecap="round" fill="none" />
+      <path d="M43 26C41 24 38 24 36 25.5" stroke="#9e8573" stroke-width="2" stroke-linecap="round" fill="none" />
 
-      {/* Eye highlights — big sparkly */}
-      <circle cx="27.5" cy="31" r="2" fill="white" />
-      <circle cx="41.5" cy="31" r="2" fill="white" />
-      <circle cx="24" cy="35" r="1" fill="white" opacity="0.5" />
-      <circle cx="38" cy="35" r="1" fill="white" opacity="0.5" />
+      {/* Eyes — large, dark with blue tint */}
+      <ellipse cx="25" cy="32" rx="5" ry="5.5" fill="#1a1a3e" />
+      <ellipse cx="39" cy="32" rx="5" ry="5.5" fill="#1a1a3e" />
 
-      {/* Nose — big round dog nose */}
-      <ellipse cx="32" cy="41" rx="3" ry="2.2" fill="#1a1a2e" />
-      <ellipse cx="31.3" cy="40.3" rx="1" ry="0.6" fill="#3a3a5e" opacity="0.5" />
+      {/* Blue tint in iris */}
+      <ellipse cx="25" cy="33" rx="3.5" ry="4" fill="#2a2a5e" />
+      <ellipse cx="39" cy="33" rx="3.5" ry="4" fill="#2a2a5e" />
 
-      {/* Mouth — happy w-shape */}
-      <path d="M29 43.5Q30.5 45.5 32 43.5Q33.5 45.5 35 43.5" stroke="#1a1a2e" stroke-width="1.2" stroke-linecap="round" fill="none" />
+      {/* Eye highlights — large white reflections */}
+      <circle cx="27.5" cy="30.5" r="2" fill="white" />
+      <circle cx="41.5" cy="30.5" r="2" fill="white" />
+      <circle cx="24" cy="34.5" r="1" fill="white" opacity="0.5" />
+      <circle cx="38" cy="34.5" r="1" fill="white" opacity="0.5" />
 
-      {/* Tiny tongue */}
-      <ellipse cx="32" cy="45.5" rx="1.8" ry="1.5" fill="#ff6b6b" />
-      <path d="M30.2 45 L33.8 45" stroke="#faf7f7" stroke-width="1" />
+      {/* Nose — brown, round */}
+      <ellipse cx="32" cy="40" rx="2.8" ry="2" fill="#6b4c3b" />
+      <ellipse cx="31.5" cy="39.5" rx="0.8" ry="0.5" fill="#8b6c5b" opacity="0.5" />
 
-      {/* Collar — red like Sadaharu's */}
-      <path d="M16 50C20 54 26 56 32 56C38 56 44 54 48 50" stroke="#e74c3c" stroke-width="3" stroke-linecap="round" fill="none" />
+      {/* Mouth — open, showing fangs */}
+      <path d="M25 44C28 47 36 47 39 44" stroke="#1a1a2e" stroke-width="1.2" fill="none" />
+      <path d="M25 44C28 49 36 49 39 44" fill="#3a1a1a" />
+
+      {/* Tongue */}
+      <ellipse cx="32" cy="47.5" rx="3.5" ry="2.5" fill="#e88" />
+      <path d="M28.5 47 L35.5 47" stroke="#f5f0ee" stroke-width="0.5" opacity="0.3" />
+
+      {/* Tiny fangs */}
+      <path d="M28 44L27.5 46.5" stroke="white" stroke-width="1.5" stroke-linecap="round" />
+      <path d="M36 44L36.5 46.5" stroke="white" stroke-width="1.5" stroke-linecap="round" />
+
+      {/* Collar — dark red */}
+      <path d="M16 51C20 55 26 57 32 57C38 57 44 55 48 51" stroke="#8b1a1a" stroke-width="3" stroke-linecap="round" fill="none" />
 
       {/* Collar tag */}
-      <circle cx="32" cy="57.5" r="2.5" fill="#f1c40f" />
-      <path d="M32 55.5L32.6 57H34L32.8 57.7L33.2 59L32 58.2L30.8 59L31.2 57.7L30 57H31.4Z" fill="#e67e22" />
+      <circle cx="32" cy="58.5" r="2" fill="#f1c40f" />
     </svg>
   );
 }
 
 // Standalone SVG string for favicon
 export const logoSvgString = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
-  <path d="M12 22C10 10 14 2 20 4C25 6 22 16 20 24" fill="#e8e0e0"/>
-  <path d="M13.5 20C12 11 15 4.5 20 6C24 7.5 21.5 16 20 23" fill="#f5f0f0"/>
-  <path d="M15 16C14 10 16 6 19 7.5C21.5 9 20 14 19 19" fill="#ffb3b3" opacity="0.5"/>
-  <path d="M52 22C54 10 50 2 44 4C39 6 42 16 44 24" fill="#e8e0e0"/>
-  <path d="M50.5 20C52 11 49 4.5 44 6C40 7.5 42.5 16 44 23" fill="#f5f0f0"/>
-  <path d="M49 16C50 10 48 6 45 7.5C42.5 9 44 14 45 19" fill="#ffb3b3" opacity="0.5"/>
-  <circle cx="32" cy="34" r="20" fill="#f5f0f0"/>
-  <circle cx="32" cy="14" r="3" fill="#f5f0f0"/>
-  <circle cx="14" cy="30" r="2.5" fill="#f5f0f0"/>
-  <circle cx="50" cy="30" r="2.5" fill="#f5f0f0"/>
-  <circle cx="32" cy="37" r="13" fill="#faf7f7"/>
-  <ellipse cx="19" cy="40" rx="4" ry="2.5" fill="#ff8a8a" opacity="0.3"/>
-  <ellipse cx="45" cy="40" rx="4" ry="2.5" fill="#ff8a8a" opacity="0.3"/>
-  <ellipse cx="25" cy="33" rx="5" ry="5.5" fill="#1a1a2e"/>
-  <ellipse cx="39" cy="33" rx="5" ry="5.5" fill="#1a1a2e"/>
-  <circle cx="27.5" cy="31" r="2" fill="white"/>
-  <circle cx="41.5" cy="31" r="2" fill="white"/>
-  <circle cx="24" cy="35" r="1" fill="white" opacity="0.5"/>
-  <circle cx="38" cy="35" r="1" fill="white" opacity="0.5"/>
-  <ellipse cx="32" cy="41" rx="3" ry="2.2" fill="#1a1a2e"/>
-  <ellipse cx="31.3" cy="40.3" rx="1" ry="0.6" fill="#3a3a5e" opacity="0.5"/>
-  <path d="M29 43.5Q30.5 45.5 32 43.5Q33.5 45.5 35 43.5" stroke="#1a1a2e" stroke-width="1.2" stroke-linecap="round" fill="none"/>
-  <ellipse cx="32" cy="45.5" rx="1.8" ry="1.5" fill="#ff6b6b"/>
-  <path d="M30.2 45 L33.8 45" stroke="#faf7f7" stroke-width="1"/>
-  <path d="M16 50C20 54 26 56 32 56C38 56 44 54 48 50" stroke="#e74c3c" stroke-width="3" stroke-linecap="round" fill="none"/>
-  <circle cx="32" cy="57.5" r="2.5" fill="#f1c40f"/>
-  <path d="M32 55.5L32.6 57H34L32.8 57.7L33.2 59L32 58.2L30.8 59L31.2 57.7L30 57H31.4Z" fill="#e67e22"/>
+  <path d="M8 20L16 2L24 22" fill="#f0ebe8" stroke="#c8c0bb" stroke-width="0.5"/>
+  <path d="M12 18L16 6L22 20" fill="#e8a0a0" opacity="0.6"/>
+  <path d="M56 20L48 2L40 22" fill="#f0ebe8" stroke="#c8c0bb" stroke-width="0.5"/>
+  <path d="M52 18L48 6L42 20" fill="#e8a0a0" opacity="0.6"/>
+  <path d="M16 22C14 20 13 17 15 16C17 15 18 18 20 20C22 18 23 15 25 16C27 17 26 20 24 22" fill="#f5f0ee"/>
+  <path d="M40 22C38 20 37 17 39 16C41 15 42 18 44 20C46 18 47 15 49 16C51 17 50 20 48 22" fill="#f5f0ee"/>
+  <circle cx="32" cy="36" r="19" fill="#f5f0ee"/>
+  <path d="M13 34C11 32 10 36 12 38C10 40 11 43 13 42" fill="#f5f0ee"/>
+  <path d="M51 34C53 32 54 36 52 38C54 40 53 43 51 42" fill="#f5f0ee"/>
+  <ellipse cx="32" cy="40" rx="11" ry="9" fill="#faf7f5"/>
+  <path d="M21 26C23 24 26 24 28 25.5" stroke="#9e8573" stroke-width="2" stroke-linecap="round" fill="none"/>
+  <path d="M43 26C41 24 38 24 36 25.5" stroke="#9e8573" stroke-width="2" stroke-linecap="round" fill="none"/>
+  <ellipse cx="25" cy="32" rx="5" ry="5.5" fill="#1a1a3e"/>
+  <ellipse cx="39" cy="32" rx="5" ry="5.5" fill="#1a1a3e"/>
+  <ellipse cx="25" cy="33" rx="3.5" ry="4" fill="#2a2a5e"/>
+  <ellipse cx="39" cy="33" rx="3.5" ry="4" fill="#2a2a5e"/>
+  <circle cx="27.5" cy="30.5" r="2" fill="white"/>
+  <circle cx="41.5" cy="30.5" r="2" fill="white"/>
+  <circle cx="24" cy="34.5" r="1" fill="white" opacity="0.5"/>
+  <circle cx="38" cy="34.5" r="1" fill="white" opacity="0.5"/>
+  <ellipse cx="32" cy="40" rx="2.8" ry="2" fill="#6b4c3b"/>
+  <ellipse cx="31.5" cy="39.5" rx="0.8" ry="0.5" fill="#8b6c5b" opacity="0.5"/>
+  <path d="M25 44C28 47 36 47 39 44" stroke="#1a1a2e" stroke-width="1.2" fill="none"/>
+  <path d="M25 44C28 49 36 49 39 44" fill="#3a1a1a"/>
+  <ellipse cx="32" cy="47.5" rx="3.5" ry="2.5" fill="#e88"/>
+  <path d="M28 44L27.5 46.5" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M36 44L36.5 46.5" stroke="white" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M16 51C20 55 26 57 32 57C38 57 44 55 48 51" stroke="#8b1a1a" stroke-width="3" stroke-linecap="round" fill="none"/>
+  <circle cx="32" cy="58.5" r="2" fill="#f1c40f"/>
 </svg>`;

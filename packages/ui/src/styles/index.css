@@ -298,6 +298,16 @@ a { color: var(--accent); text-decoration: none; }
 .col-header:hover { color: var(--text-bright); }
 .sort-indicator { font-size: 8px; opacity: 0.7; min-width: 8px; display: inline-block; }
 
+/* Column resize handle */
+.col-resize {
+  position: absolute; right: 0; top: 0; bottom: 0; width: 5px;
+  cursor: col-resize; z-index: 2;
+}
+.col-resize:hover, .col-resize:active {
+  background: var(--accent); opacity: 0.4;
+}
+.col-header { position: relative; }
+
 /* Context menu */
 .context-menu {
   position: fixed; z-index: 1000;

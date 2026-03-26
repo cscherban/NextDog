@@ -44,13 +44,13 @@ export function Sparkline({ events }: { events: SSEEvent[] }) {
     <svg width={WIDTH} height={HEIGHT} viewBox={`0 0 ${WIDTH} ${HEIGHT}`}>
       <polygon
         points={areaPoints}
-        fill="var(--accent)"
+        fill="var(--green)"
         opacity={0.1}
       />
       <polyline
         points={polylinePoints}
         fill="none"
-        stroke="var(--accent)"
+        stroke="var(--green)"
         stroke-width="1.5"
       />
     </svg>
