@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'preact/hooks';
+import { css } from 'styled-system/css';
 
 export interface ContextMenuAction {
   label: string;
@@ -61,6 +62,52 @@ export function attrContextActions(
   return actions;
 }
 
+const menuStyle = css({
+  position: 'fixed',
+  zIndex: 1000,
+  background: 'surface.panel',
+  border: '1px solid token(colors.border.subtle)',
+  borderRadius: 'md',
+  padding: '1 0',
+  minWidth: '200px',
+  maxWidth: '320px',
+  boxShadow: '0 4px 16px rgba(0,0,0,0.3)',
+  fontSize: 'md',
+  fontFamily: 'mono',
+});
+
+const itemStyle = css({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '2',
+  padding: '1 3',
+  cursor: 'pointer',
+  color: 'fg',
+  whiteSpace: 'nowrap',
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  _hover: { background: 'accent', color: 'white' },
+});
+
+const dangerItemStyle = css({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '2',
+  padding: '1 3',
+  cursor: 'pointer',
+  color: 'red',
+  whiteSpace: 'nowrap',
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  _hover: { background: 'red', color: 'white' },
+});
+
+const iconStyle = css({
+  width: '16px',
+  textAlign: 'center',
+  flexShrink: 0,
+});
+
 /** Global context menu container — render once in App */
 export function ContextMenuContainer() {
   const [state, setState] = useState<ContextMenuState | null>(null);
@@ -71,7 +118,6 @@ export function ContextMenuContainer() {
     return () => { globalShowMenu = null; };
   }, []);
 
-  // Close on click outside or Escape
   useEffect(() => {
     if (!state) return;
 
@@ -83,7 +129,6 @@ export function ContextMenuContainer() {
     const handleKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setState(null);
     };
-    // Use capture to close before other handlers fire
     window.addEventListener('click', handleClick, true);
     window.addEventListener('contextmenu', handleClick, true);
     window.addEventListener('keydown', handleKey);
@@ -94,7 +139,6 @@ export function ContextMenuContainer() {
     };
   }, [state]);
 
-  // Adjust position to stay in viewport
   const adjustedPos = useCallback((x: number, y: number) => {
     const menuWidth = 260;
     const menuHeight = 120;
@@ -111,16 +155,16 @@ export function ContextMenuContainer() {
   return (
     <div
       ref={menuRef}
-      class="context-menu"
+      className={menuStyle}
       style={`left:${pos.x}px;top:${pos.y}px`}
     >
       {state.actions.map((action, i) => (
         <div
           key={i}
-          class={`context-menu-item ${action.danger ? 'context-menu-danger' : ''}`}
+          className={action.danger ? dangerItemStyle : itemStyle}
           onClick={() => { action.onClick(); setState(null); }}
         >
-          {action.icon && <span class="context-menu-icon">{action.icon}</span>}
+          {action.icon && <span className={iconStyle}>{action.icon}</span>}
           <span>{action.label}</span>
         </div>
       ))}
