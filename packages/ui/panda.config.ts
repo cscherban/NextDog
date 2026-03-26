@@ -82,24 +82,24 @@ export default defineConfig({
       colors: {
         surface: {
           bg: {
-            value: { base: '{colors.neutral.950}', _light: '{colors.neutral.50}' },
+            value: { base: '{colors.neutral.950}', _light: '#ededeb' },
           },
           panel: {
-            value: { base: '{colors.neutral.900}', _light: '{colors.white}' },
+            value: { base: '{colors.neutral.900}', _light: '#f5f4f2' },
           },
           hover: {
-            value: { base: '{colors.neutral.800}', _light: '{colors.neutral.100}' },
+            value: { base: '{colors.neutral.800}', _light: '#e4e3e0' },
           },
           raised: {
-            value: { base: '{colors.neutral.700}', _light: '{colors.neutral.50}' },
+            value: { base: '{colors.neutral.700}', _light: '#ebeae8' },
           },
         },
         border: {
           subtle: {
-            value: { base: 'rgba(255,255,255,0.06)', _light: '{colors.neutral.200}' },
+            value: { base: 'rgba(255,255,255,0.06)', _light: 'rgba(0,0,0,0.08)' },
           },
           strong: {
-            value: { base: 'rgba(255,255,255,0.12)', _light: '{colors.neutral.300}' },
+            value: { base: 'rgba(255,255,255,0.12)', _light: 'rgba(0,0,0,0.14)' },
           },
         },
         fg: {
