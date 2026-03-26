@@ -3,7 +3,7 @@ import { showContextMenu, attrContextActions } from './context-menu.js';
 
 const attrTableStyle = css({
   fontSize: 'md',
-  py: '2', px: '4',
+  py: '1', px: '0',
   width: '100%',
   '& table': {
     width: '100%',
@@ -15,20 +15,16 @@ const attrTableStyle = css({
   '& tr:last-child': {
     borderBottom: 'none',
   },
-  '& td': {
-    py: '1.5', px: '2',
-    verticalAlign: 'top',
-  },
 });
 
 const attrTableTitleStyle = css({
   fontWeight: '600',
   color: 'fg.dim',
-  fontSize: 'sm',
+  fontSize: 'xs',
   textTransform: 'uppercase',
   letterSpacing: '0.5px',
   py: '2', px: '0',
-  marginBottom: '1',
+  marginBottom: '0.5',
 });
 
 const attrKeyStyle = css({
@@ -36,15 +32,19 @@ const attrKeyStyle = css({
   whiteSpace: 'nowrap',
   fontFamily: 'mono',
   fontSize: 'sm',
-  width: '1px',
-  paddingRight: '4',
+  py: '2', px: '0',
+  paddingRight: '6',
+  verticalAlign: 'top',
+  width: '1%',
 });
 
 const attrValueStyle = css({
   color: 'fg',
   fontFamily: 'mono',
   fontSize: 'sm',
+  py: '2', px: '0',
   wordBreak: 'break-all',
+  verticalAlign: 'top',
 });
 
 const attrValueFilterableStyle = css({

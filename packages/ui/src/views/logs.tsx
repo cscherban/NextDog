@@ -84,7 +84,7 @@ const logDetailHeaderStyle = css({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
-  py: '2', px: '3',
+  py: '3', px: '4',
   borderBottom: '1px solid token(colors.border.subtle)',
   fontSize: 'md',
   background: 'surface.bg',
@@ -93,29 +93,31 @@ const logDetailHeaderStyle = css({
 const logDetailBodyStyle = css({
   flex: '1',
   overflowY: 'auto',
-  padding: '3',
+  py: '3', px: '4',
 });
 
 const logDetailMessageStyle = css({
   fontFamily: 'mono',
-  fontSize: 'lg',
+  fontSize: 'md',
   color: 'fg.bright',
-  py: '2', px: '3',
-  background: 'surface.bg',
-  borderRadius: 'sm',
-  marginBottom: '3',
+  py: '3', px: '3',
+  background: 'surface.hover',
+  borderRadius: 'md',
+  marginBottom: '4',
   wordBreak: 'break-word',
   whiteSpace: 'pre-wrap',
+  lineHeight: '1.6',
+  border: '1px solid token(colors.border.subtle)',
 });
 
 const logRowHeaderStyle = css({
   cursor: 'default',
   fontSize: 'xs',
-  fontWeight: '600',
+  fontWeight: '500',
   textTransform: 'uppercase',
   letterSpacing: '0.5px',
   color: 'fg.dim',
-  py: '1', px: '4',
+  py: '2', px: '4',
   borderBottom: '1px solid token(colors.border.subtle)',
   background: 'surface.panel',
   position: 'sticky',
@@ -155,9 +157,29 @@ const detailButtonGroupStyle = css({
 });
 
 const tabButtonGroupStyle = css({
-  display: 'flex',
-  gap: '1',
-  marginBottom: '2',
+  display: 'inline-flex',
+  borderRadius: 'md',
+  border: '1px solid token(colors.border.subtle)',
+  overflow: 'hidden',
+  marginBottom: '4',
+});
+
+const tabBtnStyle = css({
+  py: '1', px: '3',
+  fontSize: 'sm',
+  fontFamily: 'mono',
+  fontWeight: 500,
+  cursor: 'pointer',
+  border: 'none',
+  background: 'transparent',
+  color: 'fg.dim',
+  transition: 'all 0.12s ease',
+  _hover: { color: 'fg.bright', background: 'surface.hover' },
+});
+
+const tabBtnActiveStyle = css({
+  background: 'surface.raised',
+  color: 'fg.bright',
 });
 
 /* ── Components ───────────────────────────────────────────────────────── */
@@ -459,8 +481,8 @@ export function Logs({ eventsResult, allEvents, onOpenTrace, onFilter }: LogsPro
               {selectedLog.data.message ?? selectedLog.data.name}
             </div>
             <div className={tabButtonGroupStyle}>
-              <button className={`${pillStyle} ${!showJson ? pillActiveStyle : ''}`} onClick={() => setShowJson(false)}>Table</button>
-              <button className={`${pillStyle} ${showJson ? pillActiveStyle : ''}`} onClick={() => setShowJson(true)}>JSON</button>
+              <button className={`${tabBtnStyle} ${!showJson ? tabBtnActiveStyle : ''}`} onClick={() => setShowJson(false)}>Table</button>
+              <button className={`${tabBtnStyle} ${showJson ? tabBtnActiveStyle : ''}`} onClick={() => setShowJson(true)}>JSON</button>
             </div>
             {showJson ? (
               <pre className={jsonViewStyle}>{JSON.stringify(selectedLog.data, null, 2)}</pre>

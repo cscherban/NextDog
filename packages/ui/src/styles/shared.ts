@@ -14,11 +14,11 @@ export const pillStyle = css({
   transition: 'all 0.15s ease',
 });
 
-/** Active variant — accent background */
+/** Active variant — subtle raised look */
 export const pillActiveStyle = css({
-  background: 'accent',
-  borderColor: 'accent',
-  color: 'white',
+  background: 'surface.raised',
+  borderColor: 'border.strong',
+  color: 'fg.bright',
 });
 
 /** Centered "no results" / empty placeholder */
