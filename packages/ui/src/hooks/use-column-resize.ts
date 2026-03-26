@@ -19,43 +19,60 @@ function saveWidths(viewId: string, widths: Record<string, number>) {
   try { localStorage.setItem(STORAGE_KEY_PREFIX + viewId, JSON.stringify(widths)); } catch {}
 }
 
+interface DragState {
+  colId: string;
+  rightColId: string | null;
+  startX: number;
+  startWidth: number;
+  rightStartWidth: number;
+}
+
 export function useColumnResize(viewId: string, columns: ColumnConfig[]) {
   const [overrides, setOverrides] = useState<Record<string, number>>(() => loadWidths(viewId));
-  const dragging = useRef<{ colId: string; startX: number; startWidth: number } | null>(null);
-  const pendingWidth = useRef<{ colId: string; width: number } | null>(null);
+  const dragging = useRef<DragState | null>(null);
+  const pendingUpdate = useRef<Record<string, number> | null>(null);
   const rafId = useRef<number>(0);
 
-  // Persist on change
   useEffect(() => {
     saveWidths(viewId, overrides);
   }, [viewId, overrides]);
 
-  // Pointer move/up handlers (registered once)
   useEffect(() => {
     const flushPending = () => {
-      if (pendingWidth.current) {
-        const { colId, width } = pendingWidth.current;
-        pendingWidth.current = null;
-        setOverrides((prev) => ({ ...prev, [colId]: width }));
+      if (pendingUpdate.current) {
+        const update = pendingUpdate.current;
+        pendingUpdate.current = null;
+        setOverrides((prev) => ({ ...prev, ...update }));
       }
     };
 
     const onMove = (e: PointerEvent) => {
       if (!dragging.current) return;
-      const delta = e.clientX - dragging.current.startX;
-      const newWidth = Math.max(MIN_WIDTH, dragging.current.startWidth + delta);
-      pendingWidth.current = { colId: dragging.current.colId, width: newWidth };
+      const { colId, rightColId, startX, startWidth, rightStartWidth } = dragging.current;
+      const delta = e.clientX - startX;
+
+      const newWidth = Math.max(MIN_WIDTH, startWidth + delta);
+      const actualDelta = newWidth - startWidth;
+
+      const update: Record<string, number> = { [colId]: newWidth };
+
+      // Steal from the right neighbor (if it's a fixed-width column)
+      if (rightColId && rightStartWidth > 0) {
+        const newRightWidth = Math.max(MIN_WIDTH, rightStartWidth - actualDelta);
+        update[rightColId] = newRightWidth;
+      }
+
+      pendingUpdate.current = update;
       cancelAnimationFrame(rafId.current);
       rafId.current = requestAnimationFrame(flushPending);
     };
 
     const onUp = () => {
       if (!dragging.current) return;
-      // Flush any pending width
-      if (pendingWidth.current) {
-        const { colId, width } = pendingWidth.current;
-        pendingWidth.current = null;
-        setOverrides((prev) => ({ ...prev, [colId]: width }));
+      if (pendingUpdate.current) {
+        const update = pendingUpdate.current;
+        pendingUpdate.current = null;
+        setOverrides((prev) => ({ ...prev, ...update }));
       }
       dragging.current = null;
       document.body.style.cursor = '';
@@ -72,8 +89,24 @@ export function useColumnResize(viewId: string, columns: ColumnConfig[]) {
   }, []);
 
   const startResize = useCallback((colId: string, startX: number) => {
-    const width = overrides[colId] ?? columns.find((c) => c.id === colId)?.defaultWidth ?? 100;
-    dragging.current = { colId, startX, startWidth: width };
+    const colIndex = columns.findIndex((c) => c.id === colId);
+    const col = columns[colIndex];
+    if (!col) return;
+
+    const width = overrides[colId] ?? col.defaultWidth ?? 100;
+
+    // Find the right neighbor (skip flex columns — they adjust automatically)
+    let rightColId: string | null = null;
+    let rightStartWidth = 0;
+    for (let i = colIndex + 1; i < columns.length; i++) {
+      if (columns[i].defaultWidth !== 0) {
+        rightColId = columns[i].id;
+        rightStartWidth = overrides[columns[i].id] ?? columns[i].defaultWidth;
+        break;
+      }
+    }
+
+    dragging.current = { colId, rightColId, startX, startWidth: width, rightStartWidth };
     document.body.style.cursor = 'col-resize';
     document.body.style.userSelect = 'none';
   }, [overrides, columns]);
@@ -81,8 +114,8 @@ export function useColumnResize(viewId: string, columns: ColumnConfig[]) {
   const gridTemplate = useMemo(() => {
     return columns.map((col) => {
       const w = overrides[col.id] ?? col.defaultWidth;
-      if (col.defaultWidth === 0) return 'minmax(100px, 1fr)';
-      return `minmax(${MIN_WIDTH}px, ${w}px)`;
+      if (col.defaultWidth === 0) return '1fr';
+      return `${w}px`;
     }).join(' ');
   }, [columns, overrides]);
 
