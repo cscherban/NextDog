@@ -27,7 +27,7 @@ export default defineConfig({
           900: { value: '#14161b' },
           950: { value: '#0e1015' },
         },
-        // Muted accent: soft teal — calm, non-aggressive
+        // Muted pastels — dark mode defaults
         accent: { value: '#5eead4' },
         green: { value: '#6ee7b7' },
         yellow: { value: '#fcd34d' },
@@ -112,6 +112,28 @@ export default defineConfig({
           bright: {
             value: { base: '{colors.white}', _light: '{colors.neutral.950}' },
           },
+        },
+        // Status colors — muted pastels on dark, saturated on light
+        accent: {
+          value: { base: '{colors.accent}', _light: '#0d9488' },
+        },
+        green: {
+          value: { base: '{colors.green}', _light: '#16a34a' },
+        },
+        yellow: {
+          value: { base: '{colors.yellow}', _light: '#b45309' },
+        },
+        red: {
+          value: { base: '{colors.red}', _light: '#dc2626' },
+        },
+        blue: {
+          value: { base: '{colors.blue}', _light: '#2563eb' },
+        },
+        orange: {
+          value: { base: '{colors.orange}', _light: '#c2410c' },
+        },
+        purple: {
+          value: { base: '{colors.purple}', _light: '#7c3aed' },
         },
       },
     },
