@@ -3,6 +3,7 @@ import { showContextMenu, attrContextActions } from './context-menu.js';
 
 const attrTableStyle = css({
   fontSize: 'md',
+  py: '2', px: '4',
   width: '100%',
   '& table': {
     width: '100%',
@@ -11,17 +12,23 @@ const attrTableStyle = css({
   '& tr': {
     borderBottom: '1px solid token(colors.border.subtle)',
   },
+  '& tr:last-child': {
+    borderBottom: 'none',
+  },
   '& td': {
-    py: '1', px: '2',
+    py: '1.5', px: '2',
     verticalAlign: 'top',
   },
 });
 
 const attrTableTitleStyle = css({
-  fontWeight: 'bold',
-  color: 'fg.bright',
-  padding: '2',
-  fontSize: 'md',
+  fontWeight: '600',
+  color: 'fg.dim',
+  fontSize: 'sm',
+  textTransform: 'uppercase',
+  letterSpacing: '0.5px',
+  py: '2', px: '0',
+  marginBottom: '1',
 });
 
 const attrKeyStyle = css({
@@ -30,6 +37,7 @@ const attrKeyStyle = css({
   fontFamily: 'mono',
   fontSize: 'sm',
   width: '1px',
+  paddingRight: '4',
 });
 
 const attrValueStyle = css({
@@ -41,9 +49,12 @@ const attrValueStyle = css({
 
 const attrValueFilterableStyle = css({
   cursor: 'pointer',
-  color: 'accent',
+  color: 'fg',
+  borderBottom: '1px dashed token(colors.border.strong)',
+  transition: 'all 0.15s ease',
   _hover: {
-    textDecoration: 'underline',
+    color: 'accent',
+    borderColor: 'accent',
   },
 });
 
