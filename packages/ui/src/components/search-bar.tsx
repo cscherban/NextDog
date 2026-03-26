@@ -371,8 +371,11 @@ export function SearchBar({ value, onChange, events }: SearchBarProps) {
 
   return (
     <div class={containerStyle}>
-      <div class={rowStyle}>
       <div class={`${inputWrapperBase} ${focused ? inputWrapperFocused : ''}`} onClick={() => inputRef.current?.focus()}>
+        {/* Search icon */}
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;opacity:0.4">
+          <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
         {tokens.map((token, i) => (
           <span key={i} class={pillColorClass(token.key, token.negated)}>
             {token.operator === 'OR' && i > 0 && <span class={pillOperatorStyle}>OR</span>}
@@ -380,14 +383,14 @@ export function SearchBar({ value, onChange, events }: SearchBarProps) {
             {token.key && <span class={pillKeyStyle}>{token.key}</span>}
             {token.key && <span class={pillSepStyle}>:</span>}
             <span class={pillValStyle}>{token.value}</span>
-            <button class={pillRemoveStyle} onClick={(e) => { e.stopPropagation(); handleRemoveToken(token.raw); }}>x</button>
+            <button class={pillRemoveStyle} onClick={(e) => { e.stopPropagation(); handleRemoveToken(token.raw); }}>×</button>
           </span>
         ))}
         <input
           ref={inputRef}
           type="text"
           class={searchInputStyle}
-          placeholder={tokens.length === 0 ? 'Filter... (e.g. level:error, !service:noisy, status:OK OR status:ERROR)' : ''}
+          placeholder={tokens.length === 0 ? 'Filter... (e.g. level:error, !service:noisy)' : ''}
           value={inputValue}
           onInput={(e) => {
             setInputValue((e.target as HTMLInputElement).value);
@@ -397,14 +400,6 @@ export function SearchBar({ value, onChange, events }: SearchBarProps) {
           onBlur={() => { setFocused(false); setTimeout(() => setShowSuggestions(false), 150); }}
           onKeyDown={handleKeyDown}
         />
-      </div>
-      <button
-        class={helpBtnStyle}
-        onClick={() => setShowHelp((v) => !v)}
-        title="Search syntax help"
-      >
-        ?
-      </button>
       </div>
       {showHelp && (
         <div class={helpPanelStyle}>

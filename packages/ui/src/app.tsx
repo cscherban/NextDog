@@ -39,44 +39,45 @@ const appStyle = css({
 const headerStyle = css({
   display: 'flex',
   alignItems: 'center',
-  gap: '4',
-  py: '2', px: '4',
+  gap: '6',
+  py: '0', px: '4',
+  height: '44px',
   borderBottom: '1px solid token(colors.border.subtle)',
   background: 'surface.panel',
 });
 
 const headerH1Style = css({
-  fontSize: 'xl',
+  fontSize: '2xl',
   fontWeight: 600,
   color: 'fg.bright',
+  letterSpacing: '-0.3px',
 });
 
 const navStyle = css({
   display: 'flex',
-  gap: '1',
+  gap: '0',
+  height: '100%',
+  alignItems: 'stretch',
 });
 
-const navLinkStyle = css({
-  py: '1', px: '3',
-  borderRadius: 'sm',
+const navLinkBase = css({
+  display: 'flex',
+  alignItems: 'center',
+  py: '0', px: '3',
   color: 'fg.dim',
-  fontSize: 'md',
+  fontSize: 'lg',
   fontWeight: 500,
   textDecoration: 'none',
+  borderBottom: '2px solid transparent',
+  transition: 'all 0.15s ease',
   _hover: {
     color: 'fg.bright',
-    background: 'surface.hover',
   },
 });
 
-const navLinkActiveStyle = css({
-  py: '1', px: '3',
-  borderRadius: 'sm',
-  fontSize: 'md',
-  fontWeight: 500,
-  textDecoration: 'none',
+const navLinkActiveIndicator = css({
   color: 'fg.bright',
-  background: 'surface.hover',
+  borderBottomColor: 'accent',
 });
 
 const navBadgeStyle = css({
@@ -86,27 +87,17 @@ const navBadgeStyle = css({
   minWidth: '18px',
   height: '16px',
   py: '0', px: '1',
-  marginLeft: '1',
-  borderRadius: 'lg',
+  marginLeft: '1.5',
+  borderRadius: 'full',
   fontSize: 'xs',
   fontWeight: 600,
-  background: 'token(colors.border.subtle)',
+  background: 'surface.hover',
   color: 'fg.dim',
 });
 
 const navBadgeActiveStyle = css({
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  minWidth: '18px',
-  height: '16px',
-  py: '0', px: '1',
-  marginLeft: '1',
-  borderRadius: 'lg',
-  fontSize: 'xs',
-  fontWeight: 600,
-  background: 'accent',
-  color: 'white',
+  background: 'surface.raised',
+  color: 'fg.bright',
 });
 
 const headerRightStyle = css({
@@ -233,18 +224,18 @@ export function App() {
         <Logo size={24} />
         <h1 className={headerH1Style}>NextDog</h1>
         <nav className={navStyle}>
-          <a href="/" className={isActive('/') ? navLinkActiveStyle : navLinkStyle}>
+          <a href="/" className={`${navLinkBase} ${isActive('/') ? navLinkActiveIndicator : ''}`}>
             Spans
             {spanCount > 0 && (
-              <span className={isActive('/') ? navBadgeActiveStyle : navBadgeStyle}>
+              <span className={`${navBadgeStyle} ${isActive('/') ? navBadgeActiveStyle : ''}`}>
                 {spanCount > 999 ? '999+' : spanCount}
               </span>
             )}
           </a>
-          <a href="/logs" className={isActive('/logs') ? navLinkActiveStyle : navLinkStyle}>
+          <a href="/logs" className={`${navLinkBase} ${isActive('/logs') ? navLinkActiveIndicator : ''}`}>
             Logs
             {logCount > 0 && (
-              <span className={isActive('/logs') ? navBadgeActiveStyle : navBadgeStyle}>
+              <span className={`${navBadgeStyle} ${isActive('/logs') ? navBadgeActiveStyle : ''}`}>
                 {logCount > 999 ? '999+' : logCount}
               </span>
             )}

@@ -49,10 +49,10 @@ export function ColumnPicker({ customColumns, availableAttrs, onAdd, onRemove }:
       {open && (
         <div
           className={css({
-            position: 'absolute', top: '100%', right: '0',
-            zIndex: 50, marginTop: '1', width: '280px',
-            background: 'surface.panel', border: '1px solid token(colors.border.subtle)',
-            borderRadius: 'lg', boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
+            position: 'fixed', right: '16px',
+            zIndex: 200, marginTop: '1', width: '280px',
+            background: 'surface.panel', border: '1px solid token(colors.border.strong)',
+            borderRadius: 'lg', boxShadow: '0 12px 32px rgba(0,0,0,0.5)',
             fontSize: 'md', fontFamily: 'mono', overflow: 'hidden',
           })}
         >

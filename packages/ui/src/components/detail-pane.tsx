@@ -155,6 +155,7 @@ const sectionStyle = css({
 const sectionTitleStyle = css({
   display: 'flex',
   alignItems: 'center',
+  justifyContent: 'space-between',
   py: '2', px: '4',
   fontSize: 'sm',
   fontWeight: 600,
@@ -172,8 +173,23 @@ const logsStyle = css({
   overflowY: 'auto',
 });
 
-const pillMlStyle = css({
-  marginLeft: '2',
+const toggleBtnStyle = css({
+  fontSize: 'xs',
+  fontFamily: 'mono',
+  py: '0.5', px: '2',
+  borderRadius: 'sm',
+  border: '1px solid token(colors.border.strong)',
+  background: 'transparent',
+  color: 'fg.dim',
+  cursor: 'pointer',
+  textTransform: 'none',
+  letterSpacing: '0',
+  fontWeight: 500,
+  transition: 'all 0.15s ease',
+  _hover: {
+    background: 'surface.hover',
+    color: 'fg.bright',
+  },
 });
 
 const METHOD_COLORS: Record<string, string> = {
@@ -364,9 +380,9 @@ export function DetailPane({ traceId, events, onClose, onFilter }: DetailPanePro
           {selectedEvent && (
             <div class={sectionStyle}>
               <div class={sectionTitleStyle}>
-                {selectedEvent.type === 'span' ? 'Span' : 'Log'} Detail
+                <span>{selectedEvent.type === 'span' ? 'Span' : 'Log'} Detail</span>
                 <button
-                  class={`${pillStyle} ${pillMlStyle}`}
+                  class={toggleBtnStyle}
                   onClick={() => setShowJson(!showJson)}
                 >
                   {showJson ? 'Table' : 'JSON'}

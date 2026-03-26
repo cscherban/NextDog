@@ -49,16 +49,21 @@ const pillButton = css({
   display: 'inline-flex',
   alignItems: 'center',
   gap: '1',
-  py: '1', px: '3',
-  borderRadius: 'lg',
-  border: '1px solid token(colors.border.subtle)',
+  py: '1', px: '2',
+  borderRadius: 'md',
+  border: '1px solid token(colors.accent)',
   fontSize: 'sm',
   fontFamily: 'mono',
   cursor: 'pointer',
   whiteSpace: 'nowrap',
-  background: 'accent',
-  color: 'surface.bg',
-  fontWeight: 600,
+  background: 'transparent',
+  color: 'accent',
+  fontWeight: 500,
+  transition: 'all 0.15s ease',
+  _hover: {
+    background: 'accent',
+    color: 'surface.bg',
+  },
 });
 
 const resultContainer = css({
