@@ -81,8 +81,8 @@ export function useColumnResize(viewId: string, columns: ColumnConfig[]) {
   const gridTemplate = useMemo(() => {
     return columns.map((col) => {
       const w = overrides[col.id] ?? col.defaultWidth;
-      if (col.defaultWidth === 0) return '1fr';
-      return `${w}px`;
+      if (col.defaultWidth === 0) return 'minmax(100px, 1fr)';
+      return `minmax(${MIN_WIDTH}px, ${w}px)`;
     }).join(' ');
   }, [columns, overrides]);
 

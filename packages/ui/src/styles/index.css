@@ -132,7 +132,7 @@ a { color: var(--accent); text-decoration: none; }
 .pill { padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 500; border: 1px solid var(--border); cursor: pointer; background: transparent; color: var(--text-dim); }
 .pill.active { background: var(--accent); border-color: var(--accent); color: white; }
 
-.event-list { flex: 1; overflow-y: auto; font-family: var(--mono); font-size: 12px; }
+.event-list { flex: 1; overflow-y: auto; overflow-x: hidden; font-family: var(--mono); font-size: 12px; }
 .event-row { display: grid; grid-template-columns: 90px 80px 45px 1fr 45px 65px; gap: 8px; padding: 4px 16px; border-bottom: 1px solid var(--border); align-items: center; cursor: pointer; }
 .event-row:hover { background: var(--bg-hover); }
 .event-row.selected { background: var(--bg-hover); outline: 1px solid var(--accent); outline-offset: -1px; }
@@ -287,7 +287,8 @@ a { color: var(--accent); text-decoration: none; }
 .waterfall-duration { width: 70px; text-align: right; color: var(--text-dim); }
 
 .requests-table { width: 100%; }
-.request-row { display: grid; grid-template-columns: 75px 55px 1fr 50px 75px 90px; gap: 10px; padding: 6px 16px; border-bottom: 1px solid var(--border); align-items: center; cursor: pointer; font-family: var(--mono); font-size: 12px; }
+.request-row { display: grid; grid-template-columns: 75px 55px 1fr 50px 75px 90px; gap: 10px; padding: 6px 16px; border-bottom: 1px solid var(--border); align-items: center; cursor: pointer; font-family: var(--mono); font-size: 12px; min-width: 0; }
+.request-row > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .request-row:hover { background: var(--bg-hover); }
 .request-row-selected { background: var(--bg-hover); outline: 1px solid var(--accent); outline-offset: -1px; }
 .request-row-header { cursor: default; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-dim); padding: 4px 16px; border-bottom: 1px solid var(--border); background: var(--bg-surface); position: sticky; top: 0; z-index: 1; }
@@ -541,6 +542,7 @@ a { color: var(--accent); text-decoration: none; }
   border-bottom: 1px solid var(--border);
   cursor: pointer;
   align-items: start;
+  min-width: 0;
 }
 
 .log-row-wide {
