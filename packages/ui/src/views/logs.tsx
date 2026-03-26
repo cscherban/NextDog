@@ -4,6 +4,7 @@ import { ServicePills } from '../components/service-pills.js';
 import { SearchBar } from '../components/search-bar.js';
 import { AttributeTable } from '../components/attribute-table.js';
 import { useKeyboard } from '../hooks/use-keyboard.js';
+import { showContextMenu, attrContextActions } from '../components/context-menu.js';
 import type { SSEEvent } from '../hooks/use-sse.js';
 import type { UseEventsResult } from '../hooks/use-events.js';
 
@@ -180,6 +181,22 @@ export function Logs({ eventsResult, allEvents, onOpenTrace, onFilter }: LogsPro
     saveCustomColumns(next);
   };
 
+  const activeColumnKeys = useMemo(() => new Set(customColumns.map((c) => c.attrKey)), [customColumns]);
+
+  const handleCellContext = useCallback((e: MouseEvent, key: string, value: string) => {
+    e.preventDefault();
+    const actions = attrContextActions(key, value, {
+      onFilter: (q) => setSearchQuery((prev: string) => prev ? `${prev} ${q}` : q),
+      onAddColumn: (k) => addColumn(k),
+      onRemoveColumn: (k) => {
+        const col = customColumns.find((c) => c.attrKey === k);
+        if (col) removeColumn(col.id);
+      },
+      isColumnActive: activeColumnKeys.has(key),
+    });
+    showContextMenu(e.clientX, e.clientY, actions);
+  }, [setSearchQuery, addColumn, removeColumn, customColumns, activeColumnKeys]);
+
   // Dynamic grid template for log rows with custom columns
   const gridTemplate = useMemo(() => {
     const base = '90px 50px 80px auto 1fr';
@@ -314,9 +331,11 @@ export function Logs({ eventsResult, allEvents, onOpenTrace, onFilter }: LogsPro
                 showService
                 selected={i === selectedIndex}
                 onClick={() => handleLogClick(log, i)}
+                onCellContext={handleCellContext}
                 style={gridTemplate ? `grid-template-columns:${gridTemplate}` : undefined}
                 extraColumns={customColumns.map((col) => ({
                   id: col.id,
+                  attrKey: col.attrKey,
                   value: log.data.attributes[col.attrKey] != null ? String(log.data.attributes[col.attrKey]) : '',
                 }))}
               />
@@ -362,6 +381,9 @@ export function Logs({ eventsResult, allEvents, onOpenTrace, onFilter }: LogsPro
                 <AttributeTable
                   title="Properties"
                   onFilter={onFilter}
+                  onAddColumn={addColumn}
+                  onRemoveColumn={(key) => { const col = customColumns.find((c) => c.attrKey === key); if (col) removeColumn(col.id); }}
+                  activeColumns={activeColumnKeys}
                   attributes={{
                     level: selectedLog.data.level,
                     message: selectedLog.data.message,
@@ -374,6 +396,9 @@ export function Logs({ eventsResult, allEvents, onOpenTrace, onFilter }: LogsPro
                   <AttributeTable
                     title="Attributes"
                     onFilter={onFilter}
+                    onAddColumn={addColumn}
+                    onRemoveColumn={(key) => { const col = customColumns.find((c) => c.attrKey === key); if (col) removeColumn(col.id); }}
+                    activeColumns={activeColumnKeys}
                     attributes={selectedLog.data.attributes as Record<string, unknown>}
                   />
                 )}

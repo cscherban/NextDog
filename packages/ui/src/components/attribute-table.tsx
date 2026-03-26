@@ -1,7 +1,12 @@
+import { showContextMenu, attrContextActions } from './context-menu.js';
+
 interface AttributeTableProps {
   attributes: Record<string, unknown>;
   title?: string;
   onFilter?: (key: string, value: string) => void;
+  onAddColumn?: (attrKey: string) => void;
+  onRemoveColumn?: (attrKey: string) => void;
+  activeColumns?: Set<string>;
 }
 
 function formatValue(value: unknown): string {
@@ -21,9 +26,21 @@ function isFilterable(value: unknown): boolean {
   return String(value).length > 0 && String(value).length < 100;
 }
 
-export function AttributeTable({ attributes, title, onFilter }: AttributeTableProps) {
+export function AttributeTable({ attributes, title, onFilter, onAddColumn, onRemoveColumn, activeColumns }: AttributeTableProps) {
   const entries = Object.entries(attributes).filter(([_, v]) => v !== undefined && v !== '');
   if (entries.length === 0) return null;
+
+  const handleContextMenu = (e: MouseEvent, key: string, value: string) => {
+    if (!onFilter) return;
+    e.preventDefault();
+    const actions = attrContextActions(key, value, {
+      onFilter: (q) => onFilter(key, q),
+      onAddColumn,
+      onRemoveColumn: onRemoveColumn ? () => onRemoveColumn(key) : undefined,
+      isColumnActive: activeColumns?.has(key),
+    });
+    showContextMenu(e.clientX, e.clientY, actions);
+  };
 
   return (
     <div class="attr-table">
@@ -40,7 +57,8 @@ export function AttributeTable({ attributes, title, onFilter }: AttributeTablePr
                   <span
                     class="attr-value-filterable"
                     onClick={() => onFilter(key, String(value))}
-                    title={`Filter by ${key}:${value}`}
+                    onContextMenu={(e: MouseEvent) => handleContextMenu(e, key, String(value))}
+                    title={`Left-click to filter, right-click for options`}
                   >
                     {formatValue(value)}
                   </span>

@@ -1,7 +1,8 @@
-import { useMemo, useState, useEffect } from 'preact/hooks';
+import { useMemo, useState, useEffect, useCallback } from 'preact/hooks';
 import { ServicePills } from '../components/service-pills.js';
 import { SearchBar } from '../components/search-bar.js';
 import { useKeyboard } from '../hooks/use-keyboard.js';
+import { showContextMenu, attrContextActions } from '../components/context-menu.js';
 import { formatTime, formatDurationMs, spanDurationMs, extractHttpMeta } from '../utils/format.js';
 import type { SSEEvent } from '../hooks/use-sse.js';
 import type { UseEventsResult } from '../hooks/use-events.js';
@@ -199,6 +200,22 @@ export function Requests({ eventsResult, onOpenTrace }: RequestsProps) {
     saveCustomColumns(next);
   };
 
+  const activeColumnKeys = useMemo(() => new Set(customColumns.map((c) => c.attrKey)), [customColumns]);
+
+  const handleCellContext = useCallback((e: MouseEvent, key: string, value: string) => {
+    e.preventDefault();
+    const actions = attrContextActions(key, value, {
+      onFilter: (q) => setSearchQuery((prev) => prev ? `${prev} ${q}` : q),
+      onAddColumn: (k) => addColumn(k),
+      onRemoveColumn: (k) => {
+        const col = customColumns.find((c) => c.attrKey === k);
+        if (col) removeColumn(col.id);
+      },
+      isColumnActive: activeColumnKeys.has(key),
+    });
+    showContextMenu(e.clientX, e.clientY, actions);
+  }, [setSearchQuery, addColumn, removeColumn, customColumns, activeColumnKeys]);
+
   // Dynamic grid template: core columns + 120px per custom column
   const gridTemplate = useMemo(() => {
     const base = '75px 55px 1fr 50px 75px 90px';
@@ -299,17 +316,17 @@ export function Requests({ eventsResult, onOpenTrace }: RequestsProps) {
               onClick={() => { setSelectedIndex(i); onOpenTrace?.(group.traceId); }}
             >
               <span class="timestamp">{formatTime(group.timestamp)}</span>
-              <span class={methodClass(group.method)}>{group.method}</span>
-              <span class="route">{group.routePath}</span>
+              <span class={methodClass(group.method)} onContextMenu={(e: MouseEvent) => handleCellContext(e, 'http.method', group.method)}>{group.method}</span>
+              <span class="route" onContextMenu={(e: MouseEvent) => handleCellContext(e, 'route', group.routePath)}>{group.routePath}</span>
               {group.httpCode ? (
-                <span class={`http-status http-${Math.floor(group.httpCode / 100)}xx`}>{group.httpCode}</span>
+                <span class={`http-status http-${Math.floor(group.httpCode / 100)}xx`} onContextMenu={(e: MouseEvent) => handleCellContext(e, 'statusCode', String(group.httpCode))}>{group.httpCode}</span>
               ) : (
-                <span class={group.status === 'ERROR' ? 'status-error' : 'status-ok'}>{group.status}</span>
+                <span class={group.status === 'ERROR' ? 'status-error' : 'status-ok'} onContextMenu={(e: MouseEvent) => handleCellContext(e, 'status', group.status)}>{group.status}</span>
               )}
               <span class={durationClass(group.durationMs, percentiles)}>{group.duration}</span>
-              <span class="service">{group.serviceName}</span>
+              <span class="service" onContextMenu={(e: MouseEvent) => handleCellContext(e, 'service', group.serviceName)}>{group.serviceName}</span>
               {customColumns.map((col) => (
-                <span key={col.id} class="custom-col" title={group.extraAttrs[col.id]}>{group.extraAttrs[col.id] || '—'}</span>
+                <span key={col.id} class="custom-col" title={group.extraAttrs[col.id]} onContextMenu={(e: MouseEvent) => handleCellContext(e, col.attrKey, group.extraAttrs[col.id])}>{group.extraAttrs[col.id] || '—'}</span>
               ))}
             </div>
           ))

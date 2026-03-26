@@ -297,6 +297,27 @@ a { color: var(--accent); text-decoration: none; }
 .col-header { cursor: pointer; display: inline-flex; align-items: center; gap: 3px; user-select: none; }
 .col-header:hover { color: var(--text-bright); }
 .sort-indicator { font-size: 8px; opacity: 0.7; min-width: 8px; display: inline-block; }
+
+/* Context menu */
+.context-menu {
+  position: fixed; z-index: 1000;
+  background: var(--bg-surface); border: 1px solid var(--border);
+  border-radius: 6px; padding: 4px 0;
+  min-width: 200px; max-width: 320px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+  font-size: 12px; font-family: var(--mono);
+  animation: contextMenuIn 0.1s ease-out;
+}
+@keyframes contextMenuIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+.context-menu-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 12px; cursor: pointer; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.context-menu-item:hover { background: var(--accent); color: var(--bg); }
+.context-menu-danger { color: var(--red); }
+.context-menu-danger:hover { background: var(--red); color: var(--bg); }
+.context-menu-icon { width: 16px; text-align: center; flex-shrink: 0; }
 .custom-col { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 120px; color: var(--text-dim); }
 
 /* Column picker */
