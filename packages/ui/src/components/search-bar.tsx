@@ -204,6 +204,11 @@ const suggestionStyle = css({
   },
 });
 
+const suggestionSelectedStyle = css({
+  background: 'surface.hover',
+  color: 'fg.bright',
+});
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -324,6 +329,7 @@ export function SearchBar({ value, onChange, events, rightSlot }: SearchBarProps
   const [focused, setFocused] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
+  const [selectedSuggestion, setSelectedSuggestion] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const tokens = parseTokens(value);
@@ -347,20 +353,35 @@ export function SearchBar({ value, onChange, events, rightSlot }: SearchBarProps
   };
 
   const handleKeyDown = (e: KeyboardEvent) => {
-    if (e.key === 'Enter') {
+    if (e.key === 'ArrowDown' && showSuggestions && suggestions.length > 0) {
       e.preventDefault();
-      if (inputValue.trim()) {
+      setSelectedSuggestion((i) => Math.min(i + 1, suggestions.length - 1));
+    } else if (e.key === 'ArrowUp' && showSuggestions && suggestions.length > 0) {
+      e.preventDefault();
+      setSelectedSuggestion((i) => Math.max(i - 1, -1));
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (selectedSuggestion >= 0 && suggestions[selectedSuggestion]) {
+        // Accept selected suggestion
+        setInputValue(suggestions[selectedSuggestion]);
+        setSelectedSuggestion(-1);
+        setShowSuggestions(false);
+      } else if (inputValue.trim()) {
         const newQuery = value ? `${value} ${inputValue.trim()}` : inputValue.trim();
         onChange(newQuery);
         setInputValue('');
         setShowSuggestions(false);
+        setSelectedSuggestion(-1);
       }
+    } else if (e.key === 'Tab' && selectedSuggestion >= 0 && suggestions[selectedSuggestion]) {
+      // Tab accepts suggestion
+      e.preventDefault();
+      setInputValue(suggestions[selectedSuggestion]);
+      setSelectedSuggestion(-1);
     } else if (e.key === 'Backspace' && !inputValue && tokens.length > 0) {
-      // Remove last token
       const lastToken = tokens[tokens.length - 1];
       onChange(removeToken(value, lastToken.raw));
     } else if (e.key === 'ArrowLeft' && tokens.length > 0) {
-      // Edit last token when cursor is at position 0
       const input = e.target as HTMLInputElement;
       if (input.selectionStart === 0 && input.selectionEnd === 0) {
         e.preventDefault();
@@ -368,6 +389,7 @@ export function SearchBar({ value, onChange, events, rightSlot }: SearchBarProps
       }
     } else if (e.key === 'Escape') {
       setShowSuggestions(false);
+      setSelectedSuggestion(-1);
       (e.target as HTMLInputElement).blur();
     }
   };
@@ -416,6 +438,7 @@ export function SearchBar({ value, onChange, events, rightSlot }: SearchBarProps
           onInput={(e) => {
             setInputValue((e.target as HTMLInputElement).value);
             setShowSuggestions(true);
+            setSelectedSuggestion(-1);
           }}
           onFocus={() => { setFocused(true); setShowSuggestions(true); }}
           onBlur={() => { setFocused(false); setTimeout(() => setShowSuggestions(false), 150); }}
@@ -455,8 +478,13 @@ export function SearchBar({ value, onChange, events, rightSlot }: SearchBarProps
       )}
       {showSuggestions && suggestions.length > 0 && focused && (
         <div class={suggestionsStyle}>
-          {suggestions.map((s) => (
-            <div key={s} class={suggestionStyle} onMouseDown={() => handleSuggestionClick(s)}>
+          {suggestions.map((s, i) => (
+            <div
+              key={s}
+              class={`${suggestionStyle} ${i === selectedSuggestion ? suggestionSelectedStyle : ''}`}
+              onMouseDown={() => handleSuggestionClick(s)}
+              onMouseEnter={() => setSelectedSuggestion(i)}
+            >
               {s}
             </div>
           ))}
