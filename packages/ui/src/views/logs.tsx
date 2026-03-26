@@ -111,6 +111,8 @@ const logDetailMessageStyle = css({
 });
 
 const logRowHeaderStyle = css({
+  display: 'grid',
+  gap: '2',
   cursor: 'default',
   fontSize: 'xs',
   fontWeight: '500',
@@ -123,6 +125,8 @@ const logRowHeaderStyle = css({
   position: 'sticky',
   top: '0',
   zIndex: '1',
+  fontFamily: 'mono',
+  alignItems: 'center',
   _hover: {
     background: 'surface.panel',
   },
@@ -412,7 +416,7 @@ export function Logs({ eventsResult, allEvents, onOpenTrace, onFilter }: LogsPro
 
         {/* Column headers — click to sort, drag edge to resize */}
         <div
-          className={`log-row log-row-wide ${logRowHeaderStyle}`}
+          className={logRowHeaderStyle}
           style={{ gridTemplateColumns: gridTemplate }}
         >
           {[
