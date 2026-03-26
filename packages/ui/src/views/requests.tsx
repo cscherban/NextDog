@@ -400,17 +400,19 @@ export function Requests({ eventsResult, onOpenTrace }: RequestsProps) {
   return (
     <>
       <ServicePills services={services} active={activeServices} onToggle={toggleService} events={filtered} />
-      <SearchBar value={searchQuery} onChange={setSearchQuery} events={filtered} />
-      <div className={toolbarStyle}>
-        <div className={mlAutoStyle}>
+      <SearchBar
+        value={searchQuery}
+        onChange={setSearchQuery}
+        events={filtered}
+        rightSlot={
           <ColumnPicker
             customColumns={customColumns}
             availableAttrs={availableAttrs}
             onAdd={addColumn}
             onRemove={removeColumn}
           />
-        </div>
-      </div>
+        }
+      />
 
       {/* Column headers — click to sort, drag edge to resize */}
       <div className={`${requestRowStyle} ${requestRowHeaderStyle}`} style={{ gridTemplateColumns: gridTemplate }}>

@@ -1,3 +1,4 @@
+import type { ComponentChildren } from 'preact';
 import { useState, useRef, useMemo } from 'preact/hooks';
 import { css } from 'styled-system/css';
 import type { SSEEvent } from '../hooks/use-sse.js';
@@ -211,6 +212,7 @@ interface SearchBarProps {
   value: string;
   onChange: (value: string) => void;
   events?: SSEEvent[];
+  rightSlot?: ComponentChildren;
 }
 
 interface FilterToken {
@@ -318,7 +320,7 @@ function collectFacets(events: SSEEvent[]): string[] {
 // Component
 // ---------------------------------------------------------------------------
 
-export function SearchBar({ value, onChange, events }: SearchBarProps) {
+export function SearchBar({ value, onChange, events, rightSlot }: SearchBarProps) {
   const [focused, setFocused] = useState(false);
   const [inputValue, setInputValue] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -371,7 +373,8 @@ export function SearchBar({ value, onChange, events }: SearchBarProps) {
 
   return (
     <div class={containerStyle}>
-      <div class={`${inputWrapperBase} ${focused ? inputWrapperFocused : ''}`} onClick={() => inputRef.current?.focus()}>
+      <div class={css({ display: 'flex', gap: '2', alignItems: 'center' })}>
+      <div class={`${inputWrapperBase} ${focused ? inputWrapperFocused : ''}`} style="flex:1" onClick={() => inputRef.current?.focus()}>
         {/* Search icon */}
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;opacity:0.4">
           <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
@@ -400,6 +403,25 @@ export function SearchBar({ value, onChange, events }: SearchBarProps) {
           onBlur={() => { setFocused(false); setTimeout(() => setShowSuggestions(false), 150); }}
           onKeyDown={handleKeyDown}
         />
+      </div>
+      {/* Help icon */}
+      <button
+        class={css({
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          width: '28px', height: '28px', flexShrink: 0,
+          borderRadius: 'md', border: '1px solid token(colors.border.subtle)',
+          background: 'transparent', color: 'fg.dim', cursor: 'pointer',
+          fontSize: 'sm', fontFamily: 'mono', transition: 'all 0.15s ease',
+          _hover: { background: 'surface.hover', color: 'fg.bright' },
+        })}
+        onClick={() => setShowHelp((v) => !v)}
+        title="Filter syntax help"
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10" /><path d="M9 9a3 3 0 015.12 1c0 2-3 3-3 3" /><line x1="12" y1="17" x2="12.01" y2="17" />
+        </svg>
+      </button>
+      {rightSlot}
       </div>
       {showHelp && (
         <div class={helpPanelStyle}>

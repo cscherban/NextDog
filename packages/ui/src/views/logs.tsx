@@ -365,7 +365,19 @@ export function Logs({ eventsResult, allEvents, onOpenTrace, onFilter }: LogsPro
     <div className={outerFlexStyle}>
       <div className={innerColumnStyle}>
         <ServicePills services={services} active={activeServices} onToggle={toggleService} events={filtered} />
-        <SearchBar value={searchQuery} onChange={setSearchQuery} events={filtered} />
+        <SearchBar
+          value={searchQuery}
+          onChange={setSearchQuery}
+          events={filtered}
+          rightSlot={
+            <ColumnPicker
+              customColumns={customColumns}
+              availableAttrs={availableAttrs}
+              onAdd={addColumn}
+              onRemove={removeColumn}
+            />
+          }
+        />
         <div className={toolbarStyle}>
           <button className={`${pillStyle} ${liveTail ? pillActiveStyle : ''}`} onClick={toggleLiveTail}>
             {liveTail ? '● Live' : '○ Paused'}
@@ -374,14 +386,6 @@ export function Logs({ eventsResult, allEvents, onOpenTrace, onFilter }: LogsPro
           {!liveTail && (
             <button className={pillStyle} onClick={toggleLiveTail}>Resume</button>
           )}
-          <div className={mlAutoStyle}>
-            <ColumnPicker
-              customColumns={customColumns}
-              availableAttrs={availableAttrs}
-              onAdd={addColumn}
-              onRemove={removeColumn}
-            />
-          </div>
         </div>
 
         {/* Column headers — click to sort, drag edge to resize */}

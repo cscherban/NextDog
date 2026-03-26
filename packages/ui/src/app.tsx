@@ -39,7 +39,7 @@ const appStyle = css({
 const headerStyle = css({
   display: 'flex',
   alignItems: 'center',
-  gap: '6',
+  gap: '4',
   py: '0', px: '4',
   height: '44px',
   borderBottom: '1px solid token(colors.border.subtle)',
