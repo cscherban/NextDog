@@ -38,36 +38,47 @@ function captureHeaders(req: http.IncomingMessage): Record<string, string> {
   return headers;
 }
 
+/**
+ * Capture the request body WITHOUT adding 'data' listeners (which would put
+ * the stream into flowing mode and break Next.js 14's body parsing).
+ * Instead, we monkey-patch req.on so that when Next.js (or any other consumer)
+ * reads the body, we passively observe the chunks.
+ */
 function captureBody(req: http.IncomingMessage, metadata: RequestMetadata): void {
   const method = (req.method ?? 'GET').toUpperCase();
   if (method === 'GET' || method === 'HEAD' || method === 'OPTIONS') return;
 
   const chunks: Buffer[] = [];
   let size = 0;
-  let timeout: ReturnType<typeof setTimeout> | undefined;
+  const originalOn = req.on;
 
-  req.on('data', (chunk: Buffer) => {
-    if (size < MAX_BODY_SIZE) {
-      chunks.push(chunk);
-      size += chunk.length;
+  // Intercept listener registration to piggyback on whoever reads the body
+  req.on = function (this: http.IncomingMessage, event: string, listener: (...args: any[]) => void) {
+    if (event === 'data') {
+      const self = this;
+      const wrappedListener = (chunk: Buffer) => {
+        if (size < MAX_BODY_SIZE) {
+          chunks.push(chunk);
+          size += chunk.length;
+        }
+        return listener.call(self, chunk);
+      };
+      return originalOn.call(this, event, wrappedListener);
     }
-  });
-
-  req.on('end', () => {
-    if (timeout) clearTimeout(timeout);
-    if (chunks.length > 0) {
-      const body = Buffer.concat(chunks).toString('utf-8');
-      metadata.body = body.length > MAX_BODY_SIZE ? body.slice(0, MAX_BODY_SIZE) : body;
+    if (event === 'end') {
+      const self = this;
+      const wrappedListener = (...args: any[]) => {
+        if (chunks.length > 0) {
+          const body = Buffer.concat(chunks).toString('utf-8');
+          metadata.body = body.length > MAX_BODY_SIZE ? body.slice(0, MAX_BODY_SIZE) : body;
+          chunks.length = 0;
+        }
+        return listener.call(self, ...args);
+      };
+      return originalOn.call(this, event, wrappedListener);
     }
-  });
-
-  timeout = setTimeout(() => {
-    if (chunks.length > 0) {
-      metadata.body = Buffer.concat(chunks).toString('utf-8');
-    }
-    chunks.length = 0;
-  }, 5000);
-  if (timeout.unref) timeout.unref();
+    return originalOn.call(this, event, listener);
+  } as typeof req.on;
 }
 
 /**
