@@ -1,4 +1,4 @@
-import { trace } from '@opentelemetry/api';
+import { trace, context } from '@opentelemetry/api';
 
 const LEVELS = ['debug', 'log', 'info', 'warn', 'error'] as const;
 type Level = typeof LEVELS[number];
@@ -104,8 +104,27 @@ export function patchConsole(url: string, serviceName: string) {
         firstArg.includes('Failed to fetch RSC payload')
       )) return;
 
+      // Try multiple approaches to get the active span context
+      // Next.js 14 has less reliable OTel context propagation
+      let traceId: string | undefined;
+      let spanId: string | undefined;
+
       const activeSpan = trace.getActiveSpan();
-      const spanCtx = activeSpan?.spanContext();
+      if (activeSpan) {
+        const spanCtx = activeSpan.spanContext();
+        traceId = spanCtx.traceId;
+        spanId = spanCtx.spanId;
+      } else {
+        // Fallback: try extracting from the active context directly
+        // This works in some Next.js 14 code paths where getActiveSpan() fails
+        const ctx = context.active();
+        const spanFromCtx = trace.getSpan(ctx);
+        if (spanFromCtx) {
+          const spanCtx = spanFromCtx.spanContext();
+          traceId = spanCtx.traceId;
+          spanId = spanCtx.spanId;
+        }
+      }
 
       const message = args.map(formatArg).join(' ');
       const attributes = extractAttributes(args);
@@ -115,8 +134,8 @@ export function patchConsole(url: string, serviceName: string) {
         level: LEVEL_MAP[level],
         message,
         attributes: { ...attributes, runtime: 'server' },
-        traceId: spanCtx?.traceId,
-        spanId: spanCtx?.spanId,
+        traceId,
+        spanId,
         serviceName,
       });
     };

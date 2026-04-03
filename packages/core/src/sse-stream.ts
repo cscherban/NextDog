@@ -26,8 +26,8 @@ export class SSEStream {
       'Access-Control-Allow-Origin': '*',
     });
 
-    // Backfill from ring buffer
-    const backfill = this.ringBuffer.getLast(50);
+    // Backfill from ring buffer (200 events covers typical page load)
+    const backfill = this.ringBuffer.getLast(200);
     for (const event of backfill) {
       res.write(serializeEvent(event));
     }
