@@ -1,14 +1,12 @@
 {
-  "name": "@nextdog/next",
+  "name": "@nextdog/node",
   "version": "0.1.0",
-  "description": "Next.js plugin for NextDog — zero-config dev observability",
+  "description": "Shared Node.js instrumentation for NextDog — OTel exporter, sidecar, console capture",
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": "./dist/index.js",
-    "./register": "./dist/register.js",
-    "./client": "./dist/client.js",
     "./exporter": "./dist/exporter.js",
     "./sidecar": "./dist/sidecar.js",
     "./console-patch": "./dist/console-patch.js",
@@ -28,17 +26,10 @@
   },
   "dependencies": {
     "@nextdog/core": "workspace:*",
-    "@nextdog/node": "workspace:*",
     "@opentelemetry/api": "^1",
     "@opentelemetry/sdk-trace-node": "^1",
     "@opentelemetry/resources": "^1",
     "@opentelemetry/semantic-conventions": "^1"
-  },
-  "peerDependencies": {
-    "next": ">=14"
-  },
-  "peerDependenciesMeta": {
-    "next": { "optional": false }
   },
   "devDependencies": {
     "@types/node": "^25",
@@ -50,5 +41,5 @@
     "type": "git",
     "url": "https://github.com/cscherban/NextDog"
   },
-  "keywords": ["nextjs", "observability", "tracing", "opentelemetry", "devtools", "instrumentation"]
+  "keywords": ["node", "observability", "tracing", "opentelemetry", "devtools", "instrumentation"]
 }

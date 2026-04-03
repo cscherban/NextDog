@@ -35,10 +35,10 @@ export function withNextDog(options?: NextDogOptions): Handle {
       const { NodeTracerProvider, BatchSpanProcessor } = await import('@opentelemetry/sdk-trace-node');
       const { Resource } = await import('@opentelemetry/resources');
       const { ATTR_SERVICE_NAME } = await import('@opentelemetry/semantic-conventions');
-      const { NextDogExporter } = await import('@nextdog/next/exporter');
-      const { ensureSidecar } = await import('@nextdog/next/sidecar');
-      const { patchConsole } = await import('@nextdog/next/console-patch');
-      const { startRequestCapture } = await import('@nextdog/next/request-capture');
+      const { NextDogExporter } = await import('@nextdog/node/exporter');
+      const { ensureSidecar } = await import('@nextdog/node/sidecar');
+      const { patchConsole } = await import('@nextdog/node/console-patch');
+      const { startRequestCapture } = await import('@nextdog/node/request-capture');
 
       await ensureSidecar(url);
 

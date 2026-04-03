@@ -88,19 +88,19 @@ describe('withNextDog — instrumented requests', () => {
       ATTR_SERVICE_NAME: 'service.name',
     }));
 
-    vi.doMock('@nextdog/next/exporter', () => ({
+    vi.doMock('@nextdog/node/exporter', () => ({
       NextDogExporter: vi.fn(),
     }));
 
-    vi.doMock('@nextdog/next/sidecar', () => ({
+    vi.doMock('@nextdog/node/sidecar', () => ({
       ensureSidecar: vi.fn().mockResolvedValue(undefined),
     }));
 
-    vi.doMock('@nextdog/next/console-patch', () => ({
+    vi.doMock('@nextdog/node/console-patch', () => ({
       patchConsole: vi.fn(),
     }));
 
-    vi.doMock('@nextdog/next/request-capture', () => ({
+    vi.doMock('@nextdog/node/request-capture', () => ({
       startRequestCapture: vi.fn(),
     }));
 
@@ -159,19 +159,19 @@ describe('withNextDog — instrumented requests', () => {
       ATTR_SERVICE_NAME: 'service.name',
     }));
 
-    vi.doMock('@nextdog/next/exporter', () => ({
+    vi.doMock('@nextdog/node/exporter', () => ({
       NextDogExporter: vi.fn(),
     }));
 
-    vi.doMock('@nextdog/next/sidecar', () => ({
+    vi.doMock('@nextdog/node/sidecar', () => ({
       ensureSidecar: vi.fn().mockResolvedValue(undefined),
     }));
 
-    vi.doMock('@nextdog/next/console-patch', () => ({
+    vi.doMock('@nextdog/node/console-patch', () => ({
       patchConsole: vi.fn(),
     }));
 
-    vi.doMock('@nextdog/next/request-capture', () => ({
+    vi.doMock('@nextdog/node/request-capture', () => ({
       startRequestCapture: vi.fn(),
     }));
 
@@ -224,19 +224,19 @@ describe('withNextDog — instrumented requests', () => {
       ATTR_SERVICE_NAME: 'service.name',
     }));
 
-    vi.doMock('@nextdog/next/exporter', () => ({
+    vi.doMock('@nextdog/node/exporter', () => ({
       NextDogExporter: vi.fn(),
     }));
 
-    vi.doMock('@nextdog/next/sidecar', () => ({
+    vi.doMock('@nextdog/node/sidecar', () => ({
       ensureSidecar: vi.fn().mockResolvedValue(undefined),
     }));
 
-    vi.doMock('@nextdog/next/console-patch', () => ({
+    vi.doMock('@nextdog/node/console-patch', () => ({
       patchConsole: vi.fn(),
     }));
 
-    vi.doMock('@nextdog/next/request-capture', () => ({
+    vi.doMock('@nextdog/node/request-capture', () => ({
       startRequestCapture: vi.fn(),
     }));
 
