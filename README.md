@@ -138,6 +138,29 @@ NextDog is **completely inert in production**:
 | [`@nextdog/core`](packages/core) | Sidecar server + event pipeline | [![npm](https://img.shields.io/npm/v/@nextdog/core.svg)](https://www.npmjs.com/package/@nextdog/core) |
 | [`@nextdog/ui`](packages/ui) | Dashboard (Preact + Vite) | [![npm](https://img.shields.io/npm/v/@nextdog/ui.svg)](https://www.npmjs.com/package/@nextdog/ui) |
 
+## Compatibility
+
+| Next.js Version | Status |
+|----------------|--------|
+| 16.x | Fully supported |
+| 15.x | Fully supported |
+| 14.x (14.0.4+) | Supported — `experimental.instrumentationHook` enabled automatically |
+
+## Roadmap
+
+**Fullstack frameworks** (highest value — server + client, routing, SSR):
+- [ ] **Nuxt adapter** (`@nextdog/nuxt`) — Vue ecosystem
+- [ ] **SvelteKit adapter** (`@nextdog/sveltekit`)
+- [ ] **Remix / React Router v7 adapter** (`@nextdog/remix`)
+
+**Generic / infrastructure:**
+- [ ] **Docker sidecar image** — `docker pull nextdog/sidecar` for containerized setups and non-Node apps
+- [ ] **OTLP protocol support** — accept standard OpenTelemetry HTTP exports (`POST /v1/traces`) so any OTel-instrumented app (Python, Go, Ruby) can send to NextDog
+
+**Server frameworks** (lower priority — less to observe):
+- [ ] **Express adapter** (`@nextdog/express`) — middleware-based
+- [ ] **Hono / Fastify adapters**
+
 ## Development
 
 ```bash
