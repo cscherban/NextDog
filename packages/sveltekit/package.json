@@ -1,0 +1,51 @@
+{
+  "name": "@nextdog/sveltekit",
+  "version": "0.0.1",
+  "description": "SvelteKit plugin for NextDog — zero-config dev observability",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./vite": {
+      "import": "./dist/vite.js",
+      "types": "./dist/vite.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run --passWithNoTests"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@nextdog/core": "workspace:*",
+    "@nextdog/next": "workspace:*",
+    "@opentelemetry/api": "^1",
+    "@opentelemetry/sdk-trace-node": "^1",
+    "@opentelemetry/resources": "^1",
+    "@opentelemetry/semantic-conventions": "^1"
+  },
+  "devDependencies": {
+    "@types/node": "^25",
+    "vite": "^6",
+    "vitest": "^3"
+  },
+  "peerDependencies": {
+    "@sveltejs/kit": "^2"
+  },
+  "peerDependenciesMeta": {
+    "@sveltejs/kit": { "optional": false }
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cscherban/NextDog"
+  },
+  "keywords": ["sveltekit", "svelte", "observability", "tracing", "opentelemetry", "devtools", "instrumentation"]
+}
