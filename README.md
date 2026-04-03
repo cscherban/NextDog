@@ -55,6 +55,24 @@ export async function register() {
 
 That's it. No sidecar to manage, no config files, no environment variables.
 
+## Nuxt 3 (Experimental)
+
+```bash
+npm install @nextdog/nuxt
+```
+
+**nuxt.config.ts:**
+```ts
+export default defineNuxtConfig({
+  modules: ['@nextdog/nuxt'],
+  nextdog: {
+    serviceName: 'my-nuxt-app', // optional
+  },
+});
+```
+
+That's it — no `instrumentation.ts`, no manual setup. The Nuxt module handles everything automatically.
+
 ## Dashboard
 
 The dashboard has two main views:
@@ -137,6 +155,7 @@ NextDog is **completely inert in production**:
 | [`@nextdog/next`](packages/next) | Next.js plugin + OTel instrumentation | [![npm](https://img.shields.io/npm/v/@nextdog/next.svg)](https://www.npmjs.com/package/@nextdog/next) |
 | [`@nextdog/core`](packages/core) | Sidecar server + event pipeline | [![npm](https://img.shields.io/npm/v/@nextdog/core.svg)](https://www.npmjs.com/package/@nextdog/core) |
 | [`@nextdog/ui`](packages/ui) | Dashboard (Preact + Vite) | [![npm](https://img.shields.io/npm/v/@nextdog/ui.svg)](https://www.npmjs.com/package/@nextdog/ui) |
+| [`@nextdog/nuxt`](packages/nuxt) | Nuxt 3 module (**experimental**) | `0.0.1` |
 
 ## Compatibility
 
@@ -149,7 +168,7 @@ NextDog is **completely inert in production**:
 ## Roadmap
 
 **Fullstack frameworks** (highest value — server + client, routing, SSR):
-- [ ] **Nuxt adapter** (`@nextdog/nuxt`) — Vue ecosystem
+- [x] **Nuxt adapter** (`@nextdog/nuxt`) — Vue ecosystem *(experimental)*
 - [ ] **SvelteKit adapter** (`@nextdog/sveltekit`)
 - [ ] **Remix / React Router v7 adapter** (`@nextdog/remix`)
 

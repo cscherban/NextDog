@@ -8,7 +8,12 @@
   "exports": {
     ".": "./dist/index.js",
     "./register": "./dist/register.js",
-    "./client": "./dist/client.js"
+    "./client": "./dist/client.js",
+    "./exporter": "./dist/exporter.js",
+    "./sidecar": "./dist/sidecar.js",
+    "./console-patch": "./dist/console-patch.js",
+    "./request-capture": "./dist/request-capture.js",
+    "./request-context": "./dist/request-context.js"
   },
   "files": [
     "dist"

@@ -1,0 +1,48 @@
+{
+  "name": "@nextdog/nuxt",
+  "version": "0.0.1",
+  "description": "Nuxt 3 module for NextDog — zero-config dev observability",
+  "type": "module",
+  "main": "./dist/module.js",
+  "types": "./dist/module.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/module.js",
+      "types": "./dist/module.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run --passWithNoTests"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@nextdog/core": "workspace:*",
+    "@nextdog/next": "workspace:*",
+    "@opentelemetry/api": "^1",
+    "@opentelemetry/sdk-trace-node": "^1",
+    "@opentelemetry/resources": "^1",
+    "@opentelemetry/semantic-conventions": "^1"
+  },
+  "devDependencies": {
+    "@nuxt/kit": "^3",
+    "vitest": "^3"
+  },
+  "peerDependencies": {
+    "nuxt": "^3.8.0"
+  },
+  "peerDependenciesMeta": {
+    "nuxt": { "optional": false }
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cscherban/NextDog"
+  },
+  "keywords": ["nuxt", "observability", "tracing", "opentelemetry", "devtools", "instrumentation"]
+}
