@@ -7,6 +7,7 @@
  * in the exporter (since the OTel active span is not available at request time).
  */
 import * as http from 'node:http';
+import { requestContextStorage, createRequestContext } from './request-context.js';
 
 export interface RequestMetadata {
   method: string;
@@ -135,6 +136,13 @@ export function startRequestCapture() {
       } else {
         requestStore.set(key, [metadata]);
       }
+
+      // Run the rest of the request inside AsyncLocalStorage context
+      // so console.log calls have access to request info
+      const reqCtx = createRequestContext(metadata.method, metadata.url);
+      return requestContextStorage.run(reqCtx, () =>
+        originalEmit.apply(this, [event, ...args])
+      );
     }
 
     return originalEmit.apply(this, [event, ...args]);

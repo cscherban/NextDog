@@ -1,4 +1,5 @@
 import { trace, context } from '@opentelemetry/api';
+import { getRequestContext } from './request-context.js';
 
 const LEVELS = ['debug', 'log', 'info', 'warn', 'error'] as const;
 type Level = typeof LEVELS[number];
@@ -128,6 +129,15 @@ export function patchConsole(url: string, serviceName: string) {
 
       const message = args.map(formatArg).join(' ');
       const attributes = extractAttributes(args);
+
+      // Enrich with request context from our own AsyncLocalStorage
+      // (reliable even when OTel context propagation fails in Next.js 14)
+      const reqCtx = getRequestContext();
+      if (reqCtx) {
+        attributes['http.method'] = reqCtx.method;
+        attributes['http.route'] = reqCtx.path;
+        attributes['request.id'] = reqCtx.requestId;
+      }
 
       buffer.push({
         timestamp: Date.now(),
