@@ -1,10 +1,10 @@
 import { NodeTracerProvider, BatchSpanProcessor } from '@opentelemetry/sdk-trace-node';
 import { Resource } from '@opentelemetry/resources';
 import { ATTR_SERVICE_NAME } from '@opentelemetry/semantic-conventions';
-import { NextDogExporter } from '@nextdog/next/exporter';
-import { ensureSidecar } from '@nextdog/next/sidecar';
-import { patchConsole } from '@nextdog/next/console-patch';
-import { startRequestCapture } from '@nextdog/next/request-capture';
+import { NextDogExporter } from '@nextdog/node/exporter';
+import { ensureSidecar } from '@nextdog/node/sidecar';
+import { patchConsole } from '@nextdog/node/console-patch';
+import { startRequestCapture } from '@nextdog/node/request-capture';
 
 // Nitro globals — declared here since we compile with tsc, not Nuxt's build
 declare function defineNitroPlugin(handler: (nitro: any) => void | Promise<void>): any;
