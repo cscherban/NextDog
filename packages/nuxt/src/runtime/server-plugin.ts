@@ -1,0 +1,31 @@
+import { NodeTracerProvider, BatchSpanProcessor } from '@opentelemetry/sdk-trace-node';
+import { Resource } from '@opentelemetry/resources';
+import { ATTR_SERVICE_NAME } from '@opentelemetry/semantic-conventions';
+import { NextDogExporter } from '@nextdog/next/exporter';
+import { ensureSidecar } from '@nextdog/next/sidecar';
+import { patchConsole } from '@nextdog/next/console-patch';
+import { startRequestCapture } from '@nextdog/next/request-capture';
+
+// Nitro globals — declared here since we compile with tsc, not Nuxt's build
+declare function defineNitroPlugin(handler: (nitro: any) => void | Promise<void>): any;
+declare function useRuntimeConfig(): { nextdog: { url: string; serviceName: string } };
+
+export default defineNitroPlugin(async () => {
+  const config = useRuntimeConfig();
+  const { url, serviceName } = config.nextdog;
+
+  await ensureSidecar(url);
+
+  // Capture request headers/cookies/body for replay
+  startRequestCapture();
+
+  const provider = new NodeTracerProvider({
+    resource: new Resource({ [ATTR_SERVICE_NAME]: serviceName }),
+    spanProcessors: [new BatchSpanProcessor(new NextDogExporter(url))],
+  });
+  provider.register();
+
+  patchConsole(url, serviceName);
+
+  console.log(`[nextdog] nuxt instrumentation registered for "${serviceName}" → ${url}`);
+});
