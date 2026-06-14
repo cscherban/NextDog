@@ -1,12 +1,50 @@
 import { useEffect, useState } from 'preact/hooks';
 import { css } from 'styled-system/css';
 
-const shortcuts = [
-  { key: 'j', desc: 'Next row' },
-  { key: 'k', desc: 'Previous row' },
-  { key: 'Enter', desc: 'Open trace / select' },
-  { key: 'Esc', desc: 'Close / go back' },
-  { key: '?', desc: 'Toggle this help' },
+interface ShortcutRow {
+  /** One or more keys; multiple keys render as separate <kbd> chips. */
+  keys: string[];
+  desc: string;
+}
+
+interface ShortcutSection {
+  title: string;
+  rows: ShortcutRow[];
+}
+
+const sections: ShortcutSection[] = [
+  {
+    title: 'Navigation',
+    rows: [
+      { keys: ['j'], desc: 'Next row' },
+      { keys: ['k'], desc: 'Previous row' },
+      { keys: ['Enter'], desc: 'Open trace / select' },
+      { keys: ['Esc'], desc: 'Close / go back' },
+    ],
+  },
+  {
+    title: 'Filter & views',
+    rows: [
+      { keys: ['/', '⌘/Ctrl+K'], desc: 'Focus filter' },
+      { keys: ['Shift+X'], desc: 'Clear filter' },
+      { keys: ['[', ']'], desc: 'Switch Spans / Logs' },
+    ],
+  },
+  {
+    title: 'In the filter bar',
+    rows: [
+      { keys: ['↑', '↓'], desc: 'Move through suggestions' },
+      { keys: ['Tab'], desc: 'Complete suggestion' },
+      { keys: ['Enter'], desc: 'Add filter token' },
+      { keys: ['Backspace'], desc: 'Remove last token' },
+      { keys: ['←'], desc: 'Edit last token' },
+      { keys: ['Esc'], desc: 'Blur filter' },
+    ],
+  },
+  {
+    title: 'Help',
+    rows: [{ keys: ['?'], desc: 'Toggle this help' }],
+  },
 ];
 
 const overlayStyle = css({
@@ -19,16 +57,27 @@ const dialogStyle = css({
   transform: 'translate(-50%,-50%)',
   background: 'surface.panel', border: '1px solid token(colors.border.subtle)',
   borderRadius: 'lg', py: '5', px: '6', zIndex: 1001,
-  minWidth: '260px', boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
+  minWidth: '300px', maxHeight: '80vh', overflowY: 'auto',
+  boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
 });
 
 const titleStyle = css({
   fontSize: 'lg', fontWeight: '600', color: 'fg.bright', marginBottom: '3',
 });
 
+const sectionTitleStyle = css({
+  fontSize: 'xs', fontWeight: '600', textTransform: 'uppercase',
+  letterSpacing: '0.5px', color: 'fg.dim',
+  marginTop: '3', marginBottom: '1',
+});
+
 const rowStyle = css({
   display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-  py: '1', px: '0', fontSize: 'md',
+  gap: '4', py: '1', px: '0', fontSize: 'md',
+});
+
+const keysCellStyle = css({
+  display: 'flex', gap: '1', alignItems: 'center', flexShrink: 0,
 });
 
 const kbdStyle = css({
@@ -67,10 +116,19 @@ export function ShortcutHelp() {
       <div className={overlayStyle} onClick={() => setOpen(false)} />
       <div className={dialogStyle}>
         <div className={titleStyle}>Keyboard Shortcuts</div>
-        {shortcuts.map(({ key, desc }) => (
-          <div key={key} className={rowStyle}>
-            <span className={css({ color: 'fg.dim' })}>{desc}</span>
-            <kbd className={kbdStyle}>{key}</kbd>
+        {sections.map((section) => (
+          <div key={section.title}>
+            <div className={sectionTitleStyle}>{section.title}</div>
+            {section.rows.map((row) => (
+              <div key={row.desc} className={rowStyle}>
+                <span className={css({ color: 'fg.dim' })}>{row.desc}</span>
+                <span className={keysCellStyle}>
+                  {row.keys.map((key) => (
+                    <kbd key={key} className={kbdStyle}>{key}</kbd>
+                  ))}
+                </span>
+              </div>
+            ))}
           </div>
         ))}
         <div className={footerStyle}>
