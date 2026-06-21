@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { ensureSidecar, isHealthy, _resetForeignOccupantWarnings } from '../sidecar.js';
+import { NEXTDOG_HEALTH_MARKER } from '@nextdog/core';
+import { ensureSidecar, isHealthy, probeHealth, _resetForeignOccupantWarnings } from '../sidecar.js';
 
 const mockFetch = vi.fn();
 
@@ -7,7 +8,7 @@ const mockFetch = vi.fn();
 function nextdogHealth() {
   return {
     ok: true,
-    json: () => Promise.resolve({ status: 'ok', service: 'nextdog' }),
+    json: () => Promise.resolve({ status: 'ok', service: NEXTDOG_HEALTH_MARKER }),
   };
 }
 
@@ -19,6 +20,41 @@ function foreignHealth(body: unknown = 'not nextdog') {
     text: () => Promise.resolve(typeof body === 'string' ? body : JSON.stringify(body)),
   };
 }
+
+describe('probeHealth', () => {
+  beforeEach(() => {
+    vi.stubGlobal('fetch', mockFetch);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('classifies a real NextDog /health response as nextdog', async () => {
+    mockFetch.mockResolvedValueOnce(nextdogHealth());
+    await expect(probeHealth('http://localhost:6789')).resolves.toBe('nextdog');
+  });
+
+  it('classifies a 2xx without the signature as foreign', async () => {
+    mockFetch.mockResolvedValueOnce(foreignHealth());
+    await expect(probeHealth('http://localhost:6789')).resolves.toBe('foreign');
+  });
+
+  it('classifies a 2xx whose JSON lacks the marker as foreign', async () => {
+    mockFetch.mockResolvedValueOnce(foreignHealth({ status: 'ok' }));
+    await expect(probeHealth('http://localhost:6789')).resolves.toBe('foreign');
+  });
+
+  it('classifies a non-2xx response as absent', async () => {
+    mockFetch.mockResolvedValueOnce({ ok: false, json: () => Promise.resolve({}) });
+    await expect(probeHealth('http://localhost:6789')).resolves.toBe('absent');
+  });
+
+  it('classifies a connection failure as absent', async () => {
+    mockFetch.mockRejectedValueOnce(new Error('connection refused'));
+    await expect(probeHealth('http://localhost:6789')).resolves.toBe('absent');
+  });
+});
 
 describe('isHealthy', () => {
   beforeEach(() => {

@@ -5,77 +5,77 @@ import { homedir } from 'node:os';
 import { join, dirname, parse as parsePath } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
+import { NEXTDOG_HEALTH_MARKER } from '@nextdog/core';
 
 const NEXTDOG_DIR = join(homedir(), '.nextdog');
 const PID_FILE = join(NEXTDOG_DIR, 'nextdog.pid');
 const LOG_FILE = join(NEXTDOG_DIR, 'sidecar.log');
 
-/**
- * Stable identifying marker a real NextDog sidecar returns in its `/health`
- * body. We require it before adopting a listener so that an unrelated process
- * squatting on the port — anything that answers a bare 2xx — is never mistaken
- * for a live sidecar (issue #17).
- */
-const HEALTH_MARKER = 'nextdog';
+const PROBE_TIMEOUT_MS = 2000;
 
 /**
- * Probe `${url}/health` and decide whether the responder is a genuine NextDog
- * sidecar. A 2xx alone is NOT enough: the body must be JSON carrying the
- * `service: "nextdog"` signature. Any other 2xx (a foreign server holding the
- * port) is treated as unhealthy so we never silently ship telemetry to it.
+ * Classification of whatever is (or isn't) listening at `${url}/health`:
+ *
+ * - `nextdog`:  a 2xx whose JSON body carries the NextDog `service` signature —
+ *               a genuine sidecar, safe to adopt.
+ * - `foreign`:  a 2xx that does NOT carry the signature (non-JSON, or JSON
+ *               without the marker) — some unrelated process holds the port.
+ * - `absent`:   nothing usable answered (connection refused, timeout, non-2xx).
+ */
+type ProbeResult = 'nextdog' | 'foreign' | 'absent';
+
+/**
+ * Single source of truth for reading and classifying `${url}/health`. Both
+ * {@link isHealthy} and {@link isForeignOccupant} are thin views over this so
+ * the fetch/timeout/JSON/marker logic lives in exactly one place.
  *
  * @internal exported for testing.
  */
-export async function isHealthy(url: string): Promise<boolean> {
+export async function probeHealth(url: string): Promise<ProbeResult> {
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 2000);
-    const res = await fetch(`${url}/health`, { signal: controller.signal });
-    clearTimeout(timeout);
-    if (!res.ok) return false;
-    let body: unknown;
+    const timeout = setTimeout(() => controller.abort(), PROBE_TIMEOUT_MS);
+    let res: Response;
     try {
-      body = await res.json();
-    } catch {
-      // 2xx but not JSON — definitely not a NextDog sidecar.
-      return false;
+      res = await fetch(`${url}/health`, { signal: controller.signal });
+    } finally {
+      clearTimeout(timeout);
     }
-    return (
-      typeof body === 'object' &&
-      body !== null &&
-      (body as { service?: unknown }).service === HEALTH_MARKER
-    );
-  } catch {
-    return false;
-  }
-}
-
-/**
- * Distinguish "nothing is listening" from "something is listening but it is not
- * a NextDog sidecar." Returns true only when `${url}/health` answers a 2xx that
- * does NOT carry the NextDog signature — i.e. a foreign occupant of the port.
- */
-async function isForeignOccupant(url: string): Promise<boolean> {
-  try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 2000);
-    const res = await fetch(`${url}/health`, { signal: controller.signal });
-    clearTimeout(timeout);
-    if (!res.ok) return false;
+    if (!res.ok) return 'absent';
     let body: unknown;
     try {
       body = await res.json();
     } catch {
-      return true; // 2xx, but not even JSON — foreign.
+      return 'foreign'; // 2xx, but not even JSON — something else holds the port.
     }
     const marked =
       typeof body === 'object' &&
       body !== null &&
-      (body as { service?: unknown }).service === HEALTH_MARKER;
-    return !marked;
+      (body as { service?: unknown }).service === NEXTDOG_HEALTH_MARKER;
+    return marked ? 'nextdog' : 'foreign';
   } catch {
-    return false; // connection refused / aborted — port is free, not foreign.
+    return 'absent'; // connection refused / aborted — port is free, not foreign.
   }
+}
+
+/**
+ * Whether `${url}/health` is answered by a genuine NextDog sidecar. A 2xx alone
+ * is NOT enough: the body must be JSON carrying the `service: "nextdog"`
+ * signature, so we never silently ship telemetry to a foreign process (#17).
+ *
+ * @internal exported for testing.
+ */
+export async function isHealthy(url: string): Promise<boolean> {
+  return (await probeHealth(url)) === 'nextdog';
+}
+
+/**
+ * Whether `${url}/health` is answered by a process that is NOT a NextDog
+ * sidecar (a 2xx lacking the signature). Distinguishes "foreign occupant" from
+ * "nothing listening" — the latter returns false.
+ */
+async function isForeignOccupant(url: string): Promise<boolean> {
+  return (await probeHealth(url)) === 'foreign';
 }
 
 async function isProcessRunning(pid: number): Promise<boolean> {
