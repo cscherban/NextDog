@@ -253,7 +253,7 @@ function pillColorClass(key?: string, negated?: boolean): string {
 
 function removeToken(query: string, tokenRaw: string): string {
   // Remove the token and any adjacent OR/AND operators
-  const parts = query.match(/(?:[^\s"]+|"[^"]*")+/g) ?? [];
+  const parts: string[] = query.match(/(?:[^\s"]+|"[^"]*")+/g) ?? [];
   const idx = parts.indexOf(tokenRaw);
   if (idx === -1) return query;
 

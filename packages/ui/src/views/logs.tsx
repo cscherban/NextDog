@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'preact/hooks'
 import { css } from 'styled-system/css';
 import { AttributeTable } from '../components/attribute-table.js';
 import { ColumnPicker } from '../components/column-picker.js';
+import type { CustomColumn } from '../components/column-types.js';
 import { attrContextActions, showContextMenu } from '../components/context-menu.js';
 import { LogRow } from '../components/log-row.js';
 import { SavedSearches, useSavedSearches } from '../components/saved-searches.js';
@@ -29,12 +30,6 @@ const DEFAULT_WIDTH = 380;
 const MIN_WIDTH = 280;
 const MAX_WIDTH = 900;
 
-interface ColumnDef {
-  id: string;
-  label: string;
-  attrKey: string;
-}
-
 function loadWidth(): number {
   try {
     const saved = localStorage.getItem(SIDEBAR_STORAGE_KEY);
@@ -46,7 +41,7 @@ function loadWidth(): number {
   return DEFAULT_WIDTH;
 }
 
-function loadCustomColumns(): ColumnDef[] {
+function loadCustomColumns(): CustomColumn[] {
   try {
     const saved = localStorage.getItem(LOG_COLUMNS_STORAGE_KEY);
     if (saved) return JSON.parse(saved);
@@ -54,7 +49,7 @@ function loadCustomColumns(): ColumnDef[] {
   return [];
 }
 
-function saveCustomColumns(cols: ColumnDef[]) {
+function saveCustomColumns(cols: CustomColumn[]) {
   try {
     localStorage.setItem(LOG_COLUMNS_STORAGE_KEY, JSON.stringify(cols));
   } catch {}
@@ -248,7 +243,7 @@ export function Logs({ eventsResult, allEvents, onOpenTrace, onFilter }: LogsPro
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [selectedLog, setSelectedLog] = useState<SSEEvent | null>(null);
   const [showJson, setShowJson] = useState(false);
-  const [customColumns, setCustomColumns] = useState<ColumnDef[]>(loadCustomColumns);
+  const [customColumns, setCustomColumns] = useState<CustomColumn[]>(loadCustomColumns);
   const [sortBy, setSortBy] = useState<string>('time');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
 
@@ -390,7 +385,7 @@ export function Logs({ eventsResult, allEvents, onOpenTrace, onFilter }: LogsPro
 
   const addColumn = (attrKey: string) => {
     const label = attrKey.split('.').pop() ?? attrKey;
-    const col: ColumnDef = { id: `custom-${attrKey}`, label, attrKey };
+    const col: CustomColumn = { id: `custom-${attrKey}`, label, attrKey };
     const next = [...customColumns, col];
     setCustomColumns(next);
     saveCustomColumns(next);
