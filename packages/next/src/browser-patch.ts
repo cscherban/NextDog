@@ -12,6 +12,40 @@ export function getBrowserPatchScript(url: string, serviceName: string): string 
   var LEVEL_MAP = { debug: 'debug', log: 'info', info: 'info', warn: 'warn', error: 'error' };
   var LEVELS = ['debug', 'log', 'info', 'warn', 'error'];
 
+  // Read the server-injected trace context (if the server stamped it into the
+  // document during this page's render). Absent on pages without an active
+  // server trace — we degrade to logging with no traceId.
+  function readMeta(name) {
+    try {
+      var el = document.querySelector('meta[name="' + name + '"]');
+      return el ? (el.getAttribute('content') || '') : '';
+    } catch (e) { return ''; }
+  }
+  var HEX32 = /^[0-9a-f]{32}$/i;
+  var serverTraceId = readMeta('nextdog-trace-id');
+  if (!HEX32.test(serverTraceId)) serverTraceId = '';
+  var serverSpanId = readMeta('nextdog-span-id');
+
+  // Synthetic client span id (16 hex chars) so client logs share the server
+  // trace but are distinguishable from the server's root span. Generated once
+  // per page load. Full client-side fetch spans are a later follow-up.
+  function makeSpanId() {
+    var s = '';
+    for (var i = 0; i < 16; i++) s += Math.floor(Math.random() * 16).toString(16);
+    return s;
+  }
+  var clientSpanId = serverTraceId ? makeSpanId() : '';
+
+  // Stamp trace correlation onto a buffered log entry (in place) when available.
+  function correlate(entry) {
+    if (serverTraceId) {
+      entry.traceId = serverTraceId;
+      entry.spanId = clientSpanId;
+      if (serverSpanId) entry.attributes['nextdog.server.spanId'] = serverSpanId;
+    }
+    return entry;
+  }
+
   function formatArg(arg) {
     if (typeof arg === 'string') return arg;
     if (arg instanceof Error) return arg.message + '\\n' + (arg.stack || '');
@@ -65,18 +99,18 @@ export function getBrowserPatchScript(url: string, serviceName: string): string 
       attrs.runtime = 'browser';
       attrs['window.url'] = window.location.pathname;
 
-      buffer.push({
+      buffer.push(correlate({
         timestamp: Date.now(),
         level: LEVEL_MAP[level] || 'info',
         message: message,
         attributes: attrs,
         serviceName: serviceName
-      });
+      }));
     };
   });
 
   window.addEventListener('error', function(e) {
-    buffer.push({
+    buffer.push(correlate({
       timestamp: Date.now(),
       level: 'error',
       message: e.message || 'Uncaught error',
@@ -88,11 +122,11 @@ export function getBrowserPatchScript(url: string, serviceName: string): string 
         'error.colno': e.colno
       },
       serviceName: serviceName
-    });
+    }));
   });
 
   window.addEventListener('unhandledrejection', function(e) {
-    buffer.push({
+    buffer.push(correlate({
       timestamp: Date.now(),
       level: 'error',
       message: e.reason ? (e.reason.message || String(e.reason)) : 'Unhandled promise rejection',
@@ -102,7 +136,7 @@ export function getBrowserPatchScript(url: string, serviceName: string): string 
         'error.type': 'unhandledrejection'
       },
       serviceName: serviceName
-    });
+    }));
   });
 })();`;
 }
