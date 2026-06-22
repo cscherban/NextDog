@@ -68,11 +68,7 @@ describe('FileStore', () => {
 
   it('reads events back with query filters', async () => {
     const store = new FileStore(dir);
-    await store.flush([
-      makeEvent(1, 'app-a'),
-      makeEvent(2, 'app-b'),
-      makeEvent(3, 'app-a'),
-    ]);
+    await store.flush([makeEvent(1, 'app-a'), makeEvent(2, 'app-b'), makeEvent(3, 'app-a')]);
 
     const all = await store.query({});
     expect(all).toHaveLength(3);
@@ -96,11 +92,11 @@ describe('FileStore', () => {
 
     const spans = await store.query({ type: 'span' });
     expect(spans).toHaveLength(2);
-    expect(spans.every(e => e.type === 'span')).toBe(true);
+    expect(spans.every((e) => e.type === 'span')).toBe(true);
 
     const logs = await store.query({ type: 'log' });
     expect(logs).toHaveLength(2);
-    expect(logs.every(e => e.type === 'log')).toBe(true);
+    expect(logs.every((e) => e.type === 'log')).toBe(true);
   });
 
   it('filters by since (timestamp, inclusive of newer)', async () => {
@@ -109,7 +105,7 @@ describe('FileStore', () => {
 
     const result = await store.query({ since: 2 });
     // since is exclusive — only events strictly newer than 2
-    expect(result.map(e => e.timestamp)).toEqual([3]);
+    expect(result.map((e) => e.timestamp)).toEqual([3]);
   });
 
   it('filters by before (timestamp, for load-older paging)', async () => {
@@ -117,7 +113,7 @@ describe('FileStore', () => {
     await store.flush([makeEvent(1), makeEvent(2), makeEvent(3)]);
 
     const result = await store.query({ before: 3 });
-    expect(result.map(e => e.timestamp)).toEqual([1, 2]);
+    expect(result.map((e) => e.timestamp)).toEqual([1, 2]);
   });
 
   it('returns distinct service names via services()', async () => {
@@ -147,22 +143,22 @@ describe('FileStore', () => {
       join(dir, '2026-01-01-00.ndjson'),
       [
         line(makeEvent(1, 'app-a')),
-        'not valid json at all',          // unparseable
-        '42',                              // parses, but not an object
-        'null',                            // parses to null
-        '{"type":"span"}',                 // object, but missing data/timestamp
+        'not valid json at all', // unparseable
+        '42', // parses, but not an object
+        'null', // parses to null
+        '{"type":"span"}', // object, but missing data/timestamp
         '{"type":"mystery","timestamp":9,"data":{"serviceName":"x"}}', // unknown type
         line(makeLog(2, 'app-b')),
-        '',                                // blank line
+        '', // blank line
       ].join('\n') + '\n',
-      'utf-8'
+      'utf-8',
     );
 
     const store = new FileStore(dir);
     const all = await store.query({});
     // Only the two well-formed events survive.
-    expect(all.map(e => e.type).sort()).toEqual(['log', 'span']);
-    expect(all.map(e => e.data.serviceName).sort()).toEqual(['app-a', 'app-b']);
+    expect(all.map((e) => e.type).sort()).toEqual(['log', 'span']);
+    expect(all.map((e) => e.data.serviceName).sort()).toEqual(['app-a', 'app-b']);
   });
 
   it('tolerates old-shape lines missing newer optional fields', async () => {
@@ -203,7 +199,7 @@ describe('FileStore', () => {
         '{"type":"span","timestamp":2}', // no data → no serviceName
         line(makeLog(2, 'worker')),
       ].join('\n') + '\n',
-      'utf-8'
+      'utf-8',
     );
 
     const store = new FileStore(dir);

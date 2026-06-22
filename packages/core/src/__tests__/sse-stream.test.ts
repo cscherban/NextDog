@@ -52,11 +52,14 @@ describe('SSEStream', () => {
     sse.addClient(res);
 
     // Should have sent 2 backfill events
-    expect(res.writeHead).toHaveBeenCalledWith(200, expect.objectContaining({
-      'Content-Type': 'text/event-stream',
-    }));
+    expect(res.writeHead).toHaveBeenCalledWith(
+      200,
+      expect.objectContaining({
+        'Content-Type': 'text/event-stream',
+      }),
+    );
     // Each event = "data: {...}\n\n"
-    const dataChunks = res.chunks.filter(c => c.startsWith('data:'));
+    const dataChunks = res.chunks.filter((c) => c.startsWith('data:'));
     expect(dataChunks).toHaveLength(2);
   });
 
@@ -84,7 +87,7 @@ describe('SSEStream', () => {
 
     sse.broadcast(makeEvent(99));
 
-    const dataChunks = res.chunks.filter(c => c.startsWith('data:'));
+    const dataChunks = res.chunks.filter((c) => c.startsWith('data:'));
     expect(dataChunks).toHaveLength(1);
     expect(dataChunks[0]).toContain('trace-99');
   });

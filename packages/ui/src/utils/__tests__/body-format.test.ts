@@ -30,7 +30,7 @@ describe('stripResponseAttributes', () => {
 describe('formatBody', () => {
   it('pretty-prints JSON bodies', () => {
     expect(formatBody('{"a":1,"b":[2,3]}', 'application/json')).toBe(
-      '{\n  "a": 1,\n  "b": [\n    2,\n    3\n  ]\n}'
+      '{\n  "a": 1,\n  "b": [\n    2,\n    3\n  ]\n}',
     );
   });
 

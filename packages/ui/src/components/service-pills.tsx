@@ -6,7 +6,8 @@ import type { SSEEvent } from '../hooks/use-sse.js';
 const servicePillsStyle = css({
   display: 'flex',
   gap: '6px',
-  py: '2', px: '4',
+  py: '2',
+  px: '4',
   borderBottom: '1px solid token(colors.border.subtle)',
   flexWrap: 'wrap',
 });
@@ -57,11 +58,13 @@ export function ServicePills({ services, active, onToggle, events }: ServicePill
         const s = stats.get(name);
         const hasErrors = s && s.errors > 0;
         return (
-          <button key={name} className={`${pillStyle} ${active.has(name) ? pillActiveStyle : ''}`} onClick={() => onToggle(name)}>
+          <button
+            key={name}
+            className={`${pillStyle} ${active.has(name) ? pillActiveStyle : ''}`}
+            onClick={() => onToggle(name)}
+          >
             {name}
-            {hasErrors && (
-              <span className={pillErrorDotStyle} title={`${s!.errors} errors`} />
-            )}
+            {hasErrors && <span className={pillErrorDotStyle} title={`${s!.errors} errors`} />}
           </button>
         );
       })}

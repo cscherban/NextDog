@@ -28,9 +28,7 @@ describe('grammar grouping parity', () => {
   });
 
   it('a leading OR starts a fresh group rather than matching nothing', () => {
-    expect(groupFilterTokens('OR a')).toEqual([
-      [expect.objectContaining({ value: 'a' })],
-    ]);
+    expect(groupFilterTokens('OR a')).toEqual([[expect.objectContaining({ value: 'a' })]]);
   });
 });
 
@@ -80,7 +78,7 @@ describe('matcher parity', () => {
   it('status:ERROR matches spans by status code field', () => {
     const r = run('status:ERROR');
     expect(r.map((e) => e.data.spanId).sort()).toEqual(
-      ['payments-charge', 'web-checkout-root'].sort()
+      ['payments-charge', 'web-checkout-root'].sort(),
     );
   });
 });

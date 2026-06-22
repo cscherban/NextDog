@@ -30,7 +30,11 @@ function makeFakeProject(): { appDir: string; realSidecarUrl: string; coreCliPat
   mkdirSync(coreDistDir, { recursive: true });
   writeFileSync(
     join(coreDir, 'package.json'),
-    JSON.stringify({ name: '@nextdog/core', main: './dist/index.js', bin: { nextdog: './dist/cli.js' } })
+    JSON.stringify({
+      name: '@nextdog/core',
+      main: './dist/index.js',
+      bin: { nextdog: './dist/cli.js' },
+    }),
   );
   const coreCliPath = join(coreDistDir, 'cli.js');
   writeFileSync(coreCliPath, '// fake core cli');
@@ -42,17 +46,25 @@ function makeFakeProject(): { appDir: string; realSidecarUrl: string; coreCliPat
 
 describe('isRealFileUrl', () => {
   it('accepts a normal file URL (webpack / native ESM)', () => {
-    expect(isRealFileUrl(pathToFileURL('/tmp/app/node_modules/@nextdog/node/dist/sidecar.js').href)).toBe(true);
+    expect(
+      isRealFileUrl(pathToFileURL('/tmp/app/node_modules/@nextdog/node/dist/sidecar.js').href),
+    ).toBe(true);
   });
 
   it('rejects a Turbopack virtual URL carrying a [project] segment', () => {
     // This is the URL shape that broke resolution in issue #15.
-    expect(isRealFileUrl(pathToFileURL('/tmp/app/[project]/node_modules/@nextdog/node/dist/sidecar.js').href)).toBe(false);
+    expect(
+      isRealFileUrl(
+        pathToFileURL('/tmp/app/[project]/node_modules/@nextdog/node/dist/sidecar.js').href,
+      ),
+    ).toBe(false);
   });
 
   it('rejects other bracketed virtual segments and non-file schemes', () => {
     expect(isRealFileUrl(pathToFileURL('/tmp/[turbopack]/x.js').href)).toBe(false);
-    expect(isRealFileUrl('webpack-internal:///./node_modules/@nextdog/node/dist/sidecar.js')).toBe(false);
+    expect(isRealFileUrl('webpack-internal:///./node_modules/@nextdog/node/dist/sidecar.js')).toBe(
+      false,
+    );
   });
 });
 
@@ -67,11 +79,11 @@ describe('resolveCoreCliPath (bundler-agnostic core CLI resolution)', () => {
     const real = makeFakeProject();
 
     const turbopackVirtualUrl = pathToFileURL(
-      join(decoy.appDir, '[project]', 'node_modules', '@nextdog', 'node', 'dist', 'sidecar.js')
+      join(decoy.appDir, '[project]', 'node_modules', '@nextdog', 'node', 'dist', 'sidecar.js'),
     ).href;
 
     const resolved = realpathSync(
-      resolveCoreCliPath({ anchorUrl: turbopackVirtualUrl, projectRoot: real.appDir })
+      resolveCoreCliPath({ anchorUrl: turbopackVirtualUrl, projectRoot: real.appDir }),
     );
 
     expect(resolved).toBe(realpathSync(real.coreCliPath));
@@ -82,7 +94,7 @@ describe('resolveCoreCliPath (bundler-agnostic core CLI resolution)', () => {
     const { appDir, realSidecarUrl, coreCliPath } = makeFakeProject();
 
     const resolved = realpathSync(
-      resolveCoreCliPath({ anchorUrl: realSidecarUrl, projectRoot: appDir })
+      resolveCoreCliPath({ anchorUrl: realSidecarUrl, projectRoot: appDir }),
     );
 
     expect(resolved).toBe(realpathSync(coreCliPath));
@@ -91,7 +103,7 @@ describe('resolveCoreCliPath (bundler-agnostic core CLI resolution)', () => {
   it('never returns a path that does not exist on disk', () => {
     const { appDir, coreCliPath } = makeFakeProject();
     const virtual = pathToFileURL(
-      join(appDir, '[project]', 'node_modules', '@nextdog', 'node', 'dist', 'sidecar.js')
+      join(appDir, '[project]', 'node_modules', '@nextdog', 'node', 'dist', 'sidecar.js'),
     ).href;
 
     const resolved = resolveCoreCliPath({ anchorUrl: virtual, projectRoot: appDir });

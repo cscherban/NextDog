@@ -63,7 +63,13 @@ describe('EventBus', () => {
     bus.emit({
       type: 'log',
       timestamp: Date.now(),
-      data: { timestamp: Date.now(), level: 'info', message: 'x', attributes: {}, serviceName: 'a' },
+      data: {
+        timestamp: Date.now(),
+        level: 'info',
+        message: 'x',
+        attributes: {},
+        serviceName: 'a',
+      },
     });
 
     expect(handler).toHaveBeenCalledTimes(2);

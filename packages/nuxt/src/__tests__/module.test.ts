@@ -55,9 +55,7 @@ describe('@nextdog/nuxt module', () => {
 
     // Should add server plugin
     expect(mockAddServerPlugin).toHaveBeenCalledTimes(1);
-    expect(mockAddServerPlugin).toHaveBeenCalledWith(
-      expect.stringContaining('server-plugin')
-    );
+    expect(mockAddServerPlugin).toHaveBeenCalledWith(expect.stringContaining('server-plugin'));
   });
 
   it('uses default options when none provided', () => {

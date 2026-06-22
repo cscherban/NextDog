@@ -36,9 +36,9 @@ async function driveRequest(opts: {
               clientBody: Buffer.concat(chunks),
               clientStatus: res.statusCode ?? 0,
               clientHeaders: res.headers,
-            })
+            }),
           );
-        }
+        },
       );
       req.on('error', reject);
       if (opts.reqBody) req.write(opts.reqBody);

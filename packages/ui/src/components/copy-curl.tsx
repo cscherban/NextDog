@@ -5,8 +5,13 @@ import type { SSEEvent } from '../hooks/use-sse.js';
 
 /** Sensitive headers to strip in safe mode */
 const SENSITIVE_HEADERS = new Set([
-  'authorization', 'cookie', 'set-cookie', 'x-csrf-token',
-  'x-api-key', 'x-auth-token', 'proxy-authorization',
+  'authorization',
+  'cookie',
+  'set-cookie',
+  'x-csrf-token',
+  'x-api-key',
+  'x-auth-token',
+  'proxy-authorization',
 ]);
 
 function buildCurl(event: SSEEvent, includeSensitive: boolean): string {
@@ -86,12 +91,15 @@ interface CopyCurlProps {
 export function CopyCurl({ event }: CopyCurlProps) {
   const [copied, setCopied] = useState<'safe' | 'full' | null>(null);
 
-  const copy = useCallback(async (mode: 'safe' | 'full') => {
-    const curl = buildCurl(event, mode === 'full');
-    await navigator.clipboard.writeText(curl);
-    setCopied(mode);
-    setTimeout(() => setCopied(null), 2000);
-  }, [event]);
+  const copy = useCallback(
+    async (mode: 'safe' | 'full') => {
+      const curl = buildCurl(event, mode === 'full');
+      await navigator.clipboard.writeText(curl);
+      setCopied(mode);
+      setTimeout(() => setCopied(null), 2000);
+    },
+    [event],
+  );
 
   return (
     <div className={styles.wrapper}>

@@ -28,7 +28,7 @@ async function main() {
   const port = Number(parsed.port) || DEFAULT_PORT;
   const host = parsed.hostname;
   const dataDir = process.env.NEXTDOG_DATA_DIR ?? DEFAULT_DATA_DIR;
-  const uiDir = process.env.NEXTDOG_UI_DIR ?? await resolveUiDir();
+  const uiDir = process.env.NEXTDOG_UI_DIR ?? (await resolveUiDir());
 
   const server = await createServer({ port, host, dataDir, uiDir });
   console.log(`[nextdog] sidecar running at http://${host}:${port}`);
@@ -75,7 +75,7 @@ async function main() {
   process.on('SIGTERM', shutdown);
 }
 
-main().catch(err => {
+main().catch((err) => {
   console.error('[nextdog] failed to start:', err);
   process.exit(1);
 });

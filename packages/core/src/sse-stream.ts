@@ -4,7 +4,7 @@ import type { RingBuffer } from './ring-buffer.js';
 
 function serializeEvent(event: NextDogEvent): string {
   const json = JSON.stringify(event, (_key, value) =>
-    typeof value === 'bigint' ? value.toString() + 'n' : value
+    typeof value === 'bigint' ? value.toString() + 'n' : value,
   );
   return `data: ${json}\n\n`;
 }
@@ -22,7 +22,7 @@ export class SSEStream {
     res.writeHead(200, {
       'Content-Type': 'text/event-stream',
       'Cache-Control': 'no-cache',
-      'Connection': 'keep-alive',
+      Connection: 'keep-alive',
       'Access-Control-Allow-Origin': '*',
     });
 

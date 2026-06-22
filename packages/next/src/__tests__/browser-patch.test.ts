@@ -103,14 +103,7 @@ function runPatch(opts: {
     `${script}`,
   );
 
-  fn(
-    win,
-    navigatorStub,
-    documentStub,
-    sandboxConsole,
-    BlobStub,
-    (() => 0) as unknown,
-  );
+  fn(win, navigatorStub, documentStub, sandboxConsole, BlobStub, (() => 0) as unknown);
 
   // Drive user console activity through the (now patched) sandbox console.
   opts.drive(sandboxConsole);
@@ -152,8 +145,6 @@ describe('browser-patch trace correlation', () => {
   });
 
   it('does not throw and still buffers when document lacks the injected meta', () => {
-    expect(() =>
-      runPatch({ drive: (c) => c.warn('careful') }),
-    ).not.toThrow();
+    expect(() => runPatch({ drive: (c) => c.warn('careful') })).not.toThrow();
   });
 });

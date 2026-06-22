@@ -21,6 +21,8 @@ async function main(): Promise<void> {
 }
 
 main().catch((err) => {
-  process.stderr.write(`[nextdog-mcp] failed to start: ${err instanceof Error ? err.message : String(err)}\n`);
+  process.stderr.write(
+    `[nextdog-mcp] failed to start: ${err instanceof Error ? err.message : String(err)}\n`,
+  );
   process.exit(1);
 });

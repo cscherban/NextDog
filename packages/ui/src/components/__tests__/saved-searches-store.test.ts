@@ -12,8 +12,12 @@ function memoryStorage(): StorageLike & { dump: () => Record<string, string> } {
   const map = new Map<string, string>();
   return {
     getItem: (k) => (map.has(k) ? (map.get(k) as string) : null),
-    setItem: (k, v) => { map.set(k, v); },
-    removeItem: (k) => { map.delete(k); },
+    setItem: (k, v) => {
+      map.set(k, v);
+    },
+    removeItem: (k) => {
+      map.delete(k);
+    },
     dump: () => Object.fromEntries(map),
   };
 }
@@ -66,7 +70,11 @@ describe('SavedSearchStore — saved searches', () => {
   });
 
   it('round-trips saved searches through storage', () => {
-    store.save({ name: 'Slow checkout', query: 'route:/api/checkout', services: ['web', 'worker'] });
+    store.save({
+      name: 'Slow checkout',
+      query: 'route:/api/checkout',
+      services: ['web', 'worker'],
+    });
     const reloaded = new SavedSearchStore(storage);
     expect(reloaded.getSaved()).toHaveLength(1);
     expect(reloaded.getSaved()[0]).toMatchObject({
@@ -78,7 +86,9 @@ describe('SavedSearchStore — saved searches', () => {
 
   it('notifies subscribers on change', () => {
     let calls = 0;
-    store.subscribe(() => { calls++; });
+    store.subscribe(() => {
+      calls++;
+    });
     store.save({ name: 'x', query: 'q', services: [] });
     expect(calls).toBeGreaterThan(0);
   });

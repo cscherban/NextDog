@@ -22,10 +22,7 @@ function matchesField(event: SidecarEvent, key: string, value: string): boolean 
       return data.serviceName.toLowerCase() === valueLower;
     case 'route': {
       const route = String(
-        data.attributes['http.route'] ??
-          data.attributes['http.target'] ??
-          data.name ??
-          ''
+        data.attributes['http.route'] ?? data.attributes['http.target'] ?? data.name ?? '',
       ).toLowerCase();
       return route.includes(valueLower);
     }
@@ -49,9 +46,7 @@ function matchesField(event: SidecarEvent, key: string, value: string): boolean 
       return String(data.attributes.runtime ?? '').toLowerCase() === valueLower;
     case 'statusCode':
     case 'status_code':
-      return (
-        String(data.statusCode ?? data.attributes['http.status_code'] ?? '') === value
-      );
+      return String(data.statusCode ?? data.attributes['http.status_code'] ?? '') === value;
   }
 
   const attrVal = data.attributes[key];
@@ -99,7 +94,5 @@ export function matchesQuery(event: SidecarEvent, query: string): boolean {
   const groups = groupFilterTokens(query);
   if (groups.length === 0) return true;
 
-  return groups.every((group) =>
-    group.some((token) => matchesSingleToken(event, token))
-  );
+  return groups.every((group) => group.some((token) => matchesSingleToken(event, token)));
 }

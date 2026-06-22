@@ -18,7 +18,7 @@ describe('MCP server wiring', () => {
     const client = await connect(new SidecarClient({ fetchImpl: makeFetch().fetchImpl }));
     const { tools } = await client.listTools();
     expect(tools.map((t) => t.name).sort()).toEqual(
-      ['get_errors', 'get_trace', 'list_recent_traces', 'search_logs'].sort()
+      ['get_errors', 'get_trace', 'list_recent_traces', 'search_logs'].sort(),
     );
   });
 
@@ -34,9 +34,11 @@ describe('MCP server wiring', () => {
   });
 
   it('returns a clean tool error (not a crash) when the sidecar is down', async () => {
-    const fetchImpl = vi.fn().mockRejectedValue(new Error('ECONNREFUSED')) as unknown as typeof fetch;
+    const fetchImpl = vi
+      .fn()
+      .mockRejectedValue(new Error('ECONNREFUSED')) as unknown as typeof fetch;
     const client = await connect(
-      new SidecarClient({ baseUrl: 'http://localhost:6789', fetchImpl })
+      new SidecarClient({ baseUrl: 'http://localhost:6789', fetchImpl }),
     );
     const res = await client.callTool({
       name: 'list_recent_traces',

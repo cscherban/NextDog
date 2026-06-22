@@ -60,7 +60,9 @@ describe('withNextDog — instrumented requests', () => {
     };
 
     const mockTracer = {
-      startActiveSpan: vi.fn((name: string, fn: (span: typeof mockSpan) => unknown) => fn(mockSpan)),
+      startActiveSpan: vi.fn((name: string, fn: (span: typeof mockSpan) => unknown) =>
+        fn(mockSpan),
+      ),
     };
 
     vi.doMock('@opentelemetry/api', () => ({
@@ -131,7 +133,9 @@ describe('withNextDog — instrumented requests', () => {
     };
 
     const mockTracer = {
-      startActiveSpan: vi.fn((name: string, fn: (span: typeof mockSpan) => unknown) => fn(mockSpan)),
+      startActiveSpan: vi.fn((name: string, fn: (span: typeof mockSpan) => unknown) =>
+        fn(mockSpan),
+      ),
     };
 
     vi.doMock('@opentelemetry/api', () => ({
@@ -196,7 +200,9 @@ describe('withNextDog — instrumented requests', () => {
     };
 
     const mockTracer = {
-      startActiveSpan: vi.fn((name: string, fn: (span: typeof mockSpan) => unknown) => fn(mockSpan)),
+      startActiveSpan: vi.fn((name: string, fn: (span: typeof mockSpan) => unknown) =>
+        fn(mockSpan),
+      ),
     };
 
     vi.doMock('@opentelemetry/api', () => ({

@@ -9,7 +9,11 @@ import { trace, context, TraceFlags, type Context, type ContextManager } from '@
 class SyncContextManager implements ContextManager {
   private _stack: Context[] = [];
   active(): Context {
-    return this._stack[this._stack.length - 1] ?? (context as unknown as { _getRoot?: () => Context })._getRoot?.() ?? rootCtx;
+    return (
+      this._stack[this._stack.length - 1] ??
+      (context as unknown as { _getRoot?: () => Context })._getRoot?.() ??
+      rootCtx
+    );
   }
   with<A extends unknown[], F extends (...args: A) => ReturnType<F>>(
     ctx: Context,
