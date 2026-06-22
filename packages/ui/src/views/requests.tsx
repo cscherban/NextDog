@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'preact/hooks';
 import { css } from 'styled-system/css';
 import { ColumnPicker } from '../components/column-picker.js';
+import type { ColumnDef, CustomColumn } from '../components/column-types.js';
 import { attrContextActions, showContextMenu } from '../components/context-menu.js';
 import { SavedSearches, useSavedSearches } from '../components/saved-searches.js';
 import { SearchBar } from '../components/search-bar.js';
@@ -29,16 +30,6 @@ interface RequestGroup {
   extraAttrs: Record<string, string>;
 }
 
-/** Column definitions */
-interface ColumnDef {
-  id: string;
-  label: string;
-  /** If true, this is a core column that's always present */
-  core?: boolean;
-  /** Attribute key to pull from span attributes (for custom columns) */
-  attrKey?: string;
-}
-
 const CORE_COLUMNS: ColumnDef[] = [
   { id: 'time', label: 'Time', core: true },
   { id: 'method', label: 'Method', core: true },
@@ -50,7 +41,7 @@ const CORE_COLUMNS: ColumnDef[] = [
 
 const COLUMNS_STORAGE_KEY = 'nextdog:request-columns';
 
-function loadCustomColumns(): ColumnDef[] {
+function loadCustomColumns(): CustomColumn[] {
   try {
     const saved = localStorage.getItem(COLUMNS_STORAGE_KEY);
     if (saved) return JSON.parse(saved);
@@ -58,13 +49,13 @@ function loadCustomColumns(): ColumnDef[] {
   return [];
 }
 
-function saveCustomColumns(cols: ColumnDef[]) {
+function saveCustomColumns(cols: CustomColumn[]) {
   try {
     localStorage.setItem(COLUMNS_STORAGE_KEY, JSON.stringify(cols));
   } catch {}
 }
 
-function groupByTrace(events: SSEEvent[], customColumns: ColumnDef[]): RequestGroup[] {
+function groupByTrace(events: SSEEvent[], customColumns: CustomColumn[]): RequestGroup[] {
   const groups = new Map<string, SSEEvent[]>();
   for (const event of events) {
     const traceId = event.data.traceId;
@@ -349,7 +340,7 @@ export function Requests({ eventsResult, onOpenTrace }: RequestsProps) {
   const [sortBy, setSortBy] = useState<SortField>('time');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [selectedIndex, setSelectedIndex] = useState(-1);
-  const [customColumns, setCustomColumns] = useState<ColumnDef[]>(loadCustomColumns);
+  const [customColumns, setCustomColumns] = useState<CustomColumn[]>(loadCustomColumns);
 
   // TODO(parked 2026-06-22): `allColumns` (and its input `CORE_COLUMNS`) are an
   // unwired column-customization feature — computed but never rendered. Biome flags
@@ -461,7 +452,7 @@ export function Requests({ eventsResult, onOpenTrace }: RequestsProps) {
 
   const addColumn = (attrKey: string) => {
     const label = attrKey.split('.').pop() ?? attrKey;
-    const col: ColumnDef = { id: `custom-${attrKey}`, label, attrKey };
+    const col: CustomColumn = { id: `custom-${attrKey}`, label, attrKey };
     const next = [...customColumns, col];
     setCustomColumns(next);
     saveCustomColumns(next);

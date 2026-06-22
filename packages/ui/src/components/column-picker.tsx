@@ -1,14 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
 import { css } from 'styled-system/css';
-
-interface ColumnDef {
-  id: string;
-  label: string;
-  attrKey: string;
-}
+import type { CustomColumn } from './column-types.js';
 
 interface ColumnPickerProps {
-  customColumns: ColumnDef[];
+  customColumns: CustomColumn[];
   availableAttrs: string[];
   onAdd: (attrKey: string) => void;
   onRemove: (id: string) => void;

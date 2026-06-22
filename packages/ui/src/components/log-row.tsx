@@ -1,3 +1,4 @@
+import type { JSX } from 'preact';
 import { css } from 'styled-system/css';
 import type { SSEEvent } from '../hooks/use-sse.js';
 import { formatTime } from '../utils/format.js';
@@ -135,7 +136,9 @@ interface LogRowProps {
   onClick?: () => void;
   onCellContext?: (e: MouseEvent, key: string, value: string) => void;
   extraColumns?: { id: string; value: string; attrKey?: string }[];
-  style?: string;
+  /** Inline style for the row element. The Logs view passes the grid template as
+   *  an object; a plain string is also accepted (matching Preact's `style` prop). */
+  style?: string | JSX.CSSProperties;
   /** Ref forwarded to the row element so the virtualizer can measure its height. */
   rootRef?: (el: HTMLElement | null) => void;
 }
