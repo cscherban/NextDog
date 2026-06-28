@@ -211,7 +211,7 @@ export function Waterfall({ spans, onSpanClick }: WaterfallProps) {
             className={waterfallRowStyle}
             style={`padding-left:${t.depth * 16}px;${onSpanClick ? 'cursor:pointer' : ''}`}
             {...(onSpanClick
-              ? { role: 'button', ...interactiveProps(() => onSpanClick(t.source)) }
+              ? { role: 'button', tabIndex: 0, ...interactiveProps(() => onSpanClick(t.source)) }
               : {})}
           >
             <span className={waterfallLabelStyle} title={t.name}>

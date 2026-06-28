@@ -543,7 +543,7 @@ export function Logs({ eventsResult, allEvents, onOpenTrace, onFilter }: LogsPro
               key={col.id}
               className={colHeaderStyle}
               {...(col.label
-                ? { role: 'button', ...interactiveProps(() => toggleSort(col.id)) }
+                ? { role: 'button', tabIndex: 0, ...interactiveProps(() => toggleSort(col.id)) }
                 : {})}
             >
               {col.label}
