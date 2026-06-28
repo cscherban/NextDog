@@ -25,6 +25,7 @@ import {
   toolbarStyle,
 } from '../styles/shared';
 import { interactiveProps } from '../utils/a11y';
+import { sortLogs } from '../utils/log-sort';
 
 const SIDEBAR_STORAGE_KEY = 'nextdog:log-detail-width';
 const LOG_COLUMNS_STORAGE_KEY = 'nextdog:log-columns';
@@ -250,7 +251,12 @@ export function Logs({ eventsResult, allEvents, onOpenTrace, onFilter }: LogsPro
   const [showJson, setShowJson] = useState(false);
   const [customColumns, setCustomColumns] = useState<CustomColumn[]>(loadCustomColumns);
   const [sortBy, setSortBy] = useState<string>('time');
-  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+  // Default ascending: the live buffer is oldest-first and the view auto-scrolls to
+  // the newest row at the bottom (console-style tail). Clicking the Time header now
+  // flips to descending (newest first) — previously "desc" was the default but the
+  // sort short-circuited it back to the ascending buffer, so toggling did nothing
+  // (issue #59).
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
 
   // Draggable sidebar
   const [sidebarWidth, setSidebarWidth] = useState(loadWidth);
@@ -307,37 +313,12 @@ export function Logs({ eventsResult, allEvents, onOpenTrace, onFilter }: LogsPro
     }
   };
 
-  // Sort display logs
-  const sortedLogs = useMemo(() => {
-    if (sortBy === 'time' && sortDir === 'desc') return displayLogs; // default order
-    const sorted = [...displayLogs];
-    const dir = sortDir === 'asc' ? 1 : -1;
-    sorted.sort((a, b) => {
-      switch (sortBy) {
-        case 'time':
-          return ((a.data.timestamp ?? a.timestamp) - (b.data.timestamp ?? b.timestamp)) * dir;
-        case 'level':
-          return (a.data.level ?? '').localeCompare(b.data.level ?? '') * dir;
-        case 'service':
-          return a.data.serviceName.localeCompare(b.data.serviceName) * dir;
-        case 'message':
-          return (
-            (a.data.message ?? a.data.name ?? '').localeCompare(
-              b.data.message ?? b.data.name ?? '',
-            ) * dir
-          );
-        default: {
-          const av = String(a.data.attributes[sortBy.replace('custom-', '')] ?? '');
-          const bv = String(b.data.attributes[sortBy.replace('custom-', '')] ?? '');
-          const an = Number(av),
-            bn = Number(bv);
-          if (!Number.isNaN(an) && !Number.isNaN(bn)) return (an - bn) * dir;
-          return av.localeCompare(bv) * dir;
-        }
-      }
-    });
-    return sorted;
-  }, [displayLogs, sortBy, sortDir]);
+  // Sort display logs. The comparator (and the ascending-time fast path) lives in
+  // sortLogs so it can be unit-tested without rendering (issue #59).
+  const sortedLogs = useMemo(
+    () => sortLogs(displayLogs, sortBy, sortDir),
+    [displayLogs, sortBy, sortDir],
+  );
 
   // Windowed rendering — only visible rows (+ overscan) reach the DOM (issue #9).
   const {

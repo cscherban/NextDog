@@ -56,6 +56,72 @@ export function mergeEvents(a: SSEEvent[], b: SSEEvent[]): SSEEvent[] {
   return merged;
 }
 
+/**
+ * Hard cap on the live in-memory event buffer (issue #58).
+ *
+ * The dashboard's persistent record lives on disk (core's FileStore); the client
+ * only needs a bounded *live* window — "Load older" pages further back on demand.
+ * Without a cap, the client buffer grew with every SSE message for the lifetime of
+ * the session, and because each message re-ran an O(n) dedup + O(n log n) re-sort
+ * of the *entire* buffer (see {@link mergeEvents}), per-event cost climbed with the
+ * buffer size — O(n²) over a session. Under real traffic the main thread saturated
+ * and the page froze (felt acutely while scrolling). Small-dataset QA never hit it.
+ *
+ * 2000 matches the buffer size the virtualized lists were already designed around
+ * (see utils/virtual-window.ts); this enforces the intended ceiling.
+ */
+export const MAX_LIVE_EVENTS = 2000;
+
+/**
+ * Append live SSE events onto an oldest-first buffer, de-duplicating by
+ * {@link eventKey}, keeping it sorted oldest-first, and bounding it to the most
+ * recent `cap` events. Unlike {@link mergeEvents}, this never re-sorts the whole
+ * buffer: a live event is almost always the newest, so it appends in O(1); a rare
+ * out-of-order delivery is binary-inserted. Cost per call is therefore bounded by
+ * `cap`, not by how long the session has been running (issue #58).
+ *
+ * Used only for the live SSE tail. History backfill and "load older" still go
+ * through {@link mergeEvents}, which merges two ordered lists.
+ */
+export function appendLiveEvents(
+  buf: SSEEvent[],
+  incoming: SSEEvent[],
+  cap = MAX_LIVE_EVENTS,
+): SSEEvent[] {
+  if (incoming.length === 0) return buf;
+
+  const seen = new Set<string>();
+  for (const e of buf) seen.add(eventKey(e));
+
+  // Copy lazily — if every incoming event is a duplicate we return `buf` untouched
+  // so React/Preact can bail out of the re-render.
+  let next: SSEEvent[] | null = null;
+  for (const event of incoming) {
+    const key = eventKey(event);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    if (!next) next = buf.slice();
+
+    const t = timestampOf(event);
+    if (next.length === 0 || t >= timestampOf(next[next.length - 1])) {
+      next.push(event); // live-tail fast path: newest goes at the end
+    } else {
+      // Out-of-order arrival — binary-insert to keep the buffer oldest-first.
+      let lo = 0;
+      let hi = next.length;
+      while (lo < hi) {
+        const mid = (lo + hi) >> 1;
+        if (timestampOf(next[mid]) <= t) lo = mid + 1;
+        else hi = mid;
+      }
+      next.splice(lo, 0, event);
+    }
+  }
+
+  if (!next) return buf;
+  return next.length > cap ? next.slice(next.length - cap) : next;
+}
+
 /** Timestamp of the oldest event in an oldest-first list, or undefined if empty. */
 export function oldestTimestamp(events: SSEEvent[]): number | undefined {
   if (events.length === 0) return undefined;

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'preact/hooks';
-import { mergeEvents, oldestTimestamp } from './events-history';
+import { appendLiveEvents, mergeEvents, oldestTimestamp } from './events-history';
 
 export interface SSEEvent {
   type: 'span' | 'log';
@@ -83,9 +83,11 @@ export function useSSE(url: string, enabled = true): UseSSEResult {
     es.onmessage = (e) => {
       try {
         const event = JSON.parse(e.data) as SSEEvent;
-        // mergeEvents de-duplicates (spanId for spans, service+ts+message for logs)
-        // and keeps the list oldest-first.
-        setEvents((prev) => mergeEvents(prev, [event]));
+        // appendLiveEvents de-duplicates (spanId for spans, service+ts+message for
+        // logs), keeps the list oldest-first, and bounds it to the most recent
+        // MAX_LIVE_EVENTS — without re-sorting the whole buffer on every message,
+        // which is what froze the page under real traffic (issue #58).
+        setEvents((prev) => appendLiveEvents(prev, [event]));
       } catch {
         // Ignore malformed events
       }
