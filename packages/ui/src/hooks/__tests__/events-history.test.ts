@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { eventKey, mergeEvents, oldestTimestamp } from '../events-history';
+import {
+  appendLiveEvents,
+  eventKey,
+  MAX_LIVE_EVENTS,
+  mergeEvents,
+  oldestTimestamp,
+} from '../events-history';
 import type { SSEEvent } from '../use-sse';
 
 const span = (id: string, ts: number, serviceName = 'web'): SSEEvent => ({
@@ -93,6 +99,56 @@ describe('mergeEvents', () => {
   it('keeps result sorted oldest-first', () => {
     const merged = mergeEvents([span('s3', 30)], [span('s1', 10), span('s2', 20)]);
     expect(merged.map((e) => e.timestamp)).toEqual([10, 20, 30]);
+  });
+});
+
+describe('appendLiveEvents', () => {
+  it('appends a newer live event to the end of an oldest-first buffer', () => {
+    const buf = [span('s1', 10), span('s2', 20)];
+    const next = appendLiveEvents(buf, [span('s3', 30)]);
+    expect(next.map((e) => e.timestamp)).toEqual([10, 20, 30]);
+  });
+
+  it('de-duplicates a live event already present (SSE backfill overlapping history)', () => {
+    const buf = [span('s1', 10), span('s2', 20)];
+    const next = appendLiveEvents(buf, [span('s2', 20)]);
+    expect(next).toBe(buf); // unchanged reference — lets the view skip a re-render
+  });
+
+  it('binary-inserts a rare out-of-order delivery, keeping the buffer sorted', () => {
+    const buf = [span('s1', 10), span('s3', 30)];
+    const next = appendLiveEvents(buf, [span('s2', 20)]);
+    expect(next.map((e) => e.timestamp)).toEqual([10, 20, 30]);
+  });
+
+  // Regression for #58: the live buffer must stay bounded no matter how many events
+  // stream in over a session. Before the fix the client accumulated every event
+  // (and re-sorted the whole buffer each time), so this length was 5000 → O(n²) cost
+  // and a frozen page under real traffic.
+  it('caps the buffer to the most recent MAX_LIVE_EVENTS under sustained traffic', () => {
+    let buf: SSEEvent[] = [];
+    for (let i = 0; i < 5000; i++) {
+      buf = appendLiveEvents(buf, [span(`s${i}`, i)]);
+      expect(buf.length).toBeLessThanOrEqual(MAX_LIVE_EVENTS);
+    }
+    expect(buf).toHaveLength(MAX_LIVE_EVENTS);
+    // It keeps the newest window and stays oldest-first.
+    expect(buf[0].timestamp).toBe(5000 - MAX_LIVE_EVENTS);
+    expect(buf[buf.length - 1].timestamp).toBe(4999);
+    for (let i = 1; i < buf.length; i++) {
+      expect(buf[i].timestamp).toBeGreaterThanOrEqual(buf[i - 1].timestamp);
+    }
+  });
+
+  it('honours a custom cap and drops the oldest events first', () => {
+    let buf: SSEEvent[] = [];
+    for (let i = 0; i < 10; i++) buf = appendLiveEvents(buf, [span(`s${i}`, i)], 3);
+    expect(buf.map((e) => e.timestamp)).toEqual([7, 8, 9]);
+  });
+
+  it('returns the same buffer when there is nothing to append', () => {
+    const buf = [span('s1', 10)];
+    expect(appendLiveEvents(buf, [])).toBe(buf);
   });
 });
 
